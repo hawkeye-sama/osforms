@@ -1,0 +1,293 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+}
+
+.dark {
+  /* Dark Elevated Theme - Based on DESIGN_GUIDE.md */
+  /* Background Layers (darkest to lightest) */
+  --background: oklch(0.039 0 0); /* #0A0A0A - Main background */
+  --foreground: oklch(0.98 0 0); /* #FAFAFA - Primary text */
+
+  /* Additional background layers */
+  --bg-subtle: oklch(0.078 0 0); /* #141414 - Slightly elevated */
+  --bg-element: oklch(0.10 0 0); /* #1A1A1A - Cards, panels */
+  --bg-hover: oklch(0.141 0 0); /* #242424 - Hover states */
+  --bg-active: oklch(0.18 0 0); /* #2E2E2E - Active states */
+
+  /* Elevated surfaces - layered darkness */
+  --card: oklch(0.10 0 0); /* #1A1A1A - Cards, panels */
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.10 0 0);
+  --popover-foreground: oklch(0.98 0 0);
+
+  /* Primary = Light for CTAs (inverted) */
+  --primary: oklch(0.98 0 0); /* #FAFAFA - White buttons */
+  --primary-foreground: oklch(0.039 0 0); /* #0A0A0A - Text on white */
+
+  /* Secondary surfaces */
+  --secondary: oklch(0.141 0 0); /* #242424 - Hover states */
+  --secondary-foreground: oklch(0.98 0 0);
+
+  /* Muted elements */
+  --muted: oklch(0.078 0 0); /* #141414 - Subtle surfaces */
+  --muted-foreground: oklch(0.627 0 0); /* #A0A0A0 - Secondary text */
+
+  /* Text hierarchy */
+  --text-tertiary: oklch(0.45 0 0); /* #737373 - Tertiary text */
+  --text-quaternary: oklch(0.32 0 0); /* #525252 - Very subtle */
+
+  /* Accent - WHITE GLOW */
+  --accent: oklch(1 0 0); /* #FFFFFF - Pure white for emphasis */
+  --accent-foreground: oklch(0.039 0 0);
+
+  /* Destructive */
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+
+  /* Borders - subtle layering */
+  --border: oklch(0.165 0 0); /* #2A2A2A - Standard borders */
+  --border-subtle: oklch(0.10 0 0); /* #1A1A1A - Barely visible */
+  --border-strong: oklch(0.25 0 0); /* #404040 - Prominent borders */
+  --input: oklch(0.039 0 0); /* #0A0A0A - Darker input bg */
+  --ring: oklch(1 0 0); /* #FFFFFF - White focus ring */
+}
+
+body {
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+/* ──────────────────────────────────────────────────────
+   Landing Page Animations & Effects
+   ────────────────────────────────────────────────────── */
+
+/* ── Keyframe Animations ─────────────────────────────── */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.12),
+                0 0 40px rgba(255, 255, 255, 0.06);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.20),
+                0 0 60px rgba(255, 255, 255, 0.10);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Background Effects ──────────────────────────────── */
+
+.bg-grid {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px
+  );
+  background-size: 32px 32px;
+}
+
+.bg-grid-glow {
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    radial-gradient(ellipse 800px 600px at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+  background-size: 32px 32px, 100% 100%;
+}
+
+.gradient-radial-glow {
+  background: radial-gradient(
+    ellipse 1000px 600px at 50% 0%,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 50%
+  );
+}
+
+.gradient-animated {
+  background: linear-gradient(
+    -45deg,
+    oklch(0.039 0 0),
+    oklch(0.06 0 0),
+    oklch(0.078 0 0),
+    oklch(0.06 0 0)
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* ── Glow Effects ────────────────────────────────────── */
+
+.glow-subtle {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.12);
+}
+
+.glow-medium {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.15),
+              0 0 60px rgba(255, 255, 255, 0.08);
+}
+
+.glow-strong {
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.20),
+              0 0 80px rgba(255, 255, 255, 0.12);
+}
+
+.glow-hover {
+  transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.20),
+              0 0 60px rgba(255, 255, 255, 0.10);
+}
+
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ── Card Hover Effects ──────────────────────────────── */
+
+.card-hover {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border-subtle);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-strong);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.10);
+}
+
+.card-interactive {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-interactive:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.12);
+}
+
+/* ── Button Effects ──────────────────────────────────── */
+
+.button-glow {
+  position: relative;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.25);
+}
+
+.button-glow:active {
+  transform: translateY(0);
+}
+
+/* ── Floating Animation ──────────────────────────────── */
+
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.float-slow {
+  animation: float 8s ease-in-out infinite;
+}
+
+/* ── Code Block Styling ──────────────────────────────── */
+
+.code-block-dark {
+  background: oklch(0.039 0 0);
+  border: 1px solid oklch(0.10 0 0);
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.04);
+}
+
+/* ── Fade In Animation Utilities ─────────────────────── */
+
+.animate-fade-in {
+  animation: fadeIn 600ms ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 600ms ease-out;
+}
