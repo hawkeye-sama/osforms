@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app:*)",
+      "Bash(node --version:*)",
+      "Bash(npm:*)",
+      "Bash(npx --yes create-next-app@latest:*)",
+      "Bash(npx:*)",
+      "Bash(echo:*)",
+      "Bash(test:*)",
+      "Bash(npm.cmd install:*)",
+      "WebFetch(domain:usebasin.com)",
+      "WebFetch(domain:getform.io)",
+      "WebFetch(domain:formcarry.com)",
+      "WebFetch(domain:resend.com)",
+      "WebFetch(domain:jotform.com)",
+      "WebFetch(domain:basin.com)"
+    ]
+  }
+}
