@@ -93,7 +93,7 @@ export default function FormsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Forms</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Forms</h1>
           <p className="text-muted-foreground mt-1">
             Manage your form endpoints and view submissions
           </p>
@@ -172,7 +172,7 @@ export default function FormsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No forms yet</h3>
+            <h3 className="text-lg font-semibold text-foreground">No forms yet</h3>
             <p className="text-sm text-muted-foreground mt-1 mb-6">
               Create your first form to start collecting submissions
             </p>
@@ -186,7 +186,7 @@ export default function FormsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Search className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No forms found</h3>
+            <h3 className="text-lg font-semibold text-foreground">No forms found</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Try adjusting your search query
             </p>

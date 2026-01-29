@@ -119,7 +119,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       {/* Page header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
           Overview of your form submissions and usage
         </p>
@@ -150,7 +150,7 @@ export default function DashboardPage() {
         {/* Forms Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Your Forms</h2>
+            <h2 className="text-xl font-semibold text-foreground">Your Forms</h2>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -212,7 +212,7 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold">No forms yet</h3>
+                <h3 className="text-lg font-semibold text-foreground">No forms yet</h3>
                 <p className="text-sm text-muted-foreground mt-1 mb-6">
                   Create your first form to start collecting submissions
                 </p>

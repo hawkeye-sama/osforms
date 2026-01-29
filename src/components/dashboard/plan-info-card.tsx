@@ -1,14 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { Zap } from "lucide-react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 interface PlanInfoCardProps {
@@ -37,7 +34,7 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold">Your Plan</CardTitle>
+          <CardTitle className="text-base font-semibold text-foreground">Your Plan</CardTitle>
           <Badge variant="outline" className="font-medium">
             {plan.name}
           </Badge>
@@ -48,7 +45,7 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
         <div>
           <div className="mb-1.5 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Submissions</span>
-            <span className="font-medium">
+            <span className="font-medium text-foreground">
               {plan.submissionsUsed.toLocaleString()} /{" "}
               {plan.submissionsLimit.toLocaleString()}
             </span>
@@ -72,7 +69,7 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
         <div>
           <div className="mb-1.5 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Forms</span>
-            <span className="font-medium">
+            <span className="font-medium text-foreground">
               {plan.formsUsed} / {plan.formsLimit}
             </span>
           </div>
@@ -84,15 +81,10 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
           </div>
         </div>
 
-        {/* Upgrade CTA */}
-        {plan.name === "Free" && (
-          <Button className="w-full" asChild>
-            <Link href="/dashboard/billing">
-              <Zap className="mr-2 h-4 w-4" />
-              Upgrade Plan
-            </Link>
-          </Button>
-        )}
+        {/* Free plan info */}
+        <p className="text-xs text-muted-foreground text-center pt-2">
+          FreeForms is free with 200 submissions/month
+        </p>
       </CardContent>
     </Card>
   );

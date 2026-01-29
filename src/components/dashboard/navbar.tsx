@@ -29,14 +29,14 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6">
         {/* Left side - Mobile menu + Logo (mobile only) */}
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden text-foreground"
             onClick={onMobileMenuToggle}
           >
             <Menu className="h-5 w-5" />
@@ -44,7 +44,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
           </Button>
           <Link
             href="/dashboard"
-            className="text-xl font-bold tracking-tight lg:hidden"
+            className="text-xl font-bold tracking-tight text-foreground lg:hidden"
           >
             FreeForms
           </Link>
@@ -56,7 +56,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         {/* Right side - GitHub + Account dropdown */}
         <div className="flex items-center gap-2">
           {/* GitHub Link */}
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" className="text-foreground hover:text-foreground" asChild>
             <a
               href="https://github.com/freeforms/freeforms"
               target="_blank"
@@ -70,17 +70,17 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
           {/* Account Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 px-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
+              <Button variant="ghost" className="flex items-center gap-2 px-2 hover:bg-secondary">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground border border-border">
                   <User className="h-4 w-4" />
                 </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4 text-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.name || "User"}</p>
+                  <p className="text-sm font-medium leading-none text-foreground">{user.name || "User"}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user.email}
                   </p>

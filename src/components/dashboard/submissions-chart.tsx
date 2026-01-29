@@ -43,9 +43,9 @@ export function SubmissionsChart({
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold">{title}</CardTitle>
+          <CardTitle className="text-base font-semibold text-foreground">{title}</CardTitle>
           <div className="text-right">
-            <p className="text-2xl font-bold">{totalSubmissions}</p>
+            <p className="text-2xl font-bold text-foreground">{totalSubmissions}</p>
             <p className="text-xs text-muted-foreground">Total submissions</p>
           </div>
         </div>
@@ -64,13 +64,13 @@ export function SubmissionsChart({
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
+                  stroke="#333333"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatDate}
-                  stroke="hsl(var(--muted-foreground))"
+                  stroke="#A8A8A8"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -78,7 +78,7 @@ export function SubmissionsChart({
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  stroke="hsl(var(--muted-foreground))"
+                  stroke="#A8A8A8"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -89,8 +89,8 @@ export function SubmissionsChart({
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="rounded-lg border bg-popover px-3 py-2 shadow-md">
-                          <p className="text-sm font-medium">
+                        <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-md">
+                          <p className="text-sm font-medium text-foreground">
                             {formatDate(label)}
                           </p>
                           <p className="text-sm text-muted-foreground">
@@ -105,13 +105,13 @@ export function SubmissionsChart({
                 <Line
                   type="monotone"
                   dataKey="submissions"
-                  stroke="hsl(var(--primary))"
+                  stroke="#FAFAFA"
                   strokeWidth={2}
                   dot={false}
                   activeDot={{
-                    r: 4,
-                    fill: "hsl(var(--primary))",
-                    stroke: "hsl(var(--background))",
+                    r: 5,
+                    fill: "#FAFAFA",
+                    stroke: "#0A0A0A",
                     strokeWidth: 2,
                   }}
                 />
