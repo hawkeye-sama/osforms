@@ -7,28 +7,28 @@
 Based on best practices from Resend, Linear, Vercel, and Stripe. Dark foundation with white glow accents for visual interest.
 
 ```css
-/* Background Layers (darkest to lightest) */
+/* Background Layers (darkest to lightest) - Adjusted for better usability */
 --bg-base: #0A0A0A              /* Main background, near-black */
---bg-subtle: #141414            /* Slightly elevated surfaces */
---bg-element: #1A1A1A           /* Cards, panels, elevated elements */
---bg-hover: #242424             /* Hover states on interactive elements */
---bg-active: #2E2E2E            /* Active/pressed states */
+--bg-subtle: #1C1C1C            /* Slightly elevated surfaces (was #141414) */
+--bg-element: #212121           /* Cards, panels, elevated elements (was #1A1A1A) */
+--bg-hover: #292929             /* Hover states on interactive elements (was #242424) */
+--bg-active: #333333            /* Active/pressed states (was #2E2E2E) */
 
-/* Borders (subtle to prominent) */
---border-subtle: #1A1A1A        /* Barely visible dividers */
---border-default: #2A2A2A       /* Standard borders */
---border-strong: #404040        /* Prominent borders, focused states */
+/* Borders (subtle to prominent) - Adjusted for better visibility */
+--border-subtle: #212121        /* Barely visible dividers (was #1A1A1A) */
+--border-default: #333333       /* Standard borders (was #2A2A2A) */
+--border-strong: #474747        /* Prominent borders, focused states (was #404040) */
 
-/* Text (lightest to darkest) */
+/* Text (lightest to darkest) - Improved contrast */
 --text-primary: #FAFAFA         /* Primary text, headings */
---text-secondary: #A0A0A0       /* Secondary text, descriptions */
---text-tertiary: #737373        /* Placeholder, disabled text */
---text-quaternary: #525252      /* Very subtle text, hints */
+--text-secondary: #A8A8A8       /* Secondary text, descriptions (was #A0A0A0) */
+--text-tertiary: #858585        /* Placeholder, disabled text (was #737373) */
+--text-quaternary: #616161      /* Very subtle text, hints (was #525252) */
 
-/* Accent (White Glow) */
+/* Accent (White Glow) - Increased visibility */
 --accent: #FFFFFF               /* Pure white for emphasis */
---accent-glow: rgba(255, 255, 255, 0.12)  /* Subtle glow */
---accent-glow-strong: rgba(255, 255, 255, 0.20)  /* Strong glow on hover */
+--accent-glow: rgba(255, 255, 255, 0.15)  /* Subtle glow (was 0.12) */
+--accent-glow-strong: rgba(255, 255, 255, 0.25)  /* Strong glow on hover (was 0.20) */
 
 /* Inverted (for CTAs) */
 --bg-inverted: #FAFAFA          /* White/light buttons */
@@ -38,11 +38,12 @@ Based on best practices from Resend, Linear, Vercel, and Stripe. Dark foundation
 ### Design Principles
 
 1. **Dark Elevated**: Near-black base with layered darkness for depth
-2. **White Glow Accent**: Subtle white glow on interactive elements
-3. **High Contrast**: Minimum 4.5:1 ratio for accessibility (WCAG AA)
-4. **Animated Gradients**: Subtle radial gradients in hero and key sections
-5. **Micro-Interactions**: Every interactive element has hover/focus animation
-6. **Performance-First**: GPU-accelerated animations, 60fps target
+2. **White Glow Accent**: Subtle white glow on interactive elements and cards (8-12% opacity)
+3. **Visible Grid Pattern**: Background grid with 8% white dots on 32px grid for subtle texture
+4. **High Contrast**: Minimum 4.5:1 ratio for accessibility (WCAG AA)
+5. **Animated Gradients**: Subtle radial gradients in hero and key sections
+6. **Micro-Interactions**: Every interactive element has hover/focus animation
+7. **Performance-First**: GPU-accelerated animations, 60fps target
 
 ---
 
@@ -176,14 +177,16 @@ hover {
 ### Cards
 
 ```css
-background: var(--bg-element)      /* #262626 */
-border: 1px solid var(--border-default)
+background: var(--bg-element)      /* #1A1A1A */
+border: 2px solid var(--border-default)  /* Thicker border for better visibility */
 border-radius: 12px
 padding: 24px
+box-shadow: 0 0 20px rgba(255, 255, 255, 0.06)  /* Subtle white glow */
 transition: all 200ms ease
 
 hover {
   border-color: var(--border-strong)
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.12)  /* Enhanced glow on hover */
   transform: translateY(-2px)
 }
 ```
@@ -191,8 +194,8 @@ hover {
 **Card Variants:**
 
 - **Flat Card**: No border, subtle background `--bg-subtle`
-- **Elevated Card**: Default style above
-- **Interactive Card**: Adds hover effects
+- **Elevated Card**: Default style above with 2px border and glow effect for visual prominence
+- **Interactive Card**: Adds hover effects with border color transition and enhanced glow
 
 ### Forms & Inputs
 

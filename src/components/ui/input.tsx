@@ -1,18 +1,55 @@
 import * as React from "react";
+import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  ({ className, type, ...props }, ref) => {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  state?: "default" | "success" | "error";
+  errorMessage?: string;
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, state = "default", errorMessage, ...props }, ref) => {
+    const [shouldShake, setShouldShake] = React.useState(false);
+
+    React.useEffect(() => {
+      if (state === "error") {
+        setShouldShake(true);
+        const timer = setTimeout(() => setShouldShake(false), 400);
+        return () => clearTimeout(timer);
+      }
+    }, [state]);
+
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          className
+      <div className="relative w-full">
+        <input
+          type={type}
+          className={cn(
+            "flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground transition-all duration-150 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            state === "default" && "border-input focus-visible:ring-2 focus-visible:ring-white/10",
+            state === "success" && "border-green-500 focus-visible:ring-2 focus-visible:ring-green-500/20 pr-10",
+            state === "error" && "border-red-500 focus-visible:ring-2 focus-visible:ring-red-500/20 pr-10",
+            shouldShake && "animate-shake",
+            className
+          )}
+          ref={ref}
+          {...props}
+        />
+        {state === "success" && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <Check className="h-4 w-4 text-green-500 animate-scale-in" />
+          </div>
         )}
-        ref={ref}
-        {...props}
-      />
+        {state === "error" && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <X className="h-4 w-4 text-red-500 animate-scale-in" />
+          </div>
+        )}
+        {state === "error" && errorMessage && (
+          <p className="mt-1.5 text-xs text-red-500 animate-fade-in">
+            {errorMessage}
+          </p>
+        )}
+      </div>
     );
   }
 );
