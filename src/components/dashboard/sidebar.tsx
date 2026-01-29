@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   FileText,
   Settings,
-  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,11 +29,6 @@ const navItems = [
     icon: Settings,
     label: "Account Settings",
   },
-  {
-    href: "/dashboard/billing",
-    icon: CreditCard,
-    label: "Billing",
-  },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
@@ -43,13 +37,13 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen w-[240px] border-r bg-background flex flex-col",
+        "fixed left-0 top-0 z-40 h-screen w-[240px] border-r bg-card flex flex-col",
         className
       )}
     >
       {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
-        <Link href="/dashboard" className="text-xl font-bold tracking-tight">
+        <Link href="/dashboard" className="text-xl font-bold tracking-tight text-foreground">
           FreeForms
         </Link>
       </div>

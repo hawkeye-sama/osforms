@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   FileText,
   Settings,
-  CreditCard,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,11 +32,6 @@ const navItems = [
     href: "/dashboard/settings",
     icon: Settings,
     label: "Account Settings",
-  },
-  {
-    href: "/dashboard/billing",
-    icon: CreditCard,
-    label: "Billing",
   },
 ];
 
@@ -74,7 +68,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
       {/* Drawer */}
       <div
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-[280px] bg-background border-r shadow-lg lg:hidden",
+          "fixed left-0 top-0 z-50 h-full w-[280px] bg-card border-r shadow-lg lg:hidden",
           "animate-in slide-in-from-left duration-300"
         )}
       >
@@ -82,7 +76,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
         <div className="flex h-16 items-center justify-between border-b px-4">
           <Link
             href="/dashboard"
-            className="text-xl font-bold tracking-tight"
+            className="text-xl font-bold tracking-tight text-foreground"
             onClick={() => onOpenChange(false)}
           >
             FreeForms
@@ -90,6 +84,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
           <Button
             variant="ghost"
             size="icon"
+            className="text-foreground"
             onClick={() => onOpenChange(false)}
           >
             <X className="h-5 w-5" />

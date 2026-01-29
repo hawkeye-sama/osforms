@@ -24,8 +24,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            "flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground transition-all duration-150 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
-            state === "default" && "border-input focus-visible:ring-2 focus-visible:ring-white/10",
+            "flex h-10 w-full rounded-md border bg-card px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground transition-all duration-150 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            state === "default" && "border-border focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:border-border",
             state === "success" && "border-green-500 focus-visible:ring-2 focus-visible:ring-green-500/20 pr-10",
             state === "error" && "border-red-500 focus-visible:ring-2 focus-visible:ring-red-500/20 pr-10",
             shouldShake && "animate-shake",
