@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { DashboardNav } from "@/components/dashboard/nav";
+import { Sidebar } from "@/components/dashboard/sidebar";
+import { Navbar } from "@/components/dashboard/navbar";
+import { MobileNav } from "@/components/dashboard/mobile-nav";
 
 interface User {
   _id: string;
@@ -20,6 +22,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     async function checkAuth() {
@@ -45,6 +48,10 @@ export default function DashboardLayout({
     checkAuth();
   }, [router, pathname]);
 
+  const handleMobileMenuToggle = useCallback(() => {
+    setMobileNavOpen((prev) => !prev);
+  }, []);
+
   if (loading) {
     return (
       <div className="dark flex min-h-screen items-center justify-center bg-background">
@@ -62,8 +69,20 @@ export default function DashboardLayout({
 
   return (
     <div className="dark min-h-screen bg-background">
-      <DashboardNav user={user} />
-      <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+      {/* Sidebar - hidden on mobile */}
+      <Sidebar className="hidden lg:flex" />
+
+      {/* Main content area - offset for sidebar on desktop */}
+      <div className="lg:ml-[240px]">
+        {/* Top navbar */}
+        <Navbar user={user} onMobileMenuToggle={handleMobileMenuToggle} />
+
+        {/* Page content */}
+        <main className="px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      </div>
+
+      {/* Mobile nav drawer */}
+      <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
     </div>
   );
 }

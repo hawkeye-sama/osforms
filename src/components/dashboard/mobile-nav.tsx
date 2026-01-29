@@ -1,0 +1,133 @@
+"use client";
+
+import { useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  FileText,
+  Settings,
+  CreditCard,
+  X,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+
+interface MobileNavProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const navItems = [
+  {
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    label: "Dashboard",
+  },
+  {
+    href: "/dashboard/forms",
+    icon: FileText,
+    label: "Forms",
+  },
+  {
+    href: "/dashboard/settings",
+    icon: Settings,
+    label: "Account Settings",
+  },
+  {
+    href: "/dashboard/billing",
+    icon: CreditCard,
+    label: "Billing",
+  },
+];
+
+export function MobileNav({ open, onOpenChange }: MobileNavProps) {
+  const pathname = usePathname();
+
+  // Close on route change
+  useEffect(() => {
+    onOpenChange(false);
+  }, [pathname, onOpenChange]);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm lg:hidden"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Drawer */}
+      <div
+        className={cn(
+          "fixed left-0 top-0 z-50 h-full w-[280px] bg-background border-r shadow-lg lg:hidden",
+          "animate-in slide-in-from-left duration-300"
+        )}
+      >
+        {/* Header */}
+        <div className="flex h-16 items-center justify-between border-b px-4">
+          <Link
+            href="/dashboard"
+            className="text-xl font-bold tracking-tight"
+            onClick={() => onOpenChange(false)}
+          >
+            FreeForms
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-5 w-5" />
+            <span className="sr-only">Close menu</span>
+          </Button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 p-4">
+          {navItems.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => onOpenChange(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className="border-t p-4">
+          <p className="text-xs text-muted-foreground">FreeForms v1.0</p>
+        </div>
+      </div>
+    </>
+  );
+}

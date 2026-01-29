@@ -55,20 +55,20 @@
 
 .dark {
   /* Dark Elevated Theme - Based on DESIGN_GUIDE.md */
-  /* Background Layers (darkest to lightest) */
+  /* Background Layers (darkest to lightest) - Adjusted for better usability */
   --background: oklch(0.039 0 0); /* #0A0A0A - Main background */
   --foreground: oklch(0.98 0 0); /* #FAFAFA - Primary text */
 
-  /* Additional background layers */
-  --bg-subtle: oklch(0.078 0 0); /* #141414 - Slightly elevated */
-  --bg-element: oklch(0.10 0 0); /* #1A1A1A - Cards, panels */
-  --bg-hover: oklch(0.141 0 0); /* #242424 - Hover states */
-  --bg-active: oklch(0.18 0 0); /* #2E2E2E - Active states */
+  /* Additional background layers - Lightened for better visibility */
+  --bg-subtle: oklch(0.11 0 0); /* #1C1C1C - Slightly elevated (was 0.078) */
+  --bg-element: oklch(0.13 0 0); /* #212121 - Cards, panels (was 0.10) */
+  --bg-hover: oklch(0.16 0 0); /* #292929 - Hover states (was 0.141) */
+  --bg-active: oklch(0.20 0 0); /* #333333 - Active states (was 0.18) */
 
-  /* Elevated surfaces - layered darkness */
-  --card: oklch(0.10 0 0); /* #1A1A1A - Cards, panels */
+  /* Elevated surfaces - lightened for better contrast */
+  --card: oklch(0.13 0 0); /* #212121 - Cards, panels (was 0.10) */
   --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.10 0 0);
+  --popover: oklch(0.13 0 0); /* (was 0.10) */
   --popover-foreground: oklch(0.98 0 0);
 
   /* Primary = Light for CTAs (inverted) */
@@ -76,16 +76,16 @@
   --primary-foreground: oklch(0.039 0 0); /* #0A0A0A - Text on white */
 
   /* Secondary surfaces */
-  --secondary: oklch(0.141 0 0); /* #242424 - Hover states */
+  --secondary: oklch(0.16 0 0); /* #292929 - Hover states (was 0.141) */
   --secondary-foreground: oklch(0.98 0 0);
 
   /* Muted elements */
-  --muted: oklch(0.078 0 0); /* #141414 - Subtle surfaces */
-  --muted-foreground: oklch(0.627 0 0); /* #A0A0A0 - Secondary text */
+  --muted: oklch(0.11 0 0); /* #1C1C1C - Subtle surfaces (was 0.078) */
+  --muted-foreground: oklch(0.65 0 0); /* #A8A8A8 - Secondary text (was 0.627) */
 
-  /* Text hierarchy */
-  --text-tertiary: oklch(0.45 0 0); /* #737373 - Tertiary text */
-  --text-quaternary: oklch(0.32 0 0); /* #525252 - Very subtle */
+  /* Text hierarchy - improved contrast */
+  --text-tertiary: oklch(0.52 0 0); /* #858585 - Tertiary text (was 0.45) */
+  --text-quaternary: oklch(0.38 0 0); /* #616161 - Very subtle (was 0.32) */
 
   /* Accent - WHITE GLOW */
   --accent: oklch(1 0 0); /* #FFFFFF - Pure white for emphasis */
@@ -96,10 +96,10 @@
   --destructive-foreground: oklch(1 0 0);
 
   /* Borders - subtle layering */
-  --border: oklch(0.165 0 0); /* #2A2A2A - Standard borders */
-  --border-subtle: oklch(0.10 0 0); /* #1A1A1A - Barely visible */
-  --border-strong: oklch(0.25 0 0); /* #404040 - Prominent borders */
-  --input: oklch(0.039 0 0); /* #0A0A0A - Darker input bg */
+  --border: oklch(0.20 0 0); /* #333333 - Standard borders (was 0.165) */
+  --border-subtle: oklch(0.13 0 0); /* #212121 - Barely visible (was 0.10) */
+  --border-strong: oklch(0.28 0 0); /* #474747 - Prominent borders (was 0.25) */
+  --input: oklch(0.08 0 0); /* #141414 - Slightly lighter input bg (was 0.039) */
   --ring: oklch(1 0 0); /* #FFFFFF - White focus ring */
 }
 
@@ -159,6 +159,26 @@ body {
   100% { background-position: 200% 0; }
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* ── Background Effects ──────────────────────────────── */
 
 .bg-grid {
@@ -172,8 +192,8 @@ body {
 
 .bg-grid-glow {
   background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    radial-gradient(ellipse 800px 600px at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+    radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    radial-gradient(ellipse 800px 600px at 50% 0%, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
   background-size: 32px 32px, 100% 100%;
 }
 
@@ -200,17 +220,17 @@ body {
 /* ── Glow Effects ────────────────────────────────────── */
 
 .glow-subtle {
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
 }
 
 .glow-medium {
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.15),
-              0 0 60px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.18),
+              0 0 60px rgba(255, 255, 255, 0.10);
 }
 
 .glow-strong {
-  box-shadow: 0 0 40px rgba(255, 255, 255, 0.20),
-              0 0 80px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.25),
+              0 0 80px rgba(255, 255, 255, 0.15);
 }
 
 .glow-hover {
@@ -218,8 +238,8 @@ body {
 }
 
 .glow-hover:hover {
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.20),
-              0 0 60px rgba(255, 255, 255, 0.10);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.25),
+              0 0 60px rgba(255, 255, 255, 0.12);
 }
 
 .glow-pulse {
@@ -290,4 +310,16 @@ body {
 
 .animate-fade-in-up {
   animation: fadeInUp 600ms ease-out;
+}
+
+.animate-shake {
+  animation: shake 400ms ease-in-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 300ms ease-out;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
 }

@@ -4,24 +4,163 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField } from "@/components/ui/form-field";
+import { AuthLayout } from "@/components/auth/auth-layout";
+import { AuthCard } from "@/components/auth/auth-card";
+
+type FieldState = "default" | "success" | "error";
 
 export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  // Form values
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Field states
+  const [nameState, setNameState] = useState<FieldState>("default");
+  const [emailState, setEmailState] = useState<FieldState>("default");
+  const [passwordState, setPasswordState] = useState<FieldState>("default");
+  const [confirmPasswordState, setConfirmPasswordState] = useState<FieldState>("default");
+
+  // Error messages
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  // Validation functions
+  const validateName = (value: string) => {
+    if (!value) {
+      setNameState("default");
+      setNameError("");
+      return;
+    }
+
+    if (value.length < 2) {
+      setNameState("error");
+      setNameError("Name must be at least 2 characters");
+    } else {
+      setNameState("success");
+      setNameError("");
+    }
+  };
+
+  const validateEmail = (value: string) => {
+    if (!value) {
+      setEmailState("default");
+      setEmailError("");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setEmailState("error");
+      setEmailError("Please enter a valid email address");
+    } else {
+      setEmailState("success");
+      setEmailError("");
+    }
+  };
+
+  const validatePassword = (value: string) => {
+    if (!value) {
+      setPasswordState("default");
+      setPasswordError("");
+      return;
+    }
+
+    const hasMinLength = value.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(value);
+    const hasNumber = /[0-9]/.test(value);
+
+    if (!hasMinLength) {
+      setPasswordState("error");
+      setPasswordError("Password must be at least 8 characters");
+    } else if (!hasUpperCase) {
+      setPasswordState("error");
+      setPasswordError("Password must contain at least 1 uppercase letter");
+    } else if (!hasNumber) {
+      setPasswordState("error");
+      setPasswordError("Password must contain at least 1 number");
+    } else {
+      setPasswordState("success");
+      setPasswordError("");
+    }
+
+    // Also re-validate confirm password if it has a value
+    if (confirmPassword) {
+      validateConfirmPassword(confirmPassword, value);
+    }
+  };
+
+  const validateConfirmPassword = (value: string, passwordValue?: string) => {
+    const currentPassword = passwordValue !== undefined ? passwordValue : password;
+
+    if (!value) {
+      setConfirmPasswordState("default");
+      setConfirmPasswordError("");
+      return;
+    }
+
+    if (value !== currentPassword) {
+      setConfirmPasswordState("error");
+      setConfirmPasswordError("Passwords do not match");
+    } else {
+      setConfirmPasswordState("success");
+      setConfirmPasswordError("");
+    }
+  };
+
+  // Change handlers
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+    validateName(value);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    validateEmail(value);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    validatePassword(value);
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setConfirmPassword(value);
+    validateConfirmPassword(value);
+  };
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    // Final validation before submit
+    if (
+      nameState === "error" ||
+      emailState === "error" ||
+      passwordState === "error" ||
+      confirmPasswordState === "error" ||
+      !name ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
+      toast.error("Please fill in all fields correctly");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const res = await fetch("/api/auth/signup", {
@@ -47,66 +186,112 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="dark flex min-h-screen items-center justify-center px-4 gradient-radial-dark">
-      <Card className="w-full max-w-md card-hover">
-        <CardHeader className="text-center">
-          <Link href="/" className="text-xl font-bold tracking-tight mb-2 inline-block hover:text-accent transition-colors">
-            FreeForms
-          </Link>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>Start collecting form submissions for free</CardDescription>
-        </CardHeader>
-        <form onSubmit={onSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Your name"
-                required
-                autoComplete="name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="you@example.com"
-                required
-                autoComplete="email"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Min 8 characters"
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? "Creating account..." : "Create Account"}
+    <AuthLayout>
+      <AuthCard
+        title="Create your account"
+        description="Start collecting form submissions for free"
+        footer={
+          <p className="text-sm text-muted-foreground text-center w-full">
+            Already have an account?{" "}
+            <Link href="/login" className="text-foreground font-medium hover:underline transition-colors">
+              Sign in
+            </Link>
+          </p>
+        }
+      >
+        <form onSubmit={onSubmit} className="space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+          >
+            <FormField
+              label="Name"
+              name="name"
+              type="text"
+              placeholder="Your name"
+              required
+              autoComplete="name"
+              value={name}
+              onChange={handleNameChange}
+              state={nameState}
+              errorMessage={nameError}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+          >
+            <FormField
+              label="Email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={handleEmailChange}
+              state={emailState}
+              errorMessage={emailError}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+          >
+            <FormField
+              label="Password"
+              name="password"
+              type="password"
+              placeholder="Min 8 characters, 1 uppercase, 1 number"
+              required
+              autoComplete="new-password"
+              value={password}
+              onChange={handlePasswordChange}
+              state={passwordState}
+              errorMessage={passwordError}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.6 }}
+          >
+            <FormField
+              label="Confirm Password"
+              name="confirmPassword"
+              type="password"
+              placeholder="Re-enter your password"
+              required
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
+              state={confirmPasswordState}
+              errorMessage={confirmPasswordError}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.7 }}
+          >
+            <Button
+              type="submit"
+              className="w-full"
+              loading={loading}
+              loadingText="Creating account..."
+            >
+              Create Account
             </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Already have an account?{" "}
-              <Link href="/login" className="text-foreground font-medium hover:underline">
-                Sign in
-              </Link>
-            </p>
-          </CardFooter>
+          </motion.div>
         </form>
-      </Card>
-    </div>
+      </AuthCard>
+    </AuthLayout>
   );
 }
