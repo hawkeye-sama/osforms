@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -54,10 +54,12 @@ export default function FormDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState("");
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "submissions");
 
   // Settings dialog
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -275,7 +277,7 @@ export default function FormDetailPage({
       </div>
 
       {/* Main Tabs */}
-      <Tabs defaultValue="submissions" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-card border border-border">
           <TabsTrigger value="submissions" className="gap-2">
             <FileText className="h-4 w-4" />
