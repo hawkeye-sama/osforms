@@ -62,7 +62,8 @@ export const webhookConfigSchema = z.object({
 });
 
 export const googleSheetsConfigSchema = z.object({
-  credentials: z.string().min(1, "Service account JSON required"),
+  refreshToken: z.string().min(1, "Refresh token required"),
+  email: z.string().email("Valid email required"),
   spreadsheetId: z.string().min(1, "Spreadsheet ID required"),
   sheetName: z.string().default("Sheet1"),
 });

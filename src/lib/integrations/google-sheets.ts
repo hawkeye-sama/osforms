@@ -1,6 +1,7 @@
 import { google } from "googleapis";
 import type { IntegrationHandler, IntegrationContext, IntegrationResult } from "./base";
 import { googleSheetsConfigSchema, type GoogleSheetsConfig } from "@/lib/validations";
+import { getOAuth2Client } from "@/lib/google";
 
 export const googleSheetsIntegration: IntegrationHandler = {
   type: "GOOGLE_SHEETS",
@@ -8,25 +9,17 @@ export const googleSheetsIntegration: IntegrationHandler = {
   validate(config) {
     const parsed = googleSheetsConfigSchema.safeParse(config);
     if (!parsed.success) return { valid: false, error: parsed.error.issues[0].message };
-
-    try {
-      JSON.parse(parsed.data.credentials);
-    } catch {
-      return { valid: false, error: "Invalid service account JSON" };
-    }
     return { valid: true };
   },
 
   async execute(ctx: IntegrationContext, config: Record<string, unknown>): Promise<IntegrationResult> {
     const c = googleSheetsConfigSchema.parse(config) as GoogleSheetsConfig;
-    const creds = JSON.parse(c.credentials);
 
-    const auth = new google.auth.GoogleAuth({
-      credentials: creds,
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
+    // Use OAuth2 client with refresh token
+    const oauth2Client = getOAuth2Client();
+    oauth2Client.setCredentials({ refresh_token: c.refreshToken });
 
-    const sheets = google.sheets({ version: "v4", auth });
+    const sheets = google.sheets({ version: "v4", auth: oauth2Client });
     const range = `${c.sheetName}!A1`;
 
     // Get existing headers
