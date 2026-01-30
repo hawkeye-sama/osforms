@@ -337,30 +337,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
 
         {/* Apps Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Webhooks */}
-          <Card
-            className="group cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => openIntegrationDialog("WEBHOOK")}
-          >
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <Webhook className="h-5 w-5 text-blue-500" />
-                </div>
-                {getExistingIntegration("WEBHOOK") ? (
-                  <Badge className="text-xs bg-green-500/10 text-green-500 hover:bg-green-500/20">
-                    Connected
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-xs">Popular</Badge>
-                )}
-              </div>
-              <h4 className="font-semibold text-sm text-foreground mb-1">Webhooks</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Send form data to any URL via HTTP POST request
-              </p>
-            </CardContent>
-          </Card>
+
 
           {/* Resend Email */}
           <Card
@@ -369,8 +346,8 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
           >
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
-                <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <Mail className="h-5 w-5 text-green-500" />
+                <div className="h-10 w-10 rounded-lg bg-white/90 flex items-center justify-center">
+                  <Mail className="h-5 w-5 text-black" />
                 </div>
                 {getExistingIntegration("EMAIL") ? (
                   <Badge className="text-xs bg-green-500/10 text-green-500 hover:bg-green-500/20">
@@ -387,18 +364,42 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
             </CardContent>
           </Card>
 
-          {/* Google Sheets - Coming Soon */}
-          <Card className="opacity-60 cursor-not-allowed">
+          <Card
+            className="group cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => openIntegrationDialog("GOOGLE_SHEETS")}
+          >
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                   <FileSpreadsheet className="h-5 w-5 text-emerald-500" />
                 </div>
-                <Badge variant="secondary" className="text-xs">Soon</Badge>
+                {getExistingIntegration("GOOGLE_SHEETS") ? (
+                  <Badge className="text-xs bg-green-500/10 text-green-500 hover:bg-green-500/20">
+                    Connected
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs">Popular</Badge>
+                )}
               </div>
               <h4 className="font-semibold text-sm text-foreground mb-1">Google Sheets</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Append submissions to a spreadsheet automatically
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Webhooks */}
+          <Card className="opacity-60 cursor-not-allowed">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <Webhook className="h-5 w-5 text-gray-500" />
+                </div>
+                <Badge variant="secondary" className="text-xs">Soon</Badge>
+              </div>
+              <h4 className="font-semibold text-sm text-foreground mb-1">Webhook</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Send form data to any URL via HTTP POST request
               </p>
             </CardContent>
           </Card>
