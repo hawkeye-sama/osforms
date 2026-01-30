@@ -43,11 +43,6 @@ export const updateFormSchema = z.object({
 export const emailConfigSchema = z.object({
   provider: z.enum(['resend', 'sendgrid', 'smtp']),
   apiKey: z.string().optional(),
-  // SMTP fields
-  smtpHost: z.string().optional(),
-  smtpPort: z.number().optional(),
-  smtpUser: z.string().optional(),
-  smtpPass: z.string().optional(),
   // Common
   from: z.string().email('Valid from email required'),
   to: z.array(z.string().email()).min(1, 'At least one recipient required'),

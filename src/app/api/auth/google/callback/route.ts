@@ -9,10 +9,30 @@ import { createOrUpdateIntegration } from '@/lib/services/integration';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const formId = searchParams.get('state'); // This is the formId you passed in login
+  const stateParam = searchParams.get('state');
 
-  if (!code || !formId) {
+  if (!code || !stateParam) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+
+  // Decode state parameter
+  let formId: string;
+  let returnTo: string | undefined;
+
+  try {
+    const stateData = JSON.parse(stateParam);
+    console.log(stateData);
+    formId = stateData.formId;
+    returnTo = stateData.returnTo;
+  } catch {
+    // Fallback for old format (just formId as string)
+    formId = stateParam;
+  }
+
+  console.log('Decoded State - formId:', formId, 'returnTo:', returnTo);
+
+  if (!formId) {
+    return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
   }
 
   try {
@@ -79,10 +99,14 @@ export async function GET(request: Request) {
       enabled: true,
     });
 
+    console.log('hello', returnTo);
+
     // 6. Redirect back to your app's integration UI
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/forms/${formId}?tab=integrations`
-    );
+    const redirectUrl = returnTo
+      ? `${process.env.NEXT_PUBLIC_APP_URL}${returnTo}`
+      : `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/forms/${formId}?tab=integrations`;
+
+    return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error('Google Auth Error:', error);
     return NextResponse.json({ error: 'Auth failed' }, { status: 500 });

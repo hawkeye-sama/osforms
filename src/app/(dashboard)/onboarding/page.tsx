@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { CodeSnippets } from '@/components/forms/code-snippets';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -31,9 +32,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { encrypt } from '@/lib/encryption';
 
-const STEPS = ['About You', 'Connect Resend', 'Create & Test'];
+const STEPS = [
+  'About You',
+  'Create Form',
+  'Connect Resend',
+  'Google Sheets',
+  'Implementation',
+];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -50,38 +56,146 @@ export default function OnboardingPage() {
 
   // Step 2: Resend integration
   const [resendKey, setResendKey] = useState('');
+  const [resendFrom, setResendFrom] = useState('');
+  const [resendTo, setResendTo] = useState('');
   const [resendConnected, setResendConnected] = useState(false);
 
-  // Step 3: Create form + validate
+  // Step 3: Create form
   const [formName, setFormName] = useState('');
+  const [formDescription, setFormDescription] = useState('');
   const [formId, setFormId] = useState('');
   const [formSlug, setFormSlug] = useState('');
-  const [validating, setValidating] = useState(false);
-  const [validated, setValidated] = useState(false);
+  const [creating, setCreating] = useState(false);
 
-  // Test form submission (controlled, no page reload)
-  const [testName, setTestName] = useState('');
+  // Step 4: Google Sheets integration
+  const [sheetsConnected, setSheetsConnected] = useState(false);
+  const [sheetsIntegrationId, setSheetsIntegrationId] = useState('');
+
+  // Step 5: Implementation guide + test
   const [testEmail, setTestEmail] = useState('');
   const [testMessage, setTestMessage] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [testingForm, setTestingForm] = useState(false);
+  const [testSuccess, setTestSuccess] = useState(false);
 
+  // Fetch user email for Resend recipient pre-fill
   useEffect(() => {
-    // Check if user already has Resend key
-    async function checkResendStatus() {
+    async function fetchUserEmail() {
       try {
         const res = await fetch('/api/auth/me');
         if (res.ok) {
           const data = await res.json();
-          if (data.user.hasResendKey) {
-            setResendConnected(true);
+          if (data.user?.email && !resendTo) {
+            setResendTo(data.user.email);
           }
         }
       } catch {
         // ignore
       }
     }
-    checkResendStatus();
+    fetchUserEmail();
+  }, [resendTo]);
+
+  // Check for Google Sheets OAuth return
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlStep = params.get('step');
+    const oauthFormId = params.get('formId');
+
+    // If returning to step 3 (Google Sheets) after OAuth
+    if (urlStep === '3' && oauthFormId) {
+      setFormId(oauthFormId);
+      // Check if Google Sheets integration was created
+      async function checkSheetsConnection() {
+        try {
+          const res = await fetch(`/api/v1/integrations?formId=${oauthFormId}`);
+          if (res.ok) {
+            const data = await res.json();
+            const sheetsIntegration = data.integrations?.find(
+              (int: { type: string }) => int.type === 'GOOGLE_SHEETS'
+            );
+
+            if (sheetsIntegration) {
+              setSheetsConnected(true);
+              setSheetsIntegrationId(sheetsIntegration._id);
+              toast.success('Google Sheets connected successfully!');
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      checkSheetsConnection();
+      setStep(3); // Set to Google Sheets step
+    }
   }, []);
+
+  // Fetch user email for test form pre-fill
+  useEffect(() => {
+    if (step === 4) {
+      async function fetchUserEmail() {
+        try {
+          const res = await fetch('/api/auth/me');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.user?.email && !testEmail) {
+              setTestEmail(data.user.email);
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      async function fetchFormSlug() {
+        try {
+          const res = await fetch(`/api/v1/forms/${formId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setFormSlug(data.form.slug);
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      fetchUserEmail();
+      fetchFormSlug();
+    }
+  }, [formId, step, testEmail]);
+
+  async function handleTestForm() {
+    if (!testEmail.trim()) {
+      toast.error('Please enter an email');
+      return;
+    }
+
+    setTestingForm(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      const endpointUrl = `${baseUrl}/api/v1/f/${formSlug}`;
+
+      const res = await fetch(endpointUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: testEmail.trim(),
+          message: testMessage.trim() || 'Test submission from onboarding',
+        }),
+      });
+
+      if (res.ok) {
+        setTestSuccess(true);
+        toast.success('Test submission successful!');
+      } else {
+        toast.error('Test submission failed');
+      }
+    } catch {
+      toast.error('Something went wrong');
+    } finally {
+      setTestingForm(false);
+    }
+  }
 
   async function handleSaveProfile() {
     if (
@@ -126,25 +240,46 @@ export default function OnboardingPage() {
       return;
     }
 
+    if (!resendFrom.trim()) {
+      toast.error('Please enter your verified sending email');
+      return;
+    }
+
+    if (!resendTo.trim()) {
+      toast.error('Please enter recipient email');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Encrypt the key before storing
-      const encrypted = encrypt(resendKey.trim());
-
-      const res = await fetch('/api/auth/me', {
-        method: 'PATCH',
+      // Create EMAIL integration for the form
+      const res = await fetch('/api/v1/integrations', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resendApiKey: encrypted }),
+        body: JSON.stringify({
+          formId: formId,
+          type: 'EMAIL',
+          name: 'Email Notifications',
+          config: {
+            provider: 'resend',
+            apiKey: resendKey.trim(),
+            from: resendFrom.trim(),
+            to: [resendTo.trim()],
+            subject: 'New Form Submission',
+          },
+          enabled: true,
+        }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || 'Failed to save Resend key');
+        toast.error(data.error || 'Failed to connect Resend');
         return;
       }
 
       setResendConnected(true);
       toast.success('Resend connected!');
+      setStep(3); // Move to Google Sheets step
     } catch {
       toast.error('Something went wrong');
     } finally {
@@ -158,12 +293,19 @@ export default function OnboardingPage() {
       return;
     }
 
-    setLoading(true);
+    setCreating(true);
     try {
+      const body: { name: string; description?: string } = {
+        name: formName.trim(),
+      };
+      if (formDescription.trim()) {
+        body.description = formDescription.trim();
+      }
+
       const res = await fetch('/api/v1/forms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formName.trim() }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -175,80 +317,12 @@ export default function OnboardingPage() {
       const data = await res.json();
       setFormId(data.form._id);
       setFormSlug(data.form.slug);
-      toast.success('Form created!');
+      toast.success('Form created successfully!');
+      setStep(2); // Move to Resend step
     } catch {
       toast.error('Something went wrong');
     } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSubmitTestForm(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!testName.trim() || !testEmail.trim()) {
-      toast.error('Please fill in name and email');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append('name', testName.trim());
-      formData.append('email', testEmail.trim());
-      if (testMessage.trim()) {
-        formData.append('message', testMessage.trim());
-      }
-
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-      const endpointUrl = `${baseUrl}/api/v1/f/${formSlug}`;
-
-      const res = await fetch(endpointUrl, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (res.ok) {
-        toast.success('Test form submitted! Now click Validate.');
-        setTestName('');
-        setTestEmail('');
-        setTestMessage('');
-      } else {
-        toast.error('Form submission failed');
-      }
-    } catch {
-      toast.error('Something went wrong');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleValidate() {
-    if (!formId) {
-      return;
-    }
-
-    setValidating(true);
-    try {
-      const res = await fetch(`/api/v1/forms/${formId}/submissions?limit=1`);
-      if (!res.ok) {
-        toast.error('Failed to check submissions');
-        return;
-      }
-
-      const data = await res.json();
-      if (data.submissions && data.submissions.length > 0) {
-        setValidated(true);
-        toast.success("Integration validated! You're all set.");
-      } else {
-        toast.error(
-          'No submissions found yet. Submit your test form and try again.'
-        );
-      }
-    } catch {
-      toast.error('Something went wrong');
-    } finally {
-      setValidating(false);
+      setCreating(false);
     }
   }
 
@@ -264,7 +338,6 @@ export default function OnboardingPage() {
         toast.error('Failed to complete onboarding');
         return;
       }
-      toast.success('Welcome to OSForms!');
       router.push('/dashboard');
       router.refresh(); // Force refresh to update auth state
     } catch {
@@ -274,16 +347,11 @@ export default function OnboardingPage() {
     }
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (typeof window !== 'undefined' ? window.location.origin : '');
-  const endpointUrl = formSlug ? `${baseUrl}/api/v1/f/${formSlug}` : '';
-
   return (
-    <div className="dark gradient-radial-dark flex min-h-screen flex-col items-center justify-center px-4 py-12">
+    <div className="bg-background flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         {/* Logo */}
-        <h1 className="text-foreground mb-8 text-center text-2xl font-bold tracking-tight">
+        <h1 className="text-foreground mb-8 text-center text-3xl font-bold tracking-tight">
           OSForms
         </h1>
 
@@ -317,11 +385,13 @@ export default function OnboardingPage() {
 
         {/* Step 1: About You */}
         {step === 0 && (
-          <Card className="card-hover">
-            <CardHeader>
-              <CardTitle>Tell us about yourself</CardTitle>
-              <CardDescription>
-                Help us understand how you&apos;ll use OSForms
+          <Card variant="elevated" className="card-hover">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-foreground text-xl font-semibold">
+                Tell us about yourself
+              </CardTitle>
+              <CardDescription className="text-muted-foreground text-sm">
+                Help us understand how you&apos;ll use osforms
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -410,12 +480,81 @@ export default function OnboardingPage() {
           </Card>
         )}
 
-        {/* Step 2: Connect Resend */}
+        {/* Step 2: Create Form */}
         {step === 1 && (
-          <Card className="card-hover">
-            <CardHeader>
-              <CardTitle>Connect Resend</CardTitle>
-              <CardDescription>
+          <Card variant="elevated" className="card-hover">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-foreground text-xl font-semibold">
+                Create your first form
+              </CardTitle>
+              <CardDescription className="text-muted-foreground text-sm">
+                Give your form a name and we&apos;ll generate an endpoint for
+                you
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="formName" className="text-sm font-medium">
+                    Form Name *
+                  </Label>
+                  <Input
+                    id="formName"
+                    value={formName}
+                    onChange={(e) => {
+                      setFormName(e.target.value);
+                    }}
+                    placeholder="Contact Form"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="formDescription"
+                    className="text-sm font-medium"
+                  >
+                    Description (Optional)
+                  </Label>
+                  <Textarea
+                    id="formDescription"
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    placeholder="Form for collecting contact inquiries"
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleCreateForm}
+                  disabled={creating || !formName.trim()}
+                >
+                  {creating && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {creating ? 'Creating...' : 'Create Form'}
+                  {!creating && <ArrowRight className="ml-2 h-4 w-4" />}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 3: Connect Resend */}
+        {step === 2 && (
+          <Card variant="elevated" className="card-hover">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-foreground text-xl font-semibold">
+                Connect Resend
+              </CardTitle>
+              <CardDescription className="text-muted-foreground text-sm">
                 Add your Resend API key to send form submissions via email
               </CardDescription>
             </CardHeader>
@@ -436,33 +575,70 @@ export default function OnboardingPage() {
                 </div>
               ) : (
                 <>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">
-                        Resend API Key
-                      </Label>
-                      <Link
-                        href="https://resend.com/api-keys"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs"
-                      >
-                        Get API Key <ExternalLink className="h-3 w-3" />
-                      </Link>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">
+                          Resend API Key *
+                        </Label>
+                        <Link
+                          href="https://resend.com/api-keys"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs"
+                        >
+                          Get API Key <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </div>
+                      <Input
+                        value={resendKey}
+                        onChange={(e) => setResendKey(e.target.value)}
+                        placeholder="re_xxxxxxxxxxxxx"
+                        type="password"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        Your key will be encrypted and stored securely.
+                      </p>
                     </div>
-                    <p className="text-muted-foreground text-xs">
-                      Enter your Resend API key to enable email notifications.
-                      Your key will be encrypted and stored securely.
-                    </p>
-                    <Input
-                      value={resendKey}
-                      onChange={(e) => setResendKey(e.target.value)}
-                      placeholder="re_xxxxxxxxxxxxx"
-                      type="password"
-                    />
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        From Email (Verified in Resend) *
+                      </Label>
+                      <Input
+                        type="email"
+                        value={resendFrom}
+                        onChange={(e) => setResendFrom(e.target.value)}
+                        placeholder="noreply@yourdomain.com"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        Must be a verified domain in your Resend account.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Send To (Your Email) *
+                      </Label>
+                      <Input
+                        type="email"
+                        value={resendTo}
+                        onChange={(e) => setResendTo(e.target.value)}
+                        placeholder="your@email.com"
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        Where you want to receive form submissions.
+                      </p>
+                    </div>
+
                     <Button
                       onClick={handleConnectResend}
-                      disabled={loading || !resendKey.trim()}
+                      disabled={
+                        loading ||
+                        !resendKey.trim() ||
+                        !resendFrom.trim() ||
+                        !resendTo.trim()
+                      }
                       className="w-full"
                     >
                       {loading && (
@@ -482,11 +658,11 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(0)}>
+                <Button variant="outline" onClick={() => setStep(1)}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
-                <Button className="flex-1" onClick={() => setStep(2)}>
+                <Button className="flex-1" onClick={() => setStep(3)}>
                   {resendConnected ? 'Continue' : 'Skip for now'}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -495,182 +671,208 @@ export default function OnboardingPage() {
           </Card>
         )}
 
-        {/* Step 3: Create Form + Validate */}
-        {step === 2 && (
-          <Card className="card-hover">
-            <CardHeader>
-              <CardTitle>Create your first form</CardTitle>
-              <CardDescription>
-                Create a form, submit a test, and validate everything works
+        {/* Step 4: Google Sheets */}
+        {step === 3 && (
+          <Card variant="elevated" className="card-hover">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-foreground text-xl font-semibold">
+                Connect Google Sheets
+              </CardTitle>
+              <CardDescription className="text-muted-foreground text-sm">
+                Automatically save submissions to a Google Spreadsheet
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {!formId ? (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="formName">Form Name</Label>
-                    <Input
-                      id="formName"
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                      placeholder="e.g. Contact Form, Newsletter Signup"
-                      required
-                    />
-                  </div>
-                  {resendConnected && (
-                    <div className="bg-muted/50 flex items-center gap-2 rounded-lg border p-3">
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span className="text-muted-foreground text-sm">
-                        Resend connected — submissions will be sent to your
-                        email
-                      </span>
+              {sheetsConnected ? (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/20">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-500" />
+                    <div>
+                      <p className="font-medium text-green-900 dark:text-green-100">
+                        Google Sheets Connected
+                      </p>
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        Form submissions will be saved to your spreadsheet
+                      </p>
                     </div>
-                  )}
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setStep(1)}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back
-                    </Button>
-                    <Button
-                      className="flex-1"
-                      onClick={handleCreateForm}
-                      disabled={loading || !formName.trim()}
-                    >
-                      {loading && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      {loading ? 'Creating...' : 'Create Form'}
-                    </Button>
                   </div>
-                </>
+                </div>
               ) : (
-                <>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Check className="h-5 w-5 text-green-600" />
-                      <span className="font-medium">Form created!</span>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg border p-4">
-                      <Label className="text-muted-foreground text-xs">
-                        Your endpoint URL:
-                      </Label>
-                      <p className="mt-1 font-mono text-sm break-all">
-                        {endpointUrl}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">
-                      Test your form
-                    </Label>
-                    <div className="bg-card rounded-lg border p-4">
-                      <p className="text-muted-foreground mb-3 text-sm">
-                        Submit a test to validate everything works:
-                      </p>
-                      <form
-                        onSubmit={handleSubmitTestForm}
-                        className="space-y-3"
-                      >
-                        <Input
-                          type="text"
-                          value={testName}
-                          onChange={(e) => setTestName(e.target.value)}
-                          placeholder="Your name"
-                          required
-                        />
-                        <Input
-                          type="email"
-                          value={testEmail}
-                          onChange={(e) => setTestEmail(e.target.value)}
-                          placeholder="your@email.com"
-                          required
-                        />
-                        <Textarea
-                          value={testMessage}
-                          onChange={(e) => setTestMessage(e.target.value)}
-                          placeholder="Test message (optional)"
-                          rows={2}
-                        />
-                        <Button
-                          type="submit"
-                          variant="outline"
-                          className="w-full"
-                          size="sm"
-                          disabled={submitting}
-                        >
-                          {submitting ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Submitting...
-                            </>
-                          ) : (
-                            'Submit Test Form'
-                          )}
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">
-                      Validate integration
-                    </Label>
-                    <p className="text-muted-foreground text-xs">
-                      After submitting the test above, click the button below to
-                      verify we received your submission.
+                <div className="space-y-4">
+                  <div className="border-border bg-muted/30 space-y-3 rounded-lg border p-4 text-center">
+                    <p className="text-muted-foreground text-sm">
+                      Connect your Google account to automatically save form
+                      submissions to a spreadsheet.
                     </p>
                     <Button
-                      onClick={handleValidate}
-                      disabled={validating || validated}
-                      variant={validated ? 'default' : 'outline'}
-                      className="w-full"
+                      onClick={() => {
+                        const returnTo = encodeURIComponent(
+                          `/onboarding?step=3&formId=${formId}`
+                        );
+                        window.location.href = `/api/auth/google/login?formId=${formId}&returnTo=${returnTo}`;
+                      }}
+                      className="gap-2"
+                      disabled={!formId}
                     >
-                      {(() => {
-                        if (validating) {
-                          return (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Checking...
-                            </>
-                          );
-                        }
-                        if (validated) {
-                          return (
-                            <>
-                              <Check className="mr-2 h-4 w-4" />
-                              Validated!
-                            </>
-                          );
-                        }
-                        return 'Validate Integration';
-                      })()}
+                      <svg className="h-4 w-4" viewBox="0 0 24 24">
+                        <path
+                          fill="currentColor"
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        />
+                        <path
+                          fill="currentColor"
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        />
+                        <path
+                          fill="currentColor"
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                        />
+                        <path
+                          fill="currentColor"
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                        />
+                      </svg>
+                      Connect with Google
                     </Button>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
-                    <Button
-                      onClick={handleFinish}
-                      disabled={loading}
-                      className="flex-1"
-                    >
-                      {loading && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      {(() => {
-                        if (loading) {
-                          return 'Finishing...';
-                        }
-                        if (validated) {
-                          return 'Go to Dashboard';
-                        }
-                        return 'Skip & Go to Dashboard';
-                      })()}
-                      {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-                    </Button>
-                  </div>
-                </>
+                  <p className="text-muted-foreground text-center text-xs">
+                    A new spreadsheet will be created automatically when you
+                    connect.
+                  </p>
+                </div>
               )}
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setStep(2)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <Button className="flex-1" onClick={() => setStep(4)}>
+                  {sheetsConnected ? 'Continue' : 'Skip for now'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 5: Implementation Guide */}
+        {step === 4 && (
+          <Card variant="elevated" className="card-hover">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-foreground text-xl font-semibold">
+                Implementation Guide
+              </CardTitle>
+              <CardDescription className="text-muted-foreground text-sm">
+                Use these code examples to integrate your form
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Code Examples */}
+              <div className="space-y-3">
+                <h3 className="text-foreground text-sm font-medium">
+                  Integration Code
+                </h3>
+                <CodeSnippets
+                  endpointUrl={`${
+                    process.env.NEXT_PUBLIC_APP_URL ||
+                    (typeof window !== 'undefined'
+                      ? window.location.origin
+                      : '')
+                  }/api/v1/f/${formSlug}`}
+                />
+              </div>
+
+              {/* Test Form Section */}
+              <Card variant="elevated" className="border-border">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold">
+                    Test Your Form
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Send a test submission to verify everything works
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="testEmail" className="text-sm">
+                      Email
+                    </Label>
+                    <Input
+                      id="testEmail"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={testEmail}
+                      onChange={(e) => setTestEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="testMessage" className="text-sm">
+                      Message (Optional)
+                    </Label>
+                    <Textarea
+                      id="testMessage"
+                      placeholder="Test submission from onboarding"
+                      value={testMessage}
+                      onChange={(e) => setTestMessage(e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleTestForm}
+                    disabled={!testEmail.trim() || testingForm}
+                    className="w-full"
+                    variant={testSuccess ? 'default' : 'outline'}
+                  >
+                    {(() => {
+                      if (testingForm) {
+                        return (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        );
+                      }
+                      if (testSuccess) {
+                        return (
+                          <>
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Test Successful!
+                          </>
+                        );
+                      }
+                      return 'Send Test Submission';
+                    })()}
+                  </Button>
+
+                  {testSuccess && (
+                    <p className="flex items-center gap-2 text-sm text-green-600 dark:text-green-500">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Your form is working perfectly!
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Finish Button */}
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" onClick={() => setStep(3)}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <Button
+                  onClick={handleFinish}
+                  disabled={loading}
+                  className="flex-1"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {loading ? 'Finishing...' : 'Go to Dashboard'}
+                  {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

@@ -14,7 +14,8 @@
       "WebFetch(domain:formcarry.com)",
       "WebFetch(domain:resend.com)",
       "WebFetch(domain:jotform.com)",
-      "WebFetch(domain:basin.com)"
+      "WebFetch(domain:basin.com)",
+      "Bash(ls:*)"
     ]
   }
 }
