@@ -1,22 +1,23 @@
-import { getCurrentUser } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
-import Form from "@/lib/models/form";
-import Submission from "@/lib/models/submission";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+
+import { getCurrentUser } from '@/lib/auth';
+import { connectDB } from '@/lib/db';
+import Form from '@/lib/models/form';
+import Submission from '@/lib/models/submission';
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser(req);
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
-  const period = searchParams.get("period") || "30d";
+  const period = searchParams.get('period') || '30d';
 
   await connectDB();
 
   // Get user's forms
-  const forms = await Form.find({ userId: user._id }).select("_id");
+  const forms = await Form.find({ userId: user._id }).select('_id');
   const formIds = forms.map((f) => f._id);
 
   if (formIds.length === 0) {
@@ -25,7 +26,14 @@ export async function GET(req: NextRequest) {
   }
 
   // Calculate date range (use UTC consistently)
-  const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
+  let days: number;
+  if (period === '7d') {
+    days = 7;
+  } else if (period === '90d') {
+    days = 90;
+  } else {
+    days = 30;
+  }
   const startDate = new Date();
   startDate.setUTCDate(startDate.getUTCDate() - days);
   startDate.setUTCHours(0, 0, 0, 0);
@@ -41,7 +49,7 @@ export async function GET(req: NextRequest) {
     {
       $group: {
         _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
         },
         count: { $sum: 1 },
       },
@@ -60,7 +68,7 @@ export async function GET(req: NextRequest) {
   for (let i = 0; i <= days; i++) {
     const date = new Date(startDate);
     date.setUTCDate(startDate.getUTCDate() + i);
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = date.toISOString().split('T')[0];
     chartData.push({
       date: dateStr,
       submissions: submissionMap.get(dateStr) || 0,
@@ -71,7 +79,14 @@ export async function GET(req: NextRequest) {
 }
 
 function generateEmptyChartData(period: string) {
-  const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
+  let days: number;
+  if (period === '7d') {
+    days = 7;
+  } else if (period === '90d') {
+    days = 90;
+  } else {
+    days = 30;
+  }
   const startDate = new Date();
   startDate.setUTCDate(startDate.getUTCDate() - days);
   startDate.setUTCHours(0, 0, 0, 0);
@@ -80,7 +95,7 @@ function generateEmptyChartData(period: string) {
   for (let i = 0; i < days; i++) {
     const date = new Date(startDate);
     date.setUTCDate(startDate.getUTCDate() + i);
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = date.toISOString().split('T')[0];
     chartData.push({
       date: dateStr,
       submissions: 0,

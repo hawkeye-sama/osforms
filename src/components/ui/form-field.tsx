@@ -1,9 +1,11 @@
-import * as React from "react";
-import { Input, InputProps } from "./input";
-import { Label } from "./label";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
 
-export interface FormFieldProps extends Omit<InputProps, "id"> {
+import { cn } from '@/lib/utils';
+
+import { Input, InputProps } from './input';
+import { Label } from './label';
+
+export interface FormFieldProps extends Omit<InputProps, 'id'> {
   label: string;
   name: string;
   helperText?: string;
@@ -12,14 +14,38 @@ export interface FormFieldProps extends Omit<InputProps, "id"> {
 }
 
 const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
-  ({ label, name, helperText, required, containerClassName, state, errorMessage, className, ...props }, ref) => {
+  (
+    {
+      label,
+      name,
+      helperText,
+      required,
+      containerClassName,
+      state,
+      errorMessage,
+      className,
+      ...props
+    },
+    ref
+  ) => {
+    let ariaDescribedBy: string | undefined;
+
+    if (helperText) {
+      ariaDescribedBy = `${name}-helper`;
+    } else if (errorMessage) {
+      ariaDescribedBy = `${name}-error`;
+    }
+
     return (
-      <div className={cn("w-full space-y-2", containerClassName)}>
-        <Label htmlFor={name} className={cn(
-          "transition-colors duration-150",
-          state === "error" && "text-red-500",
-          state === "success" && "text-green-500"
-        )}>
+      <div className={cn('w-full space-y-2', containerClassName)}>
+        <Label
+          htmlFor={name}
+          className={cn(
+            'transition-colors duration-150',
+            state === 'error' && 'text-red-500',
+            state === 'success' && 'text-green-500'
+          )}
+        >
           {label}
           {required && <span className="ml-1 text-red-500">*</span>}
         </Label>
@@ -31,12 +57,12 @@ const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
           errorMessage={errorMessage}
           className={className}
           aria-required={required}
-          aria-invalid={state === "error"}
-          aria-describedby={helperText ? `${name}-helper` : errorMessage ? `${name}-error` : undefined}
+          aria-invalid={state === 'error'}
+          aria-describedby={ariaDescribedBy}
           {...props}
         />
-        {helperText && state !== "error" && (
-          <p id={`${name}-helper`} className="text-xs text-muted-foreground">
+        {helperText && state !== 'error' && (
+          <p id={`${name}-helper`} className="text-muted-foreground text-xs">
             {helperText}
           </p>
         )}
@@ -44,6 +70,6 @@ const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
     );
   }
 );
-FormField.displayName = "FormField";
+FormField.displayName = 'FormField';
 
 export { FormField };

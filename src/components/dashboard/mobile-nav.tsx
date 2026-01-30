@@ -1,16 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  FileText,
-  Settings,
-  X,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { FileText, LayoutDashboard, Settings, X } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface MobileNavProps {
   open: boolean;
@@ -19,19 +15,19 @@ interface MobileNavProps {
 
 const navItems = [
   {
-    href: "/dashboard",
+    href: '/dashboard',
     icon: LayoutDashboard,
-    label: "Dashboard",
+    label: 'Dashboard',
   },
   {
-    href: "/dashboard/forms",
+    href: '/dashboard/forms',
     icon: FileText,
-    label: "Forms",
+    label: 'Forms',
   },
   {
-    href: "/dashboard/settings",
+    href: '/dashboard/settings',
     icon: Settings,
-    label: "Account Settings",
+    label: 'Account Settings',
   },
 ];
 
@@ -46,37 +42,39 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
   // Lock body scroll when open
   useEffect(() => {
     if (open) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "";
+      document.body.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = '';
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm lg:hidden"
+        className="bg-background/80 fixed inset-0 z-50 backdrop-blur-sm lg:hidden"
         onClick={() => onOpenChange(false)}
       />
 
       {/* Drawer */}
       <div
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-[280px] bg-card border-r shadow-lg lg:hidden",
-          "animate-in slide-in-from-left duration-300"
+          'bg-card fixed top-0 left-0 z-50 h-full w-70 border-r shadow-lg lg:hidden',
+          'animate-in slide-in-from-left duration-300'
         )}
       >
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b px-4">
           <Link
             href="/dashboard"
-            className="text-xl font-bold tracking-tight text-foreground"
+            className="text-foreground text-xl font-bold tracking-tight"
             onClick={() => onOpenChange(false)}
           >
             FreeForms
@@ -97,7 +95,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
           {navItems.map((item) => {
             const isActive =
               pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href));
+              (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
             return (
               <Link
@@ -105,13 +103,13 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
                 href={item.href}
                 onClick={() => onOpenChange(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
+                  'flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors',
                   isActive
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                    ? 'bg-secondary text-foreground'
+                    : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
                 )}
               >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <item.icon className="h-5 w-5 shrink-0" />
                 <span>{item.label}</span>
               </Link>
             );
@@ -120,7 +118,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
 
         {/* Footer */}
         <div className="border-t p-4">
-          <p className="text-xs text-muted-foreground">FreeForms v1.0</p>
+          <p className="text-muted-foreground text-xs">FreeForms v1.0</p>
         </div>
       </div>
     </>

@@ -1,11 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // ── Auth ────────────────────────────────────────────────────
 
 export const signUpSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  email: z.string().email("Valid email required"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(1, 'Name is required').max(100),
+  email: z.string().email('Valid email required'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 export const signInSchema = z.object({
@@ -17,15 +17,15 @@ export const signInSchema = z.object({
 
 export const onboardingSchema = z.object({
   fullName: z.string().min(1).max(100),
-  website: z.string().max(200).optional().default(""),
-  company: z.string().max(100).optional().default(""),
-  role: z.enum(["developer", "agency", "startup", "other"]),
+  website: z.string().max(200).optional().default(''),
+  company: z.string().max(100).optional().default(''),
+  role: z.enum(['developer', 'agency', 'startup', 'other']),
 });
 
 // ── Forms ───────────────────────────────────────────────────
 
 export const createFormSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
+  name: z.string().min(1, 'Name is required').max(100),
 });
 
 export const updateFormSchema = z.object({
@@ -41,7 +41,7 @@ export const updateFormSchema = z.object({
 // ── Integrations ────────────────────────────────────────────
 
 export const emailConfigSchema = z.object({
-  provider: z.enum(["resend", "sendgrid", "smtp"]),
+  provider: z.enum(['resend', 'sendgrid', 'smtp']),
   apiKey: z.string().optional(),
   // SMTP fields
   smtpHost: z.string().optional(),
@@ -49,28 +49,28 @@ export const emailConfigSchema = z.object({
   smtpUser: z.string().optional(),
   smtpPass: z.string().optional(),
   // Common
-  from: z.string().email("Valid from email required"),
-  to: z.array(z.string().email()).min(1, "At least one recipient required"),
-  subject: z.string().default("New Form Submission"),
+  from: z.string().email('Valid from email required'),
+  to: z.array(z.string().email()).min(1, 'At least one recipient required'),
+  subject: z.string().default('New Form Submission'),
 });
 
 export const webhookConfigSchema = z.object({
-  url: z.string().url("Valid webhook URL required"),
-  method: z.enum(["POST", "PUT", "PATCH"]).default("POST"),
+  url: z.string().url('Valid webhook URL required'),
+  method: z.enum(['POST', 'PUT', 'PATCH']).default('POST'),
   headers: z.record(z.string(), z.string()).default({}),
   secret: z.string().optional(),
 });
 
 export const googleSheetsConfigSchema = z.object({
-  refreshToken: z.string().min(1, "Refresh token required"),
-  email: z.string().email("Valid email required"),
-  spreadsheetId: z.string().min(1, "Spreadsheet ID required"),
-  sheetName: z.string().default("Sheet1"),
+  refreshToken: z.string().min(1, 'Refresh token required'),
+  email: z.string().email('Valid email required'),
+  spreadsheetId: z.string().min(1, 'Spreadsheet ID required'),
+  sheetName: z.string().default('Sheet1'),
 });
 
 export const createIntegrationSchema = z.object({
   formId: z.string().min(1),
-  type: z.enum(["EMAIL", "WEBHOOK", "GOOGLE_SHEETS"]),
+  type: z.enum(['EMAIL', 'WEBHOOK', 'GOOGLE_SHEETS']),
   name: z.string().min(1).max(100),
   config: z.record(z.string(), z.unknown()),
   enabled: z.boolean().default(true),

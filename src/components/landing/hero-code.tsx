@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { motion } from "motion/react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const CODE = `<form action="https://freeforms.com/api/v1/f/abc123" method="POST">
   <input type="text" name="name" placeholder="Name" required />
@@ -13,7 +13,7 @@ const CODE = `<form action="https://freeforms.com/api/v1/f/abc123" method="POST"
 </form>`;
 
 export function HeroCode() {
-  const [displayed, setDisplayed] = useState("");
+  const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
 
   useEffect(() => {
@@ -37,15 +37,15 @@ export function HeroCode() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4 }}
-      className="w-full max-w-2xl mx-auto"
+      className="mx-auto w-full max-w-2xl"
     >
-      <div className="rounded-xl code-block-dark overflow-hidden shadow-2xl shadow-black/20">
+      <div className="code-block-dark overflow-hidden rounded-xl shadow-2xl shadow-black/20">
         {/* Window chrome */}
-        <div className="flex items-center gap-2 border-b border-border/50 px-4 py-3">
+        <div className="border-border/50 flex items-center gap-2 border-b px-4 py-3">
           <div className="h-3 w-3 rounded-full bg-white/10" />
           <div className="h-3 w-3 rounded-full bg-white/10" />
           <div className="h-3 w-3 rounded-full bg-white/10" />
-          <span className="ml-2 text-xs text-muted-foreground font-mono">
+          <span className="text-muted-foreground ml-2 font-mono text-xs">
             index.html
           </span>
         </div>
@@ -56,20 +56,20 @@ export function HeroCode() {
             style={vscDarkPlus}
             customStyle={{
               margin: 0,
-              padding: "1.25rem",
-              background: "transparent",
-              fontSize: "0.875rem",
+              padding: '1.25rem',
+              background: 'transparent',
+              fontSize: '0.875rem',
             }}
             codeTagProps={{
               style: {
-                fontFamily: "var(--font-mono), monospace",
+                fontFamily: 'var(--font-mono), monospace',
               },
             }}
           >
             {displayed}
           </SyntaxHighlighter>
           {!done && (
-            <span className="typing-cursor absolute bottom-5 inline-block w-0.5 h-3.5 bg-foreground ml-px" />
+            <span className="typing-cursor bg-foreground absolute bottom-5 ml-px inline-block h-3.5 w-0.5" />
           )}
         </div>
       </div>

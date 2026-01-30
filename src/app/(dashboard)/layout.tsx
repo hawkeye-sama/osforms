@@ -1,10 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { Sidebar } from "@/components/dashboard/sidebar";
-import { Navbar } from "@/components/dashboard/navbar";
-import { MobileNav } from "@/components/dashboard/mobile-nav";
+import { usePathname, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+
+import { MobileNav } from '@/components/dashboard/mobile-nav';
+import { Navbar } from '@/components/dashboard/navbar';
+import { Sidebar } from '@/components/dashboard/sidebar';
 
 interface User {
   _id: string;
@@ -27,20 +28,20 @@ export default function DashboardLayout({
   useEffect(() => {
     async function checkAuth() {
       try {
-        const res = await fetch("/api/auth/me");
+        const res = await fetch('/api/auth/me');
         if (!res.ok) {
-          router.push("/login");
+          router.push('/login');
           return;
         }
         const data = await res.json();
         setUser(data.user);
 
         // Redirect to onboarding if not complete (unless already there)
-        if (!data.user.onboardingComplete && pathname !== "/onboarding") {
-          router.push("/onboarding");
+        if (!data.user.onboardingComplete && pathname !== '/onboarding') {
+          router.push('/onboarding');
         }
       } catch {
-        router.push("/login");
+        router.push('/login');
       } finally {
         setLoading(false);
       }
@@ -54,26 +55,28 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="dark flex min-h-screen items-center justify-center bg-background">
+      <div className="dark bg-background flex min-h-screen items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
       </div>
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   // Onboarding page gets a clean layout (no nav)
-  if (pathname === "/onboarding") {
+  if (pathname === '/onboarding') {
     return <div className="dark">{children}</div>;
   }
 
   return (
-    <div className="dark min-h-screen bg-background">
+    <div className="dark bg-background min-h-screen">
       {/* Sidebar - hidden on mobile */}
       <Sidebar className="hidden lg:flex" />
 
       {/* Main content area - offset for sidebar on desktop */}
-      <div className="lg:ml-[240px]">
+      <div className="lg:ml-60">
         {/* Top navbar */}
         <Navbar user={user} onMobileMenuToggle={handleMobileMenuToggle} />
 

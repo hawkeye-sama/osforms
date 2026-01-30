@@ -1,11 +1,5 @@
-"use client";
+'use client';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   CartesianGrid,
   Line,
@@ -14,7 +8,9 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
+} from 'recharts';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ChartDataPoint {
   date: string;
@@ -28,33 +24,36 @@ interface SubmissionsChartProps {
 
 export function SubmissionsChart({
   data,
-  title = "Form Submissions",
+  title = 'Form Submissions',
 }: SubmissionsChartProps) {
   // Format date for display (e.g., "Jan 15")
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   // Calculate total submissions
   const totalSubmissions = data.reduce((sum, d) => sum + d.submissions, 0);
 
-
   return (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold text-foreground">{title}</CardTitle>
+          <CardTitle className="text-foreground text-base font-semibold">
+            {title}
+          </CardTitle>
           <div className="text-right">
-            <p className="text-2xl font-bold text-foreground">{totalSubmissions}</p>
-            <p className="text-xs text-muted-foreground">Total submissions</p>
+            <p className="text-foreground text-2xl font-bold">
+              {totalSubmissions}
+            </p>
+            <p className="text-muted-foreground text-xs">Total submissions</p>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] w-full">
+        <div className="h-75 w-full">
           {data.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
+            <div className="text-muted-foreground flex h-full items-center justify-center">
               No submission data yet
             </div>
           ) : (
@@ -90,11 +89,13 @@ export function SubmissionsChart({
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-md">
-                          <p className="text-sm font-medium text-foreground">
-                            {label && typeof label === "string" ? formatDate(label) : ""}
+                        <div className="border-border bg-card rounded-lg border px-3 py-2 shadow-md">
+                          <p className="text-foreground text-sm font-medium">
+                            {label && typeof label === 'string'
+                              ? formatDate(label)
+                              : ''}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             {payload[0].value} submissions
                           </p>
                         </div>
@@ -111,8 +112,8 @@ export function SubmissionsChart({
                   dot={false}
                   activeDot={{
                     r: 5,
-                    fill: "#FAFAFA",
-                    stroke: "#0A0A0A",
+                    fill: '#FAFAFA',
+                    stroke: '#0A0A0A',
                     strokeWidth: 2,
                   }}
                 />

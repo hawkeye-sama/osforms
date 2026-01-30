@@ -1,12 +1,7 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface PlanInfoCardProps {
   plan: {
@@ -32,13 +27,13 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
 
   const isNearLimit = submissionPercentage >= 80;
 
-  console.log(plan)
-
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold text-foreground">Your Plan</CardTitle>
+          <CardTitle className="text-foreground text-base font-semibold">
+            Your Plan
+          </CardTitle>
           <Badge variant="outline" className="font-medium">
             {plan.name}
           </Badge>
@@ -49,21 +44,21 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
         <div>
           <div className="mb-1.5 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Submissions</span>
-            <span className="font-medium text-foreground">
-              {plan.submissionsUsed?.toLocaleString()} /{" "}
+            <span className="text-foreground font-medium">
+              {plan.submissionsUsed?.toLocaleString()} /{' '}
               {SUBMISSION_LIMIT.toLocaleString()}
             </span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-secondary">
+          <div className="bg-secondary h-2 overflow-hidden rounded-full">
             <div
               className={`h-full transition-all ${
-                isNearLimit ? "bg-destructive" : "bg-primary"
+                isNearLimit ? 'bg-destructive' : 'bg-primary'
               }`}
               style={{ width: `${submissionPercentage}%` }}
             />
           </div>
           {isNearLimit && (
-            <p className="mt-1 text-xs text-destructive">
+            <p className="text-destructive mt-1 text-xs">
               Approaching monthly limit
             </p>
           )}
@@ -73,20 +68,20 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
         <div>
           <div className="mb-1.5 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Forms</span>
-            <span className="font-medium text-foreground">
+            <span className="text-foreground font-medium">
               {plan.formsUsed} / {plan.formsLimit}
             </span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-secondary">
+          <div className="bg-secondary h-2 overflow-hidden rounded-full">
             <div
-              className="h-full bg-primary transition-all"
+              className="bg-primary h-full transition-all"
               style={{ width: `${formsPercentage}%` }}
             />
           </div>
         </div>
 
         {/* Free plan info */}
-        <p className="text-xs text-muted-foreground text-center pt-2">
+        <p className="text-muted-foreground pt-2 text-center text-xs">
           FreeForms is free with 100 submissions/month
         </p>
       </CardContent>

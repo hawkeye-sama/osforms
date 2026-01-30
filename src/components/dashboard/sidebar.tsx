@@ -1,13 +1,10 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  FileText,
-  Settings,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { FileText, LayoutDashboard, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+import { cn } from '@/lib/utils';
 
 interface SidebarProps {
   className?: string;
@@ -15,19 +12,19 @@ interface SidebarProps {
 
 const navItems = [
   {
-    href: "/dashboard",
+    href: '/dashboard',
     icon: LayoutDashboard,
-    label: "Dashboard",
+    label: 'Dashboard',
   },
   {
-    href: "/dashboard/forms",
+    href: '/dashboard/forms',
     icon: FileText,
-    label: "Forms",
+    label: 'Forms',
   },
   {
-    href: "/dashboard/settings",
+    href: '/dashboard/settings',
     icon: Settings,
-    label: "Account Settings",
+    label: 'Account Settings',
   },
 ];
 
@@ -37,13 +34,16 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen w-[240px] border-r bg-card flex flex-col",
+        'bg-card fixed top-0 left-0 z-40 flex h-screen w-60 flex-col border-r',
         className
       )}
     >
       {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
-        <Link href="/dashboard" className="text-xl font-bold tracking-tight text-foreground">
+        <Link
+          href="/dashboard"
+          className="text-foreground text-xl font-bold tracking-tight"
+        >
           FreeForms
         </Link>
       </div>
@@ -53,20 +53,20 @@ export function Sidebar({ className }: SidebarProps) {
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                  ? 'bg-secondary text-foreground'
+                  : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
               )}
             >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
+              <item.icon className="h-5 w-5 shrink-0" />
               <span>{item.label}</span>
             </Link>
           );
@@ -75,9 +75,7 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Footer */}
       <div className="border-t p-4">
-        <p className="text-xs text-muted-foreground">
-          FreeForms v1.0
-        </p>
+        <p className="text-muted-foreground text-xs">FreeForms v1.0</p>
       </div>
     </aside>
   );

@@ -8,31 +8,26 @@ Based on best practices from Resend, Linear, Vercel, and Stripe. Dark foundation
 
 ```css
 /* Background Layers (darkest to lightest) - Adjusted for better usability */
---bg-base: #0A0A0A              /* Main background, near-black */
---bg-subtle: #1C1C1C            /* Slightly elevated surfaces (was #141414) */
---bg-element: #212121           /* Cards, panels, elevated elements (was #1A1A1A) */
---bg-hover: #292929             /* Hover states on interactive elements (was #242424) */
---bg-active: #333333            /* Active/pressed states (was #2E2E2E) */
-
-/* Borders (subtle to prominent) - Adjusted for better visibility */
---border-subtle: #212121        /* Barely visible dividers (was #1A1A1A) */
---border-default: #333333       /* Standard borders (was #2A2A2A) */
---border-strong: #474747        /* Prominent borders, focused states (was #404040) */
-
-/* Text (lightest to darkest) - Improved contrast */
---text-primary: #FAFAFA         /* Primary text, headings */
---text-secondary: #A8A8A8       /* Secondary text, descriptions (was #A0A0A0) */
---text-tertiary: #858585        /* Placeholder, disabled text (was #737373) */
---text-quaternary: #616161      /* Very subtle text, hints (was #525252) */
-
-/* Accent (White Glow) - Increased visibility */
---accent: #FFFFFF               /* Pure white for emphasis */
---accent-glow: rgba(255, 255, 255, 0.15)  /* Subtle glow (was 0.12) */
---accent-glow-strong: rgba(255, 255, 255, 0.25)  /* Strong glow on hover (was 0.20) */
-
-/* Inverted (for CTAs) */
---bg-inverted: #FAFAFA          /* White/light buttons */
---text-inverted: #0A0A0A        /* Text on white buttons */
+--bg-base: #0a0a0a /* Main background, near-black */ --bg-subtle: #1c1c1c
+  /* Slightly elevated surfaces (was #141414) */ --bg-element: #212121
+  /* Cards, panels, elevated elements (was #1A1A1A) */ --bg-hover: #292929
+  /* Hover states on interactive elements (was #242424) */ --bg-active: #333333
+  /* Active/pressed states (was #2E2E2E) */
+  /* Borders (subtle to prominent) - Adjusted for better visibility */
+  --border-subtle: #212121 /* Barely visible dividers (was #1A1A1A) */
+  --border-default: #333333 /* Standard borders (was #2A2A2A) */
+  --border-strong: #474747 /* Prominent borders, focused states (was #404040) */
+  /* Text (lightest to darkest) - Improved contrast */ --text-primary: #fafafa
+  /* Primary text, headings */ --text-secondary: #a8a8a8
+  /* Secondary text, descriptions (was #A0A0A0) */ --text-tertiary: #858585
+  /* Placeholder, disabled text (was #737373) */ --text-quaternary: #616161
+  /* Very subtle text, hints (was #525252) */
+  /* Accent (White Glow) - Increased visibility */ --accent: #ffffff
+  /* Pure white for emphasis */ --accent-glow: rgba(255, 255, 255, 0.15)
+  /* Subtle glow (was 0.12) */ --accent-glow-strong: rgba(255, 255, 255, 0.25)
+  /* Strong glow on hover (was 0.20) */ /* Inverted (for CTAs) */
+  --bg-inverted: #fafafa /* White/light buttons */ --text-inverted: #0a0a0a
+  /* Text on white buttons */;
 ```
 
 ### Design Principles
@@ -237,11 +232,23 @@ line-height: 1.6
 color: var(--text-primary)
 
 /* Syntax Highlighting: Grayscale Only */
-.keyword    { color: #FAFAFA; font-weight: 600 }
-.string     { color: #B3B3B3 }
-.comment    { color: #737373; font-style: italic }
-.function   { color: #FAFAFA }
-.variable   { color: #D4D4D4 }
+.keyword {
+  color: #fafafa;
+  font-weight: 600;
+}
+.string {
+  color: #b3b3b3;
+}
+.comment {
+  color: #737373;
+  font-style: italic;
+}
+.function {
+  color: #fafafa;
+}
+.variable {
+  color: #d4d4d4;
+}
 ```
 
 ### Tables
@@ -302,8 +309,14 @@ tr:last-child td {
 
 ```css
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 animation: fadeIn 200ms ease-out;
 ```
@@ -312,8 +325,14 @@ animation: fadeIn 200ms ease-out;
 
 ```css
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 animation: scaleIn 200ms ease-out;
 ```
@@ -322,8 +341,13 @@ animation: scaleIn 200ms ease-out;
 
 ```css
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 ```
@@ -491,7 +515,7 @@ xl:  1280px  /* Desktops */
 ```css
 @font-face {
   font-family: 'Inter';
-  font-display: swap;  /* Show fallback immediately */
+  font-display: swap; /* Show fallback immediately */
   /* ... */
 }
 ```

@@ -1,8 +1,16 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
+import * as React from 'react';
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 interface AuthCardProps {
   title: string;
@@ -11,7 +19,12 @@ interface AuthCardProps {
   children: React.ReactNode;
 }
 
-export function AuthCard({ title, description, footer, children }: AuthCardProps) {
+export function AuthCard({
+  title,
+  description,
+  footer,
+  children,
+}: AuthCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -20,11 +33,17 @@ export function AuthCard({ title, description, footer, children }: AuthCardProps
     >
       <Card variant="elevated" className="w-full">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight">{title}</CardTitle>
-          <CardDescription className="text-muted-foreground">{description}</CardDescription>
+          <CardTitle className="text-2xl font-bold tracking-tight">
+            {title}
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            {description}
+          </CardDescription>
         </CardHeader>
         <CardContent>{children}</CardContent>
-        {footer && <CardFooter className="flex flex-col space-y-4">{footer}</CardFooter>}
+        {footer && (
+          <CardFooter className="flex flex-col space-y-4">{footer}</CardFooter>
+        )}
       </Card>
     </motion.div>
   );

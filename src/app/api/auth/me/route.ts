@@ -1,13 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
-import User from "@/lib/models/user";
+import { NextRequest, NextResponse } from 'next/server';
+
+import { getCurrentUser } from '@/lib/auth';
+import { connectDB } from '@/lib/db';
+import User from '@/lib/models/user';
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser(req);
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   return NextResponse.json({
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const currentUser = await getCurrentUser(req);
   if (!currentUser) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
@@ -37,12 +38,12 @@ export async function PATCH(req: NextRequest) {
     await connectDB();
 
     const allowedFields = [
-      "fullName",
-      "website",
-      "company",
-      "role",
-      "onboardingComplete",
-      "resendApiKey", // Encrypted Resend API key
+      'fullName',
+      'website',
+      'company',
+      'role',
+      'onboardingComplete',
+      'resendApiKey', // Encrypted Resend API key
     ] as const;
 
     const update: Record<string, unknown> = {};
@@ -54,10 +55,10 @@ export async function PATCH(req: NextRequest) {
 
     const user = await User.findByIdAndUpdate(currentUser._id, update, {
       new: true,
-    }).select("-password");
+    }).select('-password');
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -75,7 +76,7 @@ export async function PATCH(req: NextRequest) {
     });
   } catch {
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

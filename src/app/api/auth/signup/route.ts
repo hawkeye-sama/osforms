@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { hashPassword, signToken, setAuthCookie } from "@/lib/auth";
-import User from "@/lib/models/user";
-import { signUpSchema } from "@/lib/validations";
+import { NextRequest, NextResponse } from 'next/server';
+
+import { hashPassword, setAuthCookie, signToken } from '@/lib/auth';
+import { connectDB } from '@/lib/db';
+import User from '@/lib/models/user';
+import { signUpSchema } from '@/lib/validations';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: parsed.error.flatten() },
+        { error: 'Validation failed', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     const existing = await User.findOne({ email });
     if (existing) {
       return NextResponse.json(
-        { error: "An account with this email already exists" },
+        { error: 'An account with this email already exists' },
         { status: 409 }
       );
     }
@@ -52,7 +53,10 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Signup error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error('Signup error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

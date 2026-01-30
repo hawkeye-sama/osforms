@@ -1,43 +1,44 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { motion } from "motion/react";
 import {
-  Github,
-  Mail,
-  Globe,
-  Webhook,
-  Unlock,
-  Plug,
-  Code2,
   ArrowRight,
+  Code2,
+  Github,
+  Globe,
+  Mail,
+  Plug,
   Sparkles,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { CodeTabs } from "@/components/landing/code-tabs";
-import { ScrollReveal } from "@/components/landing/scroll-reveal";
+  Unlock,
+  Webhook,
+} from 'lucide-react';
+import { motion } from 'motion/react';
+import Link from 'next/link';
+
+import { CodeTabs } from '@/components/landing/code-tabs';
+import { ScrollReveal } from '@/components/landing/scroll-reveal';
+import { Button } from '@/components/ui/button';
 
 export default function LandingPage() {
   return (
-    <div className="dark bg-background text-foreground min-h-screen relative overflow-hidden">
+    <div className="dark bg-background text-foreground relative min-h-screen overflow-hidden">
       {/* Background Grid */}
-      <div className="fixed inset-0 bg-grid-glow pointer-events-none" />
+      <div className="bg-grid-glow pointer-events-none fixed inset-0" />
 
       {/* ─── 1. Sticky Navigation ────────────────────────── */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl"
+        className="border-border/40 bg-background/80 sticky top-0 z-50 w-full border-b backdrop-blur-xl"
       >
-        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-8">
           <Link
             href="/"
-            className="text-base font-semibold tracking-tight hover:opacity-80 transition-opacity"
+            className="text-base font-semibold tracking-tight transition-opacity hover:opacity-80"
           >
             FreeForms
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm">
+          <nav className="hidden items-center gap-6 text-sm md:flex">
             <Link
               href="/docs"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -76,16 +77,16 @@ export default function LandingPage() {
       </motion.header>
 
       {/* ─── 2. Hero Section ─────────────────────────────── */}
-      <section className="relative pt-32 pb-24 px-8">
+      <section className="relative px-8 pt-32 pb-24">
         {/* Animated gradient background */}
-        <div className="absolute inset-0 gradient-radial-glow pointer-events-none" />
+        <div className="gradient-radial-glow pointer-events-none absolute inset-0" />
 
-        <div className="relative mx-auto max-w-[900px] text-center">
+        <div className="relative mx-auto max-w-225 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card/50 backdrop-blur-sm text-sm text-muted-foreground mb-8"
+            className="border-border bg-card/50 text-muted-foreground mb-8 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm backdrop-blur-sm"
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span>Open Source • MIT Licensed</span>
@@ -95,7 +96,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] text-foreground"
+            className="text-foreground text-5xl leading-[1.1] font-bold tracking-tight sm:text-6xl lg:text-7xl"
           >
             Forms without
             <br />
@@ -105,7 +106,7 @@ export default function LandingPage() {
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ duration: 0.8, delay: 0.8 }}
-                className="absolute -bottom-2 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-foreground to-transparent origin-left"
+                className="via-foreground absolute right-0 -bottom-2 left-0 h-0.5 origin-left bg-linear-to-r from-transparent to-transparent"
               />
             </span>
           </motion.h1>
@@ -114,7 +115,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-[720px] mx-auto leading-relaxed"
+            className="text-muted-foreground mx-auto mt-6 max-w-180 text-lg leading-relaxed sm:text-xl"
           >
             The open-source form backend where you bring your own API keys.
             Store submissions, trigger integrations. No vendor lock-in.
@@ -124,9 +125,9 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+            className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
-            <Button size="lg" asChild className="h-12 px-8 glow-hover">
+            <Button size="lg" asChild className="glow-hover h-12 px-8">
               <Link href="/signup">
                 Get Started Free
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -136,7 +137,7 @@ export default function LandingPage() {
               variant="outline"
               size="lg"
               asChild
-              className="h-12 px-6 border-border-strong hover:bg-card"
+              className="border-border-strong hover:bg-card h-12 px-6"
             >
               <Link
                 href="https://github.com"
@@ -153,7 +154,7 @@ export default function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-6 text-sm text-muted-foreground"
+            className="text-muted-foreground mt-6 text-sm"
           >
             100 free submissions/month • No credit card
           </motion.div>
@@ -164,22 +165,22 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.7 }}
-          className="relative mx-auto max-w-[800px] mt-16 float-slow"
+          className="float-slow relative mx-auto mt-16 max-w-200"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background pointer-events-none z-10" />
+          <div className="to-background pointer-events-none absolute inset-0 z-10 bg-linear-to-b from-transparent via-transparent" />
           <CodeTabs />
         </motion.div>
       </section>
 
       {/* ─── 3. Stats Banner ─────────────────────────────── */}
       <ScrollReveal>
-        <section className="border-y border-border/40 py-12 px-8 bg-card/20 backdrop-blur-sm">
-          <div className="mx-auto max-w-[1000px] grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <section className="border-border/40 bg-card/20 border-y px-8 py-12 backdrop-blur-sm">
+          <div className="mx-auto grid max-w-250 grid-cols-2 gap-8 text-center md:grid-cols-4">
             {[
-              { value: "OSS", label: "Open Source" },
-              { value: "100/mo", label: "Free Tier" },
-              { value: "0%", label: "Vendor Lock-In" },
-              { value: "<5min", label: "Setup Time" },
+              { value: 'OSS', label: 'Open Source' },
+              { value: '100/mo', label: 'Free Tier' },
+              { value: '0%', label: 'Vendor Lock-In' },
+              { value: '<5min', label: 'Setup Time' },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -188,10 +189,10 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
               >
-                <div className="text-3xl sm:text-4xl font-bold font-mono tracking-tight">
+                <div className="font-mono text-3xl font-bold tracking-tight sm:text-4xl">
                   {stat.value}
                 </div>
-                <div className="mt-2 text-sm text-muted-foreground">
+                <div className="text-muted-foreground mt-2 text-sm">
                   {stat.label}
                 </div>
               </motion.div>
@@ -201,47 +202,47 @@ export default function LandingPage() {
       </ScrollReveal>
 
       {/* ─── 4. Features Grid ────────────────────────────── */}
-      <section className="py-32 px-8 relative">
-        <div className="mx-auto max-w-[1200px]">
-          <ScrollReveal className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Everything you need. Nothing you don't.
+      <section className="relative px-8 py-32">
+        <div className="mx-auto max-w-300">
+          <ScrollReveal className="mb-16 text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Everything you need. Nothing you don&apos;t.
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground max-w-[600px] mx-auto">
+            <p className="text-muted-foreground mx-auto mt-4 max-w-150 text-lg">
               Built for developers who value control, transparency, and speed.
             </p>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid gap-6 md:grid-cols-3">
             {[
               {
                 icon: Unlock,
-                title: "Zero Vendor Lock-In",
+                title: 'Zero Vendor Lock-In',
                 description:
-                  "Your API keys, your data, your control. Export anytime, self-host if you want. No proprietary formats.",
+                  'Your API keys, your data, your control. Export anytime, self-host if you want. No proprietary formats.',
               },
               {
                 icon: Plug,
-                title: "All Integrations Free",
+                title: 'All Integrations Free',
                 description:
-                  "Resend, Google Sheets, webhooks—all included. Competitors charge $15/mo for features you already pay for.",
+                  'Resend, Google Sheets, webhooks—all included. Competitors charge $15/mo for features you already pay for.',
               },
               {
                 icon: Code2,
-                title: "Developer-First API",
+                title: 'Developer-First API',
                 description:
-                  "REST API, webhook signatures, CORS control. Built by developers who read docs, not marketing decks.",
+                  'REST API, webhook signatures, CORS control. Built by developers who read docs, not marketing decks.',
               },
             ].map((feature, i) => (
               <ScrollReveal key={feature.title} delay={i * 0.1}>
-                <div className="group h-full rounded-xl border border-border-subtle bg-card/50 backdrop-blur-sm p-8 text-center card-hover">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-card/50 border border-border-subtle group-hover:border-border-strong transition-colors">
-                    <feature.icon className="h-6 w-6 text-foreground" />
+                <div className="group border-border-subtle bg-card/50 card-hover h-full rounded-xl border p-8 text-center backdrop-blur-sm">
+                  <div className="bg-card/50 border-border-subtle group-hover:border-border-strong mx-auto flex h-14 w-14 items-center justify-center rounded-lg border transition-colors">
+                    <feature.icon className="text-foreground h-6 w-6" />
                   </div>
-                  <h3 className="mt-6 text-xl font-semibold text-foreground">
+                  <h3 className="text-foreground mt-6 text-xl font-semibold">
                     {feature.title}
                   </h3>
-                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -252,45 +253,45 @@ export default function LandingPage() {
       </section>
 
       {/* ─── 5. Integrations Showcase ────────────────────── */}
-      <section className="py-24 px-8 text-center border-t border-border/40 bg-gradient-animated">
-        <div className="mx-auto max-w-[1200px]">
+      <section className="border-border/40 bg-gradient-animated border-t px-8 py-24 text-center">
+        <div className="mx-auto max-w-300">
           <ScrollReveal>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Integrations that don't cost extra
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Integrations that don&apos;t cost extra
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Connect your own API keys. Pay only your provider's costs.
+            <p className="text-muted-foreground mt-4 text-lg">
+              Connect your own API keys. Pay only your provider&apos;s costs.
             </p>
           </ScrollReveal>
 
-          <div className="mt-12 flex flex-col md:flex-row items-center justify-center gap-6">
+          <div className="mt-12 flex flex-col items-center justify-center gap-6 md:flex-row">
             {[
               {
                 icon: Mail,
-                name: "Resend",
-                description: "Email forwarding",
+                name: 'Resend',
+                description: 'Email forwarding',
               },
               {
                 icon: Globe,
-                name: "Google Sheets",
-                description: "Auto-append rows",
+                name: 'Google Sheets',
+                description: 'Auto-append rows',
               },
               {
                 icon: Webhook,
-                name: "Webhooks",
-                description: "HMAC-signed POST",
+                name: 'Webhooks',
+                description: 'HMAC-signed POST',
               },
             ].map((integration, i) => (
               <ScrollReveal key={integration.name} delay={i * 0.15}>
-                <div className="group flex flex-col items-center gap-4 p-8 bg-card/50 backdrop-blur-sm border border-border-subtle rounded-xl min-w-[240px] card-hover">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background/50 group-hover:bg-background transition-colors">
-                    <integration.icon className="h-6 w-6 text-foreground" />
+                <div className="group bg-card/50 border-border-subtle card-hover flex min-w-60 flex-col items-center gap-4 rounded-xl border p-8 backdrop-blur-sm">
+                  <div className="bg-background/50 group-hover:bg-background flex h-12 w-12 items-center justify-center rounded-lg transition-colors">
+                    <integration.icon className="text-foreground h-6 w-6" />
                   </div>
                   <div>
-                    <div className="text-lg font-semibold text-foreground">
+                    <div className="text-foreground text-lg font-semibold">
                       {integration.name}
                     </div>
-                    <div className="mt-1 text-sm text-muted-foreground">
+                    <div className="text-muted-foreground mt-1 text-sm">
                       {integration.description}
                     </div>
                   </div>
@@ -302,22 +303,22 @@ export default function LandingPage() {
       </section>
 
       {/* ─── 6. Pricing Callout ──────────────────────────── */}
-      <section className="py-32 px-8">
-        <div className="mx-auto max-w-[600px]">
+      <section className="px-8 py-32">
+        <div className="mx-auto max-w-150">
           <ScrollReveal>
-            <div className="relative rounded-2xl border border-border bg-card/30 backdrop-blur-sm p-12 text-center overflow-hidden glow-hover">
-              <div className="absolute inset-0 bg-gradient-radial-glow pointer-events-none" />
+            <div className="border-border bg-card/30 glow-hover relative overflow-hidden rounded-2xl border p-12 text-center backdrop-blur-sm">
+              <div className="bg-gradient-radial-glow pointer-events-none absolute inset-0" />
               <div className="relative">
-                <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">
+                <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
                   100 submissions
                 </h2>
-                <p className="mt-2 text-2xl font-medium text-muted-foreground">
+                <p className="text-muted-foreground mt-2 text-2xl font-medium">
                   Free forever
                 </p>
-                <p className="mt-6 text-base text-muted-foreground">
+                <p className="text-muted-foreground mt-6 text-base">
                   No credit card required. Upgrade to 2,000 for just $9/mo.
                 </p>
-                <Button size="lg" asChild className="mt-8 h-12 px-8 glow-hover">
+                <Button size="lg" asChild className="glow-hover mt-8 h-12 px-8">
                   <Link href="/signup">
                     Get Started Free
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -330,19 +331,19 @@ export default function LandingPage() {
       </section>
 
       {/* ─── 7. Final CTA ────────────────────────────────── */}
-      <section className="py-32 px-8 text-center border-t border-border/40 relative">
-        <div className="absolute inset-0 gradient-radial-glow pointer-events-none" />
-        <div className="relative mx-auto max-w-[720px]">
+      <section className="border-border/40 relative border-t px-8 py-32 text-center">
+        <div className="gradient-radial-glow pointer-events-none absolute inset-0" />
+        <div className="relative mx-auto max-w-180">
           <ScrollReveal>
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
               Ready to own your form backend?
             </h2>
-            <p className="mt-6 text-lg text-muted-foreground">
+            <p className="text-muted-foreground mt-6 text-lg">
               Join developers building forms without limits. Open source. No
               lock-in.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" asChild className="h-12 px-8 glow-hover">
+            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Button size="lg" asChild className="glow-hover h-12 px-8">
                 <Link href="/signup">
                   Get Started Free
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -352,7 +353,7 @@ export default function LandingPage() {
                 variant="ghost"
                 size="lg"
                 asChild
-                className="h-12 px-6 hover:bg-card"
+                className="hover:bg-card h-12 px-6"
               >
                 <Link href="/docs">View Documentation</Link>
               </Button>
@@ -362,11 +363,11 @@ export default function LandingPage() {
       </section>
 
       {/* ─── 8. Footer ───────────────────────────────────── */}
-      <footer className="border-t border-border/40 py-16 px-8 bg-card/20 backdrop-blur-sm">
-        <div className="mx-auto max-w-[1200px] grid grid-cols-1 sm:grid-cols-4 gap-12">
+      <footer className="border-border/40 bg-card/20 border-t px-8 py-16 backdrop-blur-sm">
+        <div className="mx-auto grid max-w-300 grid-cols-1 gap-12 sm:grid-cols-4">
           <div>
             <div className="text-base font-semibold">FreeForms</div>
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-3 text-sm">
               Built by developers,
               <br />
               for developers.
@@ -374,13 +375,13 @@ export default function LandingPage() {
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-foreground mb-3">
+            <div className="text-foreground mb-3 text-sm font-semibold">
               Product
             </div>
             <nav className="flex flex-col gap-2">
               <Link
                 href="/pricing"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               >
                 Pricing
               </Link>
@@ -388,13 +389,13 @@ export default function LandingPage() {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               >
                 GitHub
               </Link>
               <Link
                 href="/changelog"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               >
                 Changelog
               </Link>
@@ -402,25 +403,25 @@ export default function LandingPage() {
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-foreground mb-3">
+            <div className="text-foreground mb-3 text-sm font-semibold">
               Resources
             </div>
             <nav className="flex flex-col gap-2">
               <Link
                 href="/docs"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               >
                 Docs
               </Link>
               <Link
                 href="/blog"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               >
                 Blog
               </Link>
               <Link
                 href="/support"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               >
                 Support
               </Link>
@@ -428,19 +429,19 @@ export default function LandingPage() {
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-foreground mb-3">
+            <div className="text-foreground mb-3 text-sm font-semibold">
               Legal
             </div>
             <nav className="flex flex-col gap-2">
               <Link
                 href="/privacy"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               >
                 Privacy
               </Link>
               <Link
                 href="/terms"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
               >
                 Terms
               </Link>
@@ -448,8 +449,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-[1200px] mt-12 pt-8 border-t border-border/40 text-center">
-          <p className="text-xs text-muted-foreground">
+        <div className="border-border/40 mx-auto mt-12 max-w-300 border-t pt-8 text-center">
+          <p className="text-muted-foreground text-xs">
             © {new Date().getFullYear()} FreeForms. Open source, MIT License.
           </p>
         </div>

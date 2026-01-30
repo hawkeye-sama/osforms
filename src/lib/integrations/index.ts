@@ -1,14 +1,15 @@
-import type { IntegrationHandler, IntegrationContext } from "./base";
-import { emailIntegration } from "./email";
-import { webhookIntegration } from "./webhook";
-import { googleSheetsIntegration } from "./google-sheets";
-import { decryptJSON } from "@/lib/encryption";
-import IntegrationLog from "@/lib/models/integration-log";
-import type { IIntegration } from "@/lib/models/integration";
-import type { ISubmission } from "@/lib/models/submission";
-import type { IForm } from "@/lib/models/form";
+import { decryptJSON } from '@/lib/encryption';
+import type { IForm } from '@/lib/models/form';
+import type { IIntegration } from '@/lib/models/integration';
+import IntegrationLog from '@/lib/models/integration-log';
+import type { ISubmission } from '@/lib/models/submission';
 
-export type { IntegrationHandler, IntegrationContext };
+import type { IntegrationContext, IntegrationHandler } from './base';
+import { emailIntegration } from './email';
+import { googleSheetsIntegration } from './google-sheets';
+import { webhookIntegration } from './webhook';
+
+export type { IntegrationContext, IntegrationHandler };
 
 const handlers: Record<string, IntegrationHandler> = {
   EMAIL: emailIntegration,
@@ -34,7 +35,8 @@ export async function executeIntegrations(
     formId: form._id.toString(),
     formName: form.name,
     data: submission.data,
-    submittedAt: submission.createdAt?.toISOString() || new Date().toISOString(),
+    submittedAt:
+      submission.createdAt?.toISOString() || new Date().toISOString(),
   };
 
   const results = await Promise.allSettled(
@@ -57,12 +59,14 @@ export async function executeIntegrations(
       await IntegrationLog.create({
         integrationId: integration._id,
         submissionId: submission._id,
-        status: result.success ? "success" : "failed",
+        status: result.success ? 'success' : 'failed',
         message: result.message,
       });
 
       if (!result.success) {
-        console.error(`[Integrations] ${integration.type} failed: ${result.message}`);
+        console.error(
+          `[Integrations] ${integration.type} failed: ${result.message}`
+        );
       }
     })
   );

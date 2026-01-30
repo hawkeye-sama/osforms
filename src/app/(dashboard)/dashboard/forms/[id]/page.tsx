@@ -1,27 +1,33 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, use } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import {
   ArrowLeft,
-  Copy,
   Check,
-  Trash2,
-  Settings,
-  Loader2,
-  FileText,
-  Puzzle,
   ChevronRight,
-} from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  Copy,
+  FileText,
+  Loader2,
+  Puzzle,
+  Settings,
+  Trash2,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { use, useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+
+import { IntegrationsSection } from '@/components/dashboard/integrations-section';
+import { SubmissionsSection } from '@/components/dashboard/submissions-section';
+import { CodeSnippets } from '@/components/forms/code-snippets';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -29,11 +35,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CodeSnippets } from "@/components/forms/code-snippets";
-import { SubmissionsSection } from "@/components/dashboard/submissions-section";
-import { IntegrationsSection } from "@/components/dashboard/integrations-section";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Form {
   _id: string;
@@ -58,34 +65,36 @@ export default function FormDetailPage({
 
   const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState("");
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "submissions");
+  const [copied, setCopied] = useState('');
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') || 'submissions'
+  );
 
   // Settings dialog
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [formName, setFormName] = useState("");
+  const [formName, setFormName] = useState('');
   const [formActive, setFormActive] = useState(true);
-  const [formRedirect, setFormRedirect] = useState("");
-  const [formHoneypot, setFormHoneypot] = useState("");
-  const [formOrigins, setFormOrigins] = useState("");
+  const [formRedirect, setFormRedirect] = useState('');
+  const [formHoneypot, setFormHoneypot] = useState('');
+  const [formOrigins, setFormOrigins] = useState('');
   const [saving, setSaving] = useState(false);
 
   const fetchForm = useCallback(async () => {
     try {
       const res = await fetch(`/api/v1/forms/${id}`);
       if (!res.ok) {
-        router.push("/dashboard");
+        router.push('/dashboard');
         return;
       }
       const data = await res.json();
       setForm(data.form);
       setFormName(data.form.name);
       setFormActive(data.form.active);
-      setFormRedirect(data.form.redirectUrl || "");
-      setFormHoneypot(data.form.honeypotField || "");
-      setFormOrigins((data.form.allowedOrigins || []).join(", "));
+      setFormRedirect(data.form.redirectUrl || '');
+      setFormHoneypot(data.form.honeypotField || '');
+      setFormOrigins((data.form.allowedOrigins || []).join(', '));
     } catch {
-      router.push("/dashboard");
+      router.push('/dashboard');
     } finally {
       setLoading(false);
     }
@@ -98,21 +107,27 @@ export default function FormDetailPage({
   function copyText(text: string, label: string) {
     navigator.clipboard.writeText(text);
     setCopied(label);
-    setTimeout(() => setCopied(""), 2000);
+    setTimeout(() => setCopied(''), 2000);
   }
 
   async function handleDeleteForm() {
-    if (!confirm("Delete this form? This will also delete all submissions and integrations.")) return;
+    if (
+      !confirm(
+        'Delete this form? This will also delete all submissions and integrations.'
+      )
+    ) {
+      return;
+    }
     try {
-      const res = await fetch(`/api/v1/forms/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/v1/forms/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        toast.success("Form deleted");
-        router.push("/dashboard");
+        toast.success('Form deleted');
+        router.push('/dashboard');
       } else {
-        toast.error("Failed to delete form");
+        toast.error('Failed to delete form');
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     }
   }
 
@@ -121,28 +136,31 @@ export default function FormDetailPage({
     setSaving(true);
     try {
       const res = await fetch(`/api/v1/forms/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formName,
           active: formActive,
           redirectUrl: formRedirect || undefined,
           honeypotField: formHoneypot || undefined,
           allowedOrigins: formOrigins
-            ? formOrigins.split(",").map((s) => s.trim()).filter(Boolean)
+            ? formOrigins
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean)
             : [],
         }),
       });
       if (res.ok) {
-        toast.success("Settings saved");
+        toast.success('Settings saved');
         setSettingsOpen(false);
         fetchForm();
       } else {
         const data = await res.json();
-        toast.error(data.error || "Failed to save");
+        toast.error(data.error || 'Failed to save');
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setSaving(false);
     }
@@ -164,7 +182,7 @@ export default function FormDetailPage({
         {/* Tabs skeleton */}
         <div className="space-y-4">
           <Skeleton className="h-10 w-80" />
-          <Skeleton className="h-[400px] w-full" />
+          <Skeleton className="h-100 w-full" />
         </div>
       </div>
     );
@@ -172,7 +190,7 @@ export default function FormDetailPage({
 
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
-    (typeof window !== "undefined" ? window.location.origin : "");
+    (typeof window !== 'undefined' ? window.location.origin : '');
   const endpointUrl = `${baseUrl}/api/v1/f/${form.slug}`;
 
   return (
@@ -180,8 +198,11 @@ export default function FormDetailPage({
       {/* Breadcrumb & Header */}
       <div className="mb-6">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-          <Link href="/dashboard" className="hover:text-foreground transition-colors">
+        <div className="text-muted-foreground mb-4 flex items-center gap-2 text-sm">
+          <Link
+            href="/dashboard"
+            className="hover:text-foreground transition-colors"
+          >
             Forms
           </Link>
           <ChevronRight className="h-4 w-4" />
@@ -198,26 +219,36 @@ export default function FormDetailPage({
             </Button>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">{form.name}</h1>
-                <Badge variant={form.active ? "default" : "secondary"}>
-                  {form.active ? "Active" : "Paused"}
+                <h1 className="text-foreground text-2xl font-bold tracking-tight">
+                  {form.name}
+                </h1>
+                <Badge variant={form.active ? 'default' : 'secondary'}>
+                  {form.active ? 'Active' : 'Paused'}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-muted-foreground mt-0.5 text-sm">
                 {form.submissionCount} submissions
               </p>
             </div>
           </div>
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSettingsOpen(true)}
+            >
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Button>
             <DialogContent>
               <form onSubmit={handleSaveSettings}>
                 <DialogHeader>
-                  <DialogTitle className="text-foreground">Form Settings</DialogTitle>
-                  <DialogDescription>Configure your form endpoint</DialogDescription>
+                  <DialogTitle className="text-foreground">
+                    Form Settings
+                  </DialogTitle>
+                  <DialogDescription>
+                    Configure your form endpoint
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
@@ -230,10 +261,15 @@ export default function FormDetailPage({
                   </div>
                   <div className="flex items-center justify-between">
                     <Label className="text-foreground">Active</Label>
-                    <Switch checked={formActive} onCheckedChange={setFormActive} />
+                    <Switch
+                      checked={formActive}
+                      onCheckedChange={setFormActive}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-foreground">Redirect URL (after submission)</Label>
+                    <Label className="text-foreground">
+                      Redirect URL (after submission)
+                    </Label>
                     <Input
                       value={formRedirect}
                       onChange={(e) => setFormRedirect(e.target.value)}
@@ -242,7 +278,9 @@ export default function FormDetailPage({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-foreground">Honeypot Field Name</Label>
+                    <Label className="text-foreground">
+                      Honeypot Field Name
+                    </Label>
                     <Input
                       value={formHoneypot}
                       onChange={(e) => setFormHoneypot(e.target.value)}
@@ -251,7 +289,9 @@ export default function FormDetailPage({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-foreground">Allowed Origins (comma-separated)</Label>
+                    <Label className="text-foreground">
+                      Allowed Origins (comma-separated)
+                    </Label>
                     <Input
                       value={formOrigins}
                       onChange={(e) => setFormOrigins(e.target.value)}
@@ -261,13 +301,19 @@ export default function FormDetailPage({
                   </div>
                 </div>
                 <DialogFooter className="gap-2">
-                  <Button type="button" variant="destructive" onClick={handleDeleteForm}>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDeleteForm}
+                  >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete Form
                   </Button>
                   <Button type="submit" disabled={saving}>
-                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    {saving ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -277,8 +323,12 @@ export default function FormDetailPage({
       </div>
 
       {/* Main Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-card border border-border">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
+        <TabsList className="bg-card border-border border">
           <TabsTrigger value="submissions" className="gap-2">
             <FileText className="h-4 w-4" />
             Submissions
@@ -303,21 +353,27 @@ export default function FormDetailPage({
           {/* Endpoint URL */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base text-foreground">Form Endpoint</CardTitle>
+              <CardTitle className="text-foreground text-base">
+                Form Endpoint
+              </CardTitle>
               <CardDescription>
-                Place this URL in the action attribute of your form. Make sure your form uses
-                method=&quot;POST&quot;.
+                Place this URL in the action attribute of your form. Make sure
+                your form uses method=&quot;POST&quot;.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex gap-2">
-                <Input value={endpointUrl} readOnly className="font-mono text-sm bg-card" />
+                <Input
+                  value={endpointUrl}
+                  readOnly
+                  className="bg-card font-mono text-sm"
+                />
                 <Button
                   variant="outline"
-                  onClick={() => copyText(endpointUrl, "url")}
+                  onClick={() => copyText(endpointUrl, 'url')}
                   className="shrink-0"
                 >
-                  {copied === "url" ? (
+                  {copied === 'url' ? (
                     <>
                       <Check className="mr-2 h-4 w-4" /> Copied
                     </>
@@ -334,8 +390,12 @@ export default function FormDetailPage({
           {/* Code Snippets */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base text-foreground">Integrate with your usecase</CardTitle>
-              <CardDescription>Check out the code snippets below for more examples:</CardDescription>
+              <CardTitle className="text-foreground text-base">
+                Integrate with your usecase
+              </CardTitle>
+              <CardDescription>
+                Check out the code snippets below for more examples:
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <CodeSnippets endpointUrl={endpointUrl} />
