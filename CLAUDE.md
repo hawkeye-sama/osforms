@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Teams wanting privacy-first form handling (data goes to user's own services)
 
 ### Why This Exists
-Every competitor (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5-15+/month even though the user's own API keys power them. FreeForms flips that — 200 free submissions/month with ALL integrations included. See `.claude/competitor-analysis.md` for full competitive breakdown.
+Every competitor (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5-15+/month even though the user's own API keys power them. FreeForms flips that — 100 free submissions/month with ALL integrations included. See `.claude/competitor-analysis.md` for full competitive breakdown.
 
 ## Tech Stack
 

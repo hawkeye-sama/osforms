@@ -73,7 +73,7 @@ Completely rewritten landing page with:
 - **Code Tabs**: Interactive HTML/React code examples
 - **Features Grid**: 3 cards (Zero Lock-In, All Integrations, Developer-First)
 - **Integrations**: Resend, Google Sheets, Webhooks showcase
-- **Pricing**: Simple callout "200 Free Submissions/Month"
+- **Pricing**: Simple callout "100 Free Submissions/Month"
 - **CTA**: "Ready to Own Your Form Backend?"
 - **Footer**: 4-column layout with proper link structure
 
@@ -170,7 +170,7 @@ w:\Personal\free-form\
 
 ### Content
 - [ ] Headline: "The Form Backend That Respects Your Keys"
-- [ ] Subheadline: Mentions Resend, Google Sheets, webhooks, 200 free
+- [ ] Subheadline: Mentions Resend, Google Sheets, webhooks, 100 free
 - [ ] Features: Lock-In, Integrations, Developer-First
 - [ ] No marketing buzzwords
 - [ ] Technical but approachable tone

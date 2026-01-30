@@ -127,9 +127,7 @@ Form backend services handle form submissions without server-side code. Users po
 
 | Tier | Price | Submissions/mo | What You Get |
 |------|-------|----------------|--------------|
-| Free | $0 | 200 | All integrations (BYOK), unlimited forms, API access, permanent archive |
-| Pro | $5/mo | 5,000 | Everything free + file uploads, priority support, team members |
-| Business | $15/mo | 50,000 | Everything Pro + custom domains, SLA, advanced analytics |
+| Free | $0 | 100 | All integrations (BYOK), unlimited forms, API access, permanent archive |
 | Self-hosted | Free | Unlimited | Run your own instance, bring your own DB |
 
 **Why this works**: Our costs are minimal (MongoDB storage, compute for submission processing). Users handle their own email/Sheets/webhook costs through their own accounts.
