@@ -27,6 +27,7 @@ interface Form {
   slug: string;
   active: boolean;
   createdAt: string;
+  submissionCount: number;
 }
 
 export default function FormsPage() {
@@ -236,6 +237,22 @@ export default function FormsPage() {
                           /api/v1/f/{form.slug}
                         </p>
                         <ArrowRight className="text-muted-foreground h-4 w-4" />
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="text-muted-foreground mt-3 text-sm">
+                          Submissions:{' '}
+                          <span className="font-semibold text-white">
+                            {form.submissionCount ?? 0}
+                          </span>
+                        </p>
+                        <p className="text-muted-foreground mt-3 text-sm">
+                          Created At:{' '}
+                          {new Date(form.createdAt).toLocaleString('en-GB', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
