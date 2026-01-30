@@ -69,7 +69,6 @@ export default function OnboardingPage() {
 
   // Step 4: Google Sheets integration
   const [sheetsConnected, setSheetsConnected] = useState(false);
-  const [sheetsIntegrationId, setSheetsIntegrationId] = useState('');
 
   // Step 5: Implementation guide + test
   const [testEmail, setTestEmail] = useState('');
@@ -116,7 +115,6 @@ export default function OnboardingPage() {
 
             if (sheetsIntegration) {
               setSheetsConnected(true);
-              setSheetsIntegrationId(sheetsIntegration._id);
               toast.success('Google Sheets connected successfully!');
             }
           }

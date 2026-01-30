@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { encryptJSON } from '@/lib/encryption';
+import { decryptJSON, encryptJSON } from '@/lib/encryption';
 import { getHandler } from '@/lib/integrations';
 import Form from '@/lib/models/form';
 import Integration from '@/lib/models/integration';
@@ -58,13 +58,34 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         const validation = handler.validate(
           parsed.data.config as Record<string, unknown>
         );
+
         if (!validation.valid) {
           return NextResponse.json(
             { error: `Invalid config: ${validation.error}` },
             { status: 400 }
           );
         }
+
+        // use existing resned form key
+        if (
+          handler.type === 'EMAIL' &&
+          parsed.data.config['apiKey'] === 'auto'
+        ) {
+          const existingIntegration = await Integration.findOne({
+            formId: integration.formId,
+            type: 'EMAIL',
+          }).select('configEncrypted');
+
+          if (existingIntegration) {
+            const decryptedFormConfig = decryptJSON(
+              existingIntegration.configEncrypted
+            );
+
+            parsed.data.config['apiKey'] = decryptedFormConfig['apiKey'];
+          }
+        }
       }
+
       integration.configEncrypted = encryptJSON(
         parsed.data.config as Record<string, unknown>
       );
