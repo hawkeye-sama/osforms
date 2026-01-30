@@ -355,7 +355,6 @@ export default function LandingPage() {
                 asChild
                 className="hover:bg-card h-12 px-6"
               >
-                <Link href="/docs">View Documentation</Link>
               </Button>
             </div>
           </ScrollReveal>
@@ -368,7 +367,7 @@ export default function LandingPage() {
           <div>
             <div className="text-base font-semibold">OSForms</div>
             <p className="text-muted-foreground mt-3 text-sm">
-              Built by developers,
+              Built by a dev,
               <br />
               for developers.
             </p>
