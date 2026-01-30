@@ -1,6 +1,6 @@
-import crypto from "crypto";
-import type { IntegrationHandler, IntegrationContext, IntegrationResult } from "./base";
 import { webhookConfigSchema, type WebhookConfig } from "@/lib/validations";
+import crypto from "crypto";
+import type { IntegrationContext, IntegrationHandler, IntegrationResult } from "./base";
 
 export const webhookIntegration: IntegrationHandler = {
   type: "WEBHOOK",

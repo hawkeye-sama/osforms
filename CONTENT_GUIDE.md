@@ -41,7 +41,7 @@ This guide defines the writing style, messaging framework, and content strategy 
 
 ```
 FreeForms is an open-source form backend where you bring your own API keys.
-No vendor lock-in. No integration paywalls. 200 free submissions/month.
+No vendor lock-in. No integration paywalls. 100 free submissions/month.
 ```
 
 **What We Do**: Form backend SaaS with BYOK integrations
@@ -75,7 +75,7 @@ No vendor lock-in. No integration paywalls. 200 free submissions/month.
 - 99.9% uptime SLA (once we have data)
 
 **No Hidden Costs**:
-- 200 submissions/month free
+- 100 submissions/month free
 - Upgrade to 2,000 for $9/mo (clear pricing)
 - No per-integration fees
 - No contact sales CTA
@@ -107,7 +107,7 @@ No vendor lock-in. No integration paywalls. 200 free submissions/month.
 ✅ **Good**:
 ```
 Point your forms at FreeForms. We store submissions and route them to
-your own Resend, Google Sheets, and webhooks. 200 free submissions/month.
+your own Resend, Google Sheets, and webhooks. 100 free submissions/month.
 ```
 
 ❌ **Bad**:
@@ -177,7 +177,7 @@ Every feature statement should transform into a user benefit.
 | "Advanced encryption" | "Your API keys encrypted at rest with AES-256-GCM" |
 | "Seamless integrations" | "Connect Resend, Google Sheets, webhooks—5 minute setup" |
 | "Powerful API" | "REST API with CORS control, rate limiting, webhook signatures" |
-| "Flexible pricing" | "200 free submissions/month. Upgrade to 2,000 for $9/mo" |
+| "Flexible pricing" | "100 free submissions/month. Upgrade to 2,000 for $9/mo" |
 | "Enterprise-ready" | "HTTPS endpoints, API key auth, role-based access control" |
 
 ### Technical vs Non-Technical Balance
@@ -229,7 +229,7 @@ Avoid hyperbole. Use specific numbers when possible.
 - Link to docs for details ("Learn more →")
 
 **Pricing Section**:
-- Lead with free tier: "200 Free Submissions/Month"
+- Lead with free tier: "100 Free Submissions/Month"
 - Show upgrade path: "$9/mo for 2,000 submissions"
 - No "Contact Sales" CTA
 
@@ -337,7 +337,7 @@ Open Source Form Backend with Resend Integration | FreeForms
 ✅ **Good**:
 ```
 Developer-first form backend with Resend, Google Sheets, and webhook
-integrations. Bring your own API keys. 200 free submissions/month.
+integrations. Bring your own API keys. 100 free submissions/month.
 ```
 
 **Character Limit**: 155 characters
@@ -418,7 +418,7 @@ The Form Backend That Respects Your Keys
 
 Subheadline:
 Point your forms at FreeForms. We store submissions and route them to
-your own Resend, Google Sheets, and webhooks. 200 free submissions/month.
+your own Resend, Google Sheets, and webhooks. 100 free submissions/month.
 
 Primary CTA: Get Started Free
 Secondary CTA: View on GitHub →
