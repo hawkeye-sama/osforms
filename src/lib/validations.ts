@@ -57,7 +57,7 @@ export const emailConfigSchema = z.object({
 export const webhookConfigSchema = z.object({
   url: z.string().url("Valid webhook URL required"),
   method: z.enum(["POST", "PUT", "PATCH"]).default("POST"),
-  headers: z.record(z.string()).default({}),
+  headers: z.record(z.string(), z.string()).default({}),
   secret: z.string().optional(),
 });
 
@@ -71,13 +71,13 @@ export const createIntegrationSchema = z.object({
   formId: z.string().min(1),
   type: z.enum(["EMAIL", "WEBHOOK", "GOOGLE_SHEETS"]),
   name: z.string().min(1).max(100),
-  config: z.record(z.unknown()),
+  config: z.record(z.string(), z.unknown()),
   enabled: z.boolean().default(true),
 });
 
 export const updateIntegrationSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  config: z.record(z.unknown()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
   enabled: z.boolean().optional(),
 });
 
