@@ -19,8 +19,6 @@ export async function GET(request: NextRequest) {
     ...(returnTo && { returnTo }),
   });
 
-  console.log('OAuth State Data:', stateData);
-
   // Generate the URL the user needs to visit to authorize your app
   const url = oauth2Client.generateAuthUrl({
     // 'offline' is crucial. It tells Google to give us a Refresh Token.
