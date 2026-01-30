@@ -316,7 +316,7 @@ export default function LandingPage() {
                   Free forever
                 </p>
                 <p className="text-muted-foreground mt-6 text-base">
-                  No credit card required. Upgrade to 2,000 for just $9/mo.
+                  No credit card required.
                 </p>
                 <Button size="lg" asChild className="glow-hover mt-8 h-12 px-8">
                   <Link href="/signup">
