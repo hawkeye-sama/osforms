@@ -106,7 +106,7 @@ export default function DashboardPage() {
 
   // Calculate plan info from forms
   const totalSubmissions = forms.reduce((sum, f) => sum + f.submissionCount, 0);
-  const totalLimit = forms.length > 0 ? forms[0].submissionLimit : 200;
+  const totalLimit = forms.length > 0 ? forms[0].submissionLimit : 100;
   const planInfo = {
     name: "Free",
     submissionsUsed: totalSubmissions,

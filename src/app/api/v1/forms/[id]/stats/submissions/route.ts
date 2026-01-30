@@ -3,25 +3,30 @@ import { getCurrentUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import Submission from "@/lib/models/submission";
 import Form from "@/lib/models/form";
+import mongoose from "mongoose";
 
-export async function GET(req: NextRequest) {
+type Params = { params: Promise<{ id: string }> };
+
+export async function GET(req: NextRequest, { params }: Params) {
   const user = await getCurrentUser(req);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { id } = await params;
   const { searchParams } = new URL(req.url);
   const period = searchParams.get("period") || "30d";
 
   await connectDB();
 
-  // Get user's forms
-  const forms = await Form.find({ userId: user._id }).select("_id");
-  const formIds = forms.map((f) => f._id);
+  // Verify form exists and belongs to user
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ error: "Invalid form ID" }, { status: 400 });
+  }
 
-  if (formIds.length === 0) {
-    // No forms yet, return empty chart data
-    return NextResponse.json({ chartData: generateEmptyChartData(period) });
+  const form = await Form.findOne({ _id: id, userId: user._id });
+  if (!form) {
+    return NextResponse.json({ error: "Form not found" }, { status: 404 });
   }
 
   // Calculate date range (use UTC consistently)
@@ -30,11 +35,11 @@ export async function GET(req: NextRequest) {
   startDate.setUTCDate(startDate.getUTCDate() - days);
   startDate.setUTCHours(0, 0, 0, 0);
 
-  // Aggregate submissions by date
+  // Aggregate submissions by date for this specific form
   const submissions = await Submission.aggregate([
     {
       $match: {
-        formId: { $in: formIds },
+        formId: form._id,
         createdAt: { $gte: startDate },
       },
     },
@@ -68,24 +73,4 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ chartData });
-}
-
-function generateEmptyChartData(period: string) {
-  const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
-  const startDate = new Date();
-  startDate.setUTCDate(startDate.getUTCDate() - days);
-  startDate.setUTCHours(0, 0, 0, 0);
-
-  const chartData = [];
-  for (let i = 0; i < days; i++) {
-    const date = new Date(startDate);
-    date.setUTCDate(startDate.getUTCDate() + i);
-    const dateStr = date.toISOString().split("T")[0];
-    chartData.push({
-      date: dateStr,
-      submissions: 0,
-    });
-  }
-
-  return chartData;
 }

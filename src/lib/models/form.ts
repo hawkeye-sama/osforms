@@ -35,7 +35,7 @@ const formSchema = new Schema<IForm>(
 
     rateLimit: { type: Number, default: 10 },
     submissionCount: { type: Number, default: 0 },
-    submissionLimit: { type: Number, default: 200 },
+    submissionLimit: { type: Number, default: 100 },
 
     active: { type: Boolean, default: true },
   },

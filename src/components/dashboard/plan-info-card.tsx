@@ -83,7 +83,7 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
 
         {/* Free plan info */}
         <p className="text-xs text-muted-foreground text-center pt-2">
-          FreeForms is free with 200 submissions/month
+          FreeForms is free with 100 submissions/month
         </p>
       </CardContent>
     </Card>
