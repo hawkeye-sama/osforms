@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
 export interface IForm extends Document {
   _id: mongoose.Types.ObjectId;
@@ -14,8 +14,6 @@ export interface IForm extends Document {
 
   // Limits
   rateLimit: number; // requests per minute per IP
-  submissionCount: number;
-  submissionLimit: number;
 
   active: boolean;
   createdAt: Date;
@@ -34,13 +32,11 @@ const formSchema = new Schema<IForm>(
     recaptchaSecret: { type: String, default: "" },
 
     rateLimit: { type: Number, default: 10 },
-    submissionCount: { type: Number, default: 0 },
-    submissionLimit: { type: Number, default: 100 },
 
     active: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
-const Form: Model<IForm> = mongoose.models.Form || mongoose.model<IForm>("Form", formSchema);
+const Form: Model<IForm> = mongoose.models.Form ||  mongoose.model<IForm>("Form", formSchema);
 export default Form;

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
 export type IntegrationType = "EMAIL" | "WEBHOOK" | "GOOGLE_SHEETS";
 
@@ -24,6 +24,6 @@ const integrationSchema = new Schema<IIntegration>(
   { timestamps: true }
 );
 
-const Integration: Model<IIntegration> =
-  mongoose.models.Integration || mongoose.model<IIntegration>("Integration", integrationSchema);
+const Integration: Model<IIntegration> = mongoose.models.Integration ||
+  mongoose.model<IIntegration>("Integration", integrationSchema);
 export default Integration;

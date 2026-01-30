@@ -1,15 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
-import { toast } from "sonner";
-import { Plus, ArrowRight, Inbox, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { PlanInfoCard } from "@/components/dashboard/plan-info-card";
+import { SubmissionsChart } from "@/components/dashboard/submissions-chart";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -19,17 +14,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { SubmissionsChart } from "@/components/dashboard/submissions-chart";
-import { PlanInfoCard } from "@/components/dashboard/plan-info-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowRight, Inbox, Loader2, Plus } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Form {
   _id: string;
   name: string;
   slug: string;
   active: boolean;
-  submissionCount: number;
-  submissionLimit: number;
   createdAt: string;
+}
+
+interface Usage {
+  submissionsUsed: number;
+  submissionsLimit: number;
+  currentMonth: string;
 }
 
 interface ChartDataPoint {
@@ -39,6 +43,7 @@ interface ChartDataPoint {
 
 export default function DashboardPage() {
   const [forms, setForms] = useState<Form[]>([]);
+  const [usage, setUsage] = useState<Usage>({ submissionsUsed: 0, submissionsLimit: 100, currentMonth: "" });
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(true);
@@ -50,7 +55,10 @@ export default function DashboardPage() {
     try {
       const res = await fetch("/api/v1/forms");
       const data = await res.json();
-      if (res.ok) setForms(data.forms);
+      if (res.ok) {
+        setForms(data.forms);
+        if (data.usage) setUsage(data.usage);
+      }
     } catch {
       toast.error("Failed to load forms");
     } finally {
@@ -104,13 +112,11 @@ export default function DashboardPage() {
     }
   }
 
-  // Calculate plan info from forms
-  const totalSubmissions = forms.reduce((sum, f) => sum + f.submissionCount, 0);
-  const totalLimit = forms.length > 0 ? forms[0].submissionLimit : 100;
+  // Calculate plan info from usage
   const planInfo = {
     name: "Free",
-    submissionsUsed: totalSubmissions,
-    submissionsLimit: totalLimit,
+    submissionsUsed: usage.submissionsUsed,
+    submissionsLimit: usage.submissionsLimit,
     formsUsed: forms.length,
     formsLimit: 10,
   };
@@ -146,7 +152,7 @@ export default function DashboardPage() {
       )}
 
       {/* Forms + Plan Info - Two Column Layout */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_500px]">
         {/* Forms Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
@@ -239,27 +245,11 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {form.submissionCount} / {form.submissionLimit} submissions
-                        </span>
+                        <p className="text-xs text-muted-foreground font-mono truncate">
+                          /api/v1/f/{form.slug}
+                        </p>
                         <ArrowRight className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <div className="mt-2">
-                        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-primary transition-all"
-                            style={{
-                              width: `${Math.min(
-                                (form.submissionCount / form.submissionLimit) * 100,
-                                100
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <p className="mt-3 text-xs text-muted-foreground font-mono truncate">
-                        /api/v1/f/{form.slug}
-                      </p>
                     </CardContent>
                   </Card>
                 </Link>

@@ -25,8 +25,6 @@ interface Form {
   name: string;
   slug: string;
   active: boolean;
-  submissionCount: number;
-  submissionLimit: number;
   createdAt: string;
 }
 
@@ -209,27 +207,11 @@ export default function FormsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {form.submissionCount} / {form.submissionLimit} submissions
-                    </span>
+                    <p className="text-xs text-muted-foreground font-mono truncate">
+                      /api/v1/f/{form.slug}
+                    </p>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <div className="mt-2">
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{
-                          width: `${Math.min(
-                            (form.submissionCount / form.submissionLimit) * 100,
-                            100
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <p className="mt-3 text-xs text-muted-foreground font-mono truncate">
-                    /api/v1/f/{form.slug}
-                  </p>
                 </CardContent>
               </Card>
             </Link>

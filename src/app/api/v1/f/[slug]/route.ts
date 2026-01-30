@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { checkRateLimit, getIP } from "@/lib/rate-limit";
 import Form from "@/lib/models/form";
+import User from "@/lib/models/user";
 import Submission from "@/lib/models/submission";
 import Integration from "@/lib/models/integration";
 import { executeIntegrations } from "@/lib/integrations";
@@ -40,9 +41,23 @@ export async function POST(req: NextRequest, { params }: Params) {
     return res;
   }
 
-  // ── Submission limit ──────────────────────────────────────
-  if (form.submissionCount >= form.submissionLimit) {
-    return error("This form has reached its submission limit.", 403, req);
+  // ── Fetch user for monthly limit check ──────────────────────
+  const user = await User.findById(form.userId);
+  if (!user) return error("Form owner not found", 500, req);
+
+  // ── Monthly limit with lazy reset ───────────────────────────
+  const currentMonth = new Date().toISOString().slice(0, 7); // "2026-01" format
+  if (user.currentBillingMonth !== currentMonth) {
+    // New month - reset counter
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { monthlySubmissionCount: 0, currentBillingMonth: currentMonth } }
+    );
+    user.monthlySubmissionCount = 0;
+  }
+
+  if (user.monthlySubmissionCount >= user.monthlySubmissionLimit) {
+    return error("Monthly submission limit reached. Resets on the 1st.", 403, req);
   }
 
   // ── Parse data ────────────────────────────────────────────
@@ -77,6 +92,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   // ── Store submission ──────────────────────────────────────
   const submission = await Submission.create({
     formId: form._id,
+    userId: form.userId,
     data,
     metadata: {
       ip,
@@ -85,8 +101,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     },
   });
 
-  // Increment count
-  await Form.updateOne({ _id: form._id }, { $inc: { submissionCount: 1 } });
+  // Increment user's monthly submission count
+  await User.updateOne({ _id: form.userId }, { $inc: { monthlySubmissionCount: 1 } });
 
   // ── Execute integrations (fire-and-forget) ────────────────
   const integrations = await Integration.find({ formId: form._id, enabled: true });

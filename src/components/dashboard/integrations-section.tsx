@@ -1,26 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { toast } from "sonner";
-import {
-  Trash2,
-  Mail,
-  Webhook,
-  FileSpreadsheet,
-  MessageSquare,
-  Send,
-  Bell,
-  Database,
-  Zap,
-  Share2,
-  Loader2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -30,8 +11,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Bell,
+  Database,
+  FileSpreadsheet,
+  Loader2,
+  Mail,
+  MessageSquare,
+  Send,
+  Share2,
+  Trash2,
+  Webhook,
+  Zap,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Integration {
   _id: string;
@@ -576,7 +576,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
                         />
                         <div className="flex-1">
                           <p className="text-sm font-medium text-foreground">Use account Resend key</p>
-                          <p className="text-xs text-muted-foreground">From your onboarding setup</p>
+                          <p className="text-xs text-muted-foreground">Exising API Key</p>
                         </div>
                       </label>
                       <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card cursor-pointer hover:bg-card/80 transition-colors">

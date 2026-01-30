@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
 export interface IIntegrationLog extends Document {
   _id: mongoose.Types.ObjectId;
@@ -19,6 +19,6 @@ const integrationLogSchema = new Schema<IIntegrationLog>(
   { timestamps: true }
 );
 
-const IntegrationLog: Model<IIntegrationLog> =
-  mongoose.models.IntegrationLog || mongoose.model<IIntegrationLog>("IntegrationLog", integrationLogSchema);
+const IntegrationLog: Model<IIntegrationLog> = mongoose.models.IntegrationLog ||
+  mongoose.model<IIntegrationLog>("IntegrationLog", integrationLogSchema);
 export default IntegrationLog;

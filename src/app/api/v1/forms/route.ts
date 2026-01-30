@@ -16,7 +16,20 @@ export async function GET(req: NextRequest) {
     .sort({ createdAt: -1 })
     .lean();
 
-  return NextResponse.json({ forms });
+  // Check if we need to reset for a new month
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const submissionsUsed = user.currentBillingMonth === currentMonth
+    ? user.monthlySubmissionCount
+    : 0;
+
+  return NextResponse.json({
+    forms,
+    usage: {
+      submissionsUsed,
+      submissionsLimit: user.monthlySubmissionLimit,
+      currentMonth,
+    },
+  });
 }
 
 /** POST /api/v1/forms - Create a new form */
