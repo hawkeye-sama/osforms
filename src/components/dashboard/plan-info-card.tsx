@@ -1,12 +1,12 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface PlanInfoCardProps {
   plan: {
@@ -18,9 +18,11 @@ interface PlanInfoCardProps {
   };
 }
 
+const SUBMISSION_LIMIT = 100;
+
 export function PlanInfoCard({ plan }: PlanInfoCardProps) {
   const submissionPercentage = Math.min(
-    (plan.submissionsUsed / plan.submissionsLimit) * 100,
+    (plan.submissionsUsed / SUBMISSION_LIMIT) * 100,
     100
   );
   const formsPercentage = Math.min(
@@ -29,6 +31,8 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
   );
 
   const isNearLimit = submissionPercentage >= 80;
+
+  console.log(plan)
 
   return (
     <Card>
@@ -46,8 +50,8 @@ export function PlanInfoCard({ plan }: PlanInfoCardProps) {
           <div className="mb-1.5 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Submissions</span>
             <span className="font-medium text-foreground">
-              {plan.submissionsUsed.toLocaleString()} /{" "}
-              {plan.submissionsLimit.toLocaleString()}
+              {plan.submissionsUsed?.toLocaleString()} /{" "}
+              {SUBMISSION_LIMIT.toLocaleString()}
             </span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-secondary">

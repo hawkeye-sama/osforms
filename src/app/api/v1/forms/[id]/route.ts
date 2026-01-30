@@ -24,7 +24,10 @@ export async function GET(req: NextRequest, { params }: Params) {
     Submission.countDocuments({ formId: id }),
   ]);
 
-  return NextResponse.json({ form, integrations, submissionCount });
+  return NextResponse.json({
+    form: { ...form, submissionCount, integrationCount: integrations.length },
+    integrations,
+  });
 }
 
 /** PATCH /api/v1/forms/:id - Update form settings */

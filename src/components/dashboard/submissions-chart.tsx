@@ -1,20 +1,20 @@
 "use client";
 
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
-import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface ChartDataPoint {
   date: string;
@@ -38,6 +38,7 @@ export function SubmissionsChart({
 
   // Calculate total submissions
   const totalSubmissions = data.reduce((sum, d) => sum + d.submissions, 0);
+
 
   return (
     <Card>
@@ -91,7 +92,7 @@ export function SubmissionsChart({
                       return (
                         <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-md">
                           <p className="text-sm font-medium text-foreground">
-                            {formatDate(label)}
+                            {label && typeof label === "string" ? formatDate(label) : ""}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {payload[0].value} submissions

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Check, Copy } from "lucide-react";
+import { useState } from "react";
 
 interface CodeSnippetsProps {
   endpointUrl: string;
@@ -24,17 +24,6 @@ export function CodeSnippets({ endpointUrl }: CodeSnippetsProps) {
   <textarea name="message" placeholder="Type your message"></textarea>
 
   <!-- your other form fields go here -->
-
-  <button type="submit">Send Message</button>
-</form>`;
-
-  const htmlFileUpload = `<form action="${endpointUrl}" method="POST" enctype="multipart/form-data">
-  <input type="email" placeholder="Email" name="email">
-  <input type="text" placeholder="Subject" name="subject">
-  <textarea name="message" placeholder="Type your message"></textarea>
-
-  <!-- File upload field -->
-  <input type="file" name="attachment">
 
   <button type="submit">Send Message</button>
 </form>`;
@@ -65,7 +54,6 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 
   const tabs = [
     { key: "html", label: "HTML", code: htmlBasic },
-    { key: "html-file", label: "HTML with file upload", code: htmlFileUpload },
     { key: "react", label: "React/NextJS", code: reactNext },
   ];
 
@@ -79,7 +67,7 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+            className={`px-4 py-2 text-sm font-medium transition-colors relative cursor-pointer ${
               activeTab === tab.key
                 ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"

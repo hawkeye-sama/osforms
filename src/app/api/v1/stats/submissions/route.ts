@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import Submission from "@/lib/models/submission";
 import Form from "@/lib/models/form";
+import Submission from "@/lib/models/submission";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser(req);
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
 
   // Fill in all dates with counts (0 for missing dates)
   const chartData = [];
-  for (let i = 0; i < days; i++) {
+  for (let i = 0; i <= days; i++) {
     const date = new Date(startDate);
     date.setUTCDate(startDate.getUTCDate() + i);
     const dateStr = date.toISOString().split("T")[0];

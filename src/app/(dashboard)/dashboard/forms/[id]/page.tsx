@@ -40,8 +40,7 @@ interface Form {
   name: string;
   slug: string;
   active: boolean;
-  submissionCount: number;
-  submissionLimit: number;
+  submissionCount: number; // Actual count from submissions collection
   allowedOrigins: string[];
   redirectUrl: string;
   honeypotField: string;
@@ -203,7 +202,7 @@ export default function FormDetailPage({
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {form.submissionCount} / {form.submissionLimit} submissions
+                {form.submissionCount} submissions
               </p>
             </div>
           </div>

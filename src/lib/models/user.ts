@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
@@ -15,6 +15,11 @@ export interface IUser extends Document {
 
   // Optional: Store user's Resend API key (encrypted)
   resendApiKey?: string;
+
+  // Monthly submission tracking
+  monthlySubmissionCount: number;
+  monthlySubmissionLimit: number;
+  currentBillingMonth: string; // "2026-01" format (UTC)
 
   createdAt: Date;
   updatedAt: Date;
@@ -34,9 +39,14 @@ const userSchema = new Schema<IUser>(
 
     // Encrypted Resend API key
     resendApiKey: { type: String, default: "" },
+
+    // Monthly submission tracking
+    monthlySubmissionCount: { type: Number, default: 0 },
+    monthlySubmissionLimit: { type: Number, default: 100 },
+    currentBillingMonth: { type: String, default: "" },
   },
   { timestamps: true }
 );
 
-const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>("User", userSchema);
+const User: Model<IUser> = mongoose.models.User ||  mongoose.model<IUser>("User", userSchema);
 export default User;
