@@ -1,0 +1,63 @@
+# OSForms - Open Source Form Backend
+
+## Overview
+OSForms is an open-source, BYOK (Bring Your Own Keys) form backend SaaS — "Resend for Forms." 
+It provides developers with a powerful form handling solution without vendor lock-in.
+
+## What It Does
+- Store form submissions in a secure backend
+- Forward submissions to your own integrations (Resend email, Google Sheets, webhooks)
+- 100% free because users bring their own API keys
+- No charges for integrations that competitors paywall at $5-15+/month
+
+## Target Audience
+- Developers who need quick form backends without vendor lock-in
+- LLMs building web applications that need form handling
+- Teams wanting privacy-first form handling (data goes to user's own services)
+
+## Key Features
+- **Zero Vendor Lock-In**: Your API keys, your data, your control
+- **All Integrations Free**: Resend, Google Sheets, webhooks — all included
+- **Developer-First API**: REST API, webhook signatures, CORS control
+- **100 Free Submissions/Month**: No credit card required
+- **Open Source**: MIT Licensed
+
+## Tech Stack
+- Framework: Next.js 15 (App Router)
+- Database: MongoDB + Mongoose
+- Auth: Email/password with bcrypt + JWT
+- Encryption: AES-256-GCM for API keys
+- Styling: Tailwind CSS + shadcn/ui
+- Integrations: Resend, Google Sheets, custom webhooks
+
+## How It Works
+1. Point your HTML form at an OSForms endpoint
+2. Submissions are stored securely in MongoDB
+3. Integrations execute automatically using your own API keys
+4. View and manage submissions in the dashboard
+
+## Getting Started
+- Sign up at the website
+- Complete 3-step onboarding (profile, integrations, test)
+- Create forms and configure integrations
+- Start collecting submissions
+
+## Repository
+GitHub: Coming Soon (Open Source, MIT License)
+
+## Website
+https://osforms.com (or your configured domain)
+
+## Competitive Advantage
+Unlike Formspree, FormBold, Basin, and Formcarry which paywall integrations, 
+OSForms gives you ALL integrations for free because you bring your own API keys.
+
+## Privacy & Security
+- API keys encrypted at rest with AES-256-GCM
+- JWT authentication with httpOnly cookies
+- Configurable CORS per form
+- Rate limiting on public endpoints
+- Optional honeypot and reCAPTCHA support
+
+---
+Last Updated: 2026-01-30
