@@ -2,9 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project: FreeForms
+## Project: osforms
 
-**FreeForms** is an open-source, BYOK (Bring Your Own Keys) form backend SaaS — "Resend for Forms." Users point their HTML forms at a FreeForms endpoint, and we store submissions + forward them to the user's own integrations (Resend email, Google Sheets, webhooks). Free because users bring their own API keys — we never charge for integrations.
+**osforms** is an open-source, BYOK (Bring Your Own Keys) form backend SaaS — "Resend for Forms." Users point their HTML forms at a osforms endpoint, and we store submissions + forward them to the user's own integrations (Resend email, Google Sheets, webhooks). Free because users bring their own API keys — we never charge for integrations.
 
 ### Target Users
 
@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Why This Exists
 
-Every competitor (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5-15+/month even though the user's own API keys power them. FreeForms flips that — 100 free submissions/month with ALL integrations included. See `.claude/competitor-analysis.md` for full competitive breakdown.
+Every competitor (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5-15+/month even though the user's own API keys power them. osforms flips that — 100 free submissions/month with ALL integrations included. See `.claude/competitor-analysis.md` for full competitive breakdown.
 
 ## Tech Stack
 
@@ -145,7 +145,7 @@ src/
 ## Environment Variables
 
 ```
-MONGODB_URI=mongodb://localhost:27017/freeforms
+MONGODB_URI=mongodb://localhost:27017/osforms
 JWT_SECRET=your-jwt-secret
 ENCRYPTION_KEY=<64-char hex string>  # Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 NEXT_PUBLIC_APP_URL=http://localhost:3000

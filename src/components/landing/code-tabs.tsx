@@ -121,7 +121,7 @@ const monotoneDark = {
 };
 
 const HTML_CODE = `<form
-  action="https://freeforms.com/api/v1/f/your-slug"
+  action="https://osforms.com/api/v1/f/your-slug"
   method="POST"
 >
   <input type="text" name="name" placeholder="Name" required />
@@ -135,7 +135,7 @@ const REACT_CODE = `export function ContactForm() {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
 
-    await fetch("https://freeforms.com/api/v1/f/your-slug", {
+    await fetch("https://osforms.com/api/v1/f/your-slug", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(Object.fromEntries(new FormData(form))),

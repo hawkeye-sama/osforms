@@ -1,4 +1,4 @@
-# FreeForms - Competitor Analysis
+# osforms - Competitor Analysis
 
 Last updated: 2026-01-27
 
@@ -8,7 +8,7 @@ Form backend services handle form submissions without server-side code. Users po
 
 **The problem**: Every competitor paywalls integrations (Sheets, Slack, webhooks) behind $5-15+/month plans, even though the user's own API keys power these integrations.
 
-**Our angle**: FreeForms is BYOK (Bring Your Own Keys). Integrations are free because users provide their own credentials. We only charge for submission volume/server costs.
+**Our angle**: osforms is BYOK (Bring Your Own Keys). Integrations are free because users provide their own credentials. We only charge for submission volume/server costs.
 
 ---
 
@@ -90,7 +90,7 @@ Form backend services handle form submissions without server-side code. Users po
 
 ## Competitive Matrix
 
-| Feature                    | Formspree | FormBold | Basin   | Formcarry | **FreeForms**       |
+| Feature                    | Formspree | FormBold | Basin   | Formcarry | **osforms**         |
 | -------------------------- | --------- | -------- | ------- | --------- | ------------------- |
 | Free submissions/mo        | 50        | 100      | 50      | 50        | **200**             |
 | Free integrations          | None      | Limited  | None    | Limited   | **All (BYOK)**      |
@@ -105,7 +105,7 @@ Form backend services handle form submissions without server-side code. Users po
 
 ---
 
-## Our Differentiators (FreeForms)
+## Our Differentiators (osforms)
 
 1. **BYOK = Free integrations forever**: Users bring their own Resend/SendGrid keys, Google service accounts, webhook URLs. We never charge for integrations.
 

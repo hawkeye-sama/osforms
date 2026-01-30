@@ -77,7 +77,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
             className="text-foreground text-xl font-bold tracking-tight"
             onClick={() => onOpenChange(false)}
           >
-            FreeForms
+            OSForms
           </Link>
           <Button
             variant="ghost"
@@ -118,7 +118,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
 
         {/* Footer */}
         <div className="border-t p-4">
-          <p className="text-muted-foreground text-xs">FreeForms v1.0</p>
+          <p className="text-muted-foreground text-xs">OSForms v1.0</p>
         </div>
       </div>
     </>

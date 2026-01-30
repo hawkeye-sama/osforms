@@ -20,7 +20,7 @@ function formatHTML(ctx: IntegrationContext): string {
     <h2 style="color:#1e293b">New Submission: ${esc(ctx.formName)}</h2>
     <p style="color:#64748b;margin-top:0">Received at ${ctx.submittedAt}</p>
     <table style="width:100%;border-collapse:collapse">${rows}</table>
-    <p style="color:#94a3b8;font-size:12px;margin-top:24px">FreeForms &middot; ID: ${ctx.submissionId}</p>
+    <p style="color:#94a3b8;font-size:12px;margin-top:24px">OSForms &middot; ID: ${ctx.submissionId}</p>
   </div>`;
 }
 

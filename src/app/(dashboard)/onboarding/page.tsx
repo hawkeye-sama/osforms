@@ -264,7 +264,7 @@ export default function OnboardingPage() {
         toast.error('Failed to complete onboarding');
         return;
       }
-      toast.success('Welcome to FreeForms!');
+      toast.success('Welcome to OSForms!');
       router.push('/dashboard');
       router.refresh(); // Force refresh to update auth state
     } catch {
@@ -284,7 +284,7 @@ export default function OnboardingPage() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <h1 className="text-foreground mb-8 text-center text-2xl font-bold tracking-tight">
-          FreeForms
+          OSForms
         </h1>
 
         {/* Step indicator */}
@@ -321,7 +321,7 @@ export default function OnboardingPage() {
             <CardHeader>
               <CardTitle>Tell us about yourself</CardTitle>
               <CardDescription>
-                Help us understand how you&apos;ll use FreeForms
+                Help us understand how you&apos;ll use OSForms
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -370,7 +370,7 @@ export default function OnboardingPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="usecase">
-                  What will you use FreeForms for? *
+                  What will you use OSForms for? *
                 </Label>
                 <Textarea
                   id="usecase"

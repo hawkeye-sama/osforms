@@ -27,7 +27,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             href="/"
             className="inline-flex items-center space-x-2 text-xl font-bold transition-opacity hover:opacity-80"
           >
-            <span>FreeForms</span>
+            <span>OSForms</span>
           </Link>
         </motion.header>
 
@@ -52,7 +52,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         >
           <div className="text-muted-foreground flex flex-col items-center justify-between gap-4 text-sm sm:flex-row">
             <p>
-              &copy; {new Date().getFullYear()} FreeForms. Open source form
+              &copy; {new Date().getFullYear()} OSForms. Open source form
               backend.
             </p>
             <div className="flex items-center gap-6">
@@ -69,7 +69,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                 Terms
               </Link>
               <Link
-                href="https://github.com/yourusername/freeforms"
+                href="https://github.com/yourusername/osforms"
                 className="hover:text-foreground transition-colors"
               >
                 GitHub

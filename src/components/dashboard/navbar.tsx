@@ -54,7 +54,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
             href="/dashboard"
             className="text-foreground text-xl font-bold tracking-tight lg:hidden"
           >
-            FreeForms
+            OSForms
           </Link>
         </div>
 
@@ -70,11 +70,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
             className="text-foreground hover:text-foreground"
             asChild
           >
-            <a
-              href="https://github.com/freeforms/freeforms"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href="#" target="_blank" rel="noopener noreferrer">
               <Github className="h-5 w-5" />
               <span className="sr-only">GitHub</span>
             </a>

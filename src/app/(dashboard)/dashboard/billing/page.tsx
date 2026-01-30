@@ -35,7 +35,7 @@ export default function BillingPage() {
               Coming Soon
             </h3>
             <p className="text-muted-foreground mt-2 max-w-md text-sm">
-              FreeForms is currently free to use with 100 submissions per month.
+              OSForms is currently free to use with 100 submissions per month.
               Billing features and paid plans will be available in the future.
             </p>
           </div>

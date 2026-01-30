@@ -1,6 +1,6 @@
-# FreeForms Content & Copywriting Guide
+# osforms Content & Copywriting Guide
 
-This guide defines the writing style, messaging framework, and content strategy for all FreeForms copy—landing pages, documentation, UI, and marketing materials.
+This guide defines the writing style, messaging framework, and content strategy for all osforms copy—landing pages, documentation, UI, and marketing materials.
 
 ## Voice & Tone
 
@@ -31,7 +31,7 @@ This guide defines the writing style, messaging framework, and content strategy 
 
 | Context         | Tone               | Example                                                                    |
 | --------------- | ------------------ | -------------------------------------------------------------------------- |
-| Landing Page    | Confident, direct  | "Point your forms at FreeForms. We handle the rest."                       |
+| Landing Page    | Confident, direct  | "Point your forms at osforms. We handle the rest."                       |
 | Documentation   | Clear, instructive | "Set your redirect URL to display a success message after submission."     |
 | Error Messages  | Helpful, specific  | "API key invalid. Check that you copied the full key from your dashboard." |
 | Marketing Email | Friendly, casual   | "Quick update: We just shipped Google Sheets integration."                 |
@@ -43,7 +43,7 @@ This guide defines the writing style, messaging framework, and content strategy 
 ### Core Value Proposition
 
 ```
-FreeForms is an open-source form backend where you bring your own API keys.
+osforms is an open-source form backend where you bring your own API keys.
 No vendor lock-in. No integration paywalls. 100 free submissions/month.
 ```
 
@@ -114,7 +114,7 @@ No vendor lock-in. No integration paywalls. 100 free submissions/month.
 ✅ **Good**:
 
 ```
-Point your forms at FreeForms. We store submissions and route them to
+Point your forms at osforms. We store submissions and route them to
 your own Resend, Google Sheets, and webhooks. 100 free submissions/month.
 ```
 
@@ -135,7 +135,7 @@ with best-in-class tools and scale your business to new heights.
 
 ```
 Feature: Webhook HMAC signatures with SHA-256
-Benefit: Verify requests came from FreeForms
+Benefit: Verify requests came from osforms
 Outcome: Prevent spam and replay attacks on your endpoint
 ```
 
@@ -162,7 +162,7 @@ encryption and industry-standard protocols.
 ✅ **Good**:
 
 - "Get Started Free" (action + benefit)
-- "Try FreeForms" (simple, direct)
+- "Try osforms" (simple, direct)
 - "Start Building" (action-oriented)
 
 ❌ **Bad**:
@@ -214,7 +214,7 @@ Every feature statement should transform into a user benefit.
 **Example**:
 
 - Technical: "POST to `/api/v1/f/{slug}` with `application/x-www-form-urlencoded` body"
-- Simple: "Point your HTML form at your FreeForms endpoint"
+- Simple: "Point your HTML form at your osforms endpoint"
 
 ### Social Proof Language
 
@@ -274,7 +274,7 @@ Send a POST request to your form endpoint:
 
 [code example]
 
-FreeForms will store the submission and trigger your integrations.
+osforms will store the submission and trigger your integrations.
 ```
 
 ### Error Messages
@@ -310,7 +310,7 @@ Authentication failed. Please try again.
 
 ❌ **Bad**:
 
-- "Exciting News from FreeForms!"
+- "Exciting News from osforms!"
 - "Don't Miss Out on Our Latest Features"
 
 **Body**:
@@ -318,7 +318,7 @@ Authentication failed. Please try again.
 - Start with the update or action needed
 - Use bullet points for multiple items
 - Include direct link to relevant page
-- Sign with "– The FreeForms Team"
+- Sign with "– The osforms Team"
 
 ---
 
@@ -342,7 +342,7 @@ Authentication failed. Please try again.
 
 ```
 For developers who need form backends without vendor lock-in,
-FreeForms is an open-source SaaS where you bring your own API keys—
+osforms is an open-source SaaS where you bring your own API keys—
 unlike Formspree, FormBold, and Basin who charge $5-15/mo per integration
 even though your API keys power them.
 ```
@@ -353,13 +353,13 @@ even though your API keys power them.
 
 ### Meta Titles
 
-**Pattern**: `[Primary Keyword] – [Differentiator] | FreeForms`
+**Pattern**: `[Primary Keyword] – [Differentiator] | osforms`
 
 ✅ **Good**:
 
 ```
-Form Backend API – BYOK Integrations | FreeForms
-Open Source Form Backend with Resend Integration | FreeForms
+Form Backend API – BYOK Integrations | osforms
+Open Source Form Backend with Resend Integration | osforms
 ```
 
 **Character Limit**: 60 characters
@@ -381,7 +381,7 @@ integrations. Bring your own API keys. 100 free submissions/month.
 
 1. **Title**: Problem-focused or how-to (e.g., "How to Add Resend Email to HTML Forms")
 2. **Intro**: State the problem (2-3 sentences)
-3. **Solution**: Show FreeForms solution with code
+3. **Solution**: Show osforms solution with code
 4. **Steps**: Clear numbered list with code examples
 5. **Conclusion**: Link to docs or signup
 
@@ -427,7 +427,7 @@ integrations. Bring your own API keys. 100 free submissions/month.
 ### A/B Test Priorities
 
 1. **Headlines**: Test 3 variations focused on different benefits
-2. **CTA Copy**: "Get Started Free" vs "Try FreeForms" vs "Start Building"
+2. **CTA Copy**: "Get Started Free" vs "Try osforms" vs "Start Building"
 3. **Feature Order**: Which of the 3 pillars resonates most?
 4. **Social Proof**: "Used by X developers" vs testimonial quote
 
@@ -455,7 +455,7 @@ Headline:
 The Form Backend That Respects Your Keys
 
 Subheadline:
-Point your forms at FreeForms. We store submissions and route them to
+Point your forms at osforms. We store submissions and route them to
 your own Resend, Google Sheets, and webhooks. 100 free submissions/month.
 
 Primary CTA: Get Started Free
@@ -507,4 +507,4 @@ This guide is based on 2026 best practices from:
 
 ## Version History
 
-- **v1.0** (2026-01-28): Initial guide based on research and FreeForms positioning
+- **v1.0** (2026-01-28): Initial guide based on research and osforms positioning

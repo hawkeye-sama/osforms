@@ -164,7 +164,7 @@ w:\Personal\free-form\
 ### Future Enhancements
 
 - [ ] Add animations (fade-in on scroll)
-- [ ] Implement comparison table (FreeForms vs. competitors)
+- [ ] Implement comparison table (osforms vs. competitors)
 - [ ] Add testimonials/social proof section
 - [ ] Create pricing page
 - [ ] Build documentation site

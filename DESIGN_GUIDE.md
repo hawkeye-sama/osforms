@@ -1,4 +1,4 @@
-# FreeForms Design System
+# osforms Design System
 
 ## 🎨 Color Palette
 

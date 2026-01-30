@@ -1,6 +1,6 @@
-# FreeForms UI Consistency Guide
+# osforms UI Consistency Guide
 
-This guide ensures consistent design across all components. FreeForms is a **dark-themed only** SaaS tool (no light mode).
+This guide ensures consistent design across all components. osforms is a **dark-themed only** SaaS tool (no light mode).
 
 ## Core Principles
 
@@ -127,7 +127,7 @@ className = 'focus-visible:border-border';
 <aside className="bg-card border-r">
 
 // Logo
-<Link className="text-xl font-bold tracking-tight text-foreground">FreeForms</Link>
+<Link className="text-xl font-bold tracking-tight text-foreground">osforms</Link>
 
 // Active nav item
 className="bg-secondary text-foreground"

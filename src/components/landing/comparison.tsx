@@ -36,13 +36,13 @@ export function Comparison() {
         </div>
       </AnimatedSection>
 
-      {/* FreeForms */}
+      {/* osforms */}
       <AnimatedSection delay={0.15}>
         <div className="border-foreground/20 bg-card relative rounded-xl border-2 p-6">
           <div className="bg-foreground text-background absolute -top-3 left-6 rounded-full px-3 py-1 text-xs font-semibold">
             Free
           </div>
-          <h3 className="mb-6 text-lg font-semibold">FreeForms</h3>
+          <h3 className="mb-6 text-lg font-semibold">OSForms</h3>
           <ul className="space-y-4">
             {FEATURES.map((f) => (
               <li key={f} className="flex items-center justify-between text-sm">
