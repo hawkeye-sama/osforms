@@ -1,36 +1,44 @@
-import { getCurrentUser } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
-import Form from "@/lib/models/form";
-import Submission from "@/lib/models/submission";
-import mongoose from "mongoose";
-import { NextRequest, NextResponse } from "next/server";
+import mongoose from 'mongoose';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { getCurrentUser } from '@/lib/auth';
+import { connectDB } from '@/lib/db';
+import Form from '@/lib/models/form';
+import Submission from '@/lib/models/submission';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, { params }: Params) {
   const user = await getCurrentUser(req);
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { id } = await params;
   const { searchParams } = new URL(req.url);
-  const period = searchParams.get("period") || "30d";
+  const period = searchParams.get('period') || '30d';
 
   await connectDB();
 
   // Verify form exists and belongs to user
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return NextResponse.json({ error: "Invalid form ID" }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid form ID' }, { status: 400 });
   }
 
   const form = await Form.findOne({ _id: id, userId: user._id });
   if (!form) {
-    return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    return NextResponse.json({ error: 'Form not found' }, { status: 404 });
   }
 
   // Calculate date range (use UTC consistently)
-  const days = period === "7d" ? 7 : period === "90d" ? 90 : 30;
+  let days: number;
+  if (period === '7d') {
+    days = 7;
+  } else if (period === '90d') {
+    days = 90;
+  } else {
+    days = 30;
+  }
   const startDate = new Date();
   startDate.setUTCDate(startDate.getUTCDate() - days);
   startDate.setUTCHours(0, 0, 0, 0);
@@ -46,7 +54,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     {
       $group: {
         _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
         },
         count: { $sum: 1 },
       },
@@ -65,7 +73,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   for (let i = 0; i <= days; i++) {
     const date = new Date(startDate);
     date.setUTCDate(startDate.getUTCDate() + i);
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = date.toISOString().split('T')[0];
     chartData.push({
       date: dateStr,
       submissions: submissionMap.get(dateStr) || 0,

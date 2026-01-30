@@ -5,6 +5,6 @@ export const getOAuth2Client = () => {
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
     // This MUST match exactly what you put in Google Cloud Console
-    process.env.NEXT_PUBLIC_APP_URL + "/api/auth/google/callback" 
+    process.env.NEXT_PUBLIC_APP_URL + '/api/auth/google/callback'
   );
 };

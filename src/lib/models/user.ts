@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from 'mongoose';
 
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
@@ -11,7 +11,7 @@ export interface IUser extends Document {
   fullName: string;
   website: string;
   company: string;
-  role: "developer" | "agency" | "startup" | "other";
+  role: 'developer' | 'agency' | 'startup' | 'other';
 
   // Optional: Store user's Resend API key (encrypted)
   resendApiKey?: string;
@@ -27,26 +27,37 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
   {
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
     password: { type: String, required: true },
     name: { type: String, required: true, trim: true },
 
     onboardingComplete: { type: Boolean, default: false },
-    fullName: { type: String, default: "" },
-    website: { type: String, default: "" },
-    company: { type: String, default: "" },
-    role: { type: String, enum: ["developer", "agency", "startup", "other"], default: "developer" },
+    fullName: { type: String, default: '' },
+    website: { type: String, default: '' },
+    company: { type: String, default: '' },
+    role: {
+      type: String,
+      enum: ['developer', 'agency', 'startup', 'other'],
+      default: 'developer',
+    },
 
     // Encrypted Resend API key
-    resendApiKey: { type: String, default: "" },
+    resendApiKey: { type: String, default: '' },
 
     // Monthly submission tracking
     monthlySubmissionCount: { type: Number, default: 0 },
     monthlySubmissionLimit: { type: Number, default: 100 },
-    currentBillingMonth: { type: String, default: "" },
+    currentBillingMonth: { type: String, default: '' },
   },
   { timestamps: true }
 );
 
-const User: Model<IUser> = mongoose.models.User ||  mongoose.model<IUser>("User", userSchema);
+const User: Model<IUser> =
+  mongoose.models.User || mongoose.model<IUser>('User', userSchema);
 export default User;

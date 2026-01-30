@@ -37,13 +37,13 @@ className="text-muted-foreground"  // #A8A8A8
 
 ```tsx
 // Main background (darkest)
-className="bg-background"  // #0A0A0A
+className = 'bg-background'; // #0A0A0A
 
 // Cards, panels, elevated surfaces
-className="bg-card"  // #212121
+className = 'bg-card'; // #212121
 
 // Subtle elevation (sidebar, secondary surfaces)
-className="bg-secondary"  // #292929
+className = 'bg-secondary'; // #292929
 
 // Never use bg-background for inputs - use bg-card instead
 ```
@@ -52,10 +52,10 @@ className="bg-secondary"  // #292929
 
 ```tsx
 // Standard borders
-className="border-border"  // #333333
+className = 'border-border'; // #333333
 
 // On focus
-className="focus-visible:border-border"
+className = 'focus-visible:border-border';
 ```
 
 ---
@@ -68,14 +68,16 @@ className="focus-visible:border-border"
 <div className="space-y-6">
   {/* Header */}
   <div>
-    <h1 className="text-3xl font-bold tracking-tight text-foreground">Page Title</h1>
+    <h1 className="text-foreground text-3xl font-bold tracking-tight">
+      Page Title
+    </h1>
     <p className="text-muted-foreground mt-1">Page description</p>
   </div>
 
   {/* Content */}
   <Card>
     <CardHeader>
-      <CardTitle className="text-lg text-foreground">Section</CardTitle>
+      <CardTitle className="text-foreground text-lg">Section</CardTitle>
       <CardDescription>Description</CardDescription>
     </CardHeader>
     <CardContent>...</CardContent>
@@ -88,9 +90,9 @@ className="focus-visible:border-border"
 ```tsx
 <Card>
   <CardContent className="flex flex-col items-center justify-center py-16">
-    <Icon className="h-12 w-12 text-muted-foreground mb-4" />
-    <h3 className="text-lg font-semibold text-foreground">Empty State Title</h3>
-    <p className="text-sm text-muted-foreground mt-1 mb-6">
+    <Icon className="text-muted-foreground mb-4 h-12 w-12" />
+    <h3 className="text-foreground text-lg font-semibold">Empty State Title</h3>
+    <p className="text-muted-foreground mt-1 mb-6 text-sm">
       Empty state description
     </p>
     <Button>Action</Button>
@@ -186,16 +188,16 @@ className="text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
 
 ## Color Reference
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--background` | #0A0A0A | Main page background |
-| `--card` | #212121 | Cards, panels, inputs |
-| `--secondary` | #292929 | Hover states, subtle surfaces |
-| `--border` | #333333 | All borders |
-| `--foreground` | #FAFAFA | Primary text, headings |
-| `--muted-foreground` | #A8A8A8 | Secondary text, descriptions |
-| `--primary` | #FAFAFA | CTA buttons (inverted) |
-| `--primary-foreground` | #0A0A0A | Text on CTA buttons |
+| Token                  | Hex     | Usage                         |
+| ---------------------- | ------- | ----------------------------- |
+| `--background`         | #0A0A0A | Main page background          |
+| `--card`               | #212121 | Cards, panels, inputs         |
+| `--secondary`          | #292929 | Hover states, subtle surfaces |
+| `--border`             | #333333 | All borders                   |
+| `--foreground`         | #FAFAFA | Primary text, headings        |
+| `--muted-foreground`   | #A8A8A8 | Secondary text, descriptions  |
+| `--primary`            | #FAFAFA | CTA buttons (inverted)        |
+| `--primary-foreground` | #0A0A0A | Text on CTA buttons           |
 
 ---
 

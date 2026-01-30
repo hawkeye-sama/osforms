@@ -1,13 +1,14 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ExternalLink, Loader2, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { ExternalLink, Loader2, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 
 interface Integration {
   _id: string;
@@ -42,8 +43,32 @@ export function GoogleSheetsConfig({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<IntegrationStatus | null>(null);
-  const [name, setName] = useState(existingIntegration?.name || "Google Sheets");
+  const [name, setName] = useState(
+    existingIntegration?.name || 'Google Sheets'
+  );
   const [enabled, setEnabled] = useState(existingIntegration?.enabled ?? true);
+
+  const fetchStatus = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `/api/v1/integrations/${existingIntegration?._id}/status`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setStatus(data);
+        setName(existingIntegration?.name || data.name || 'Google Sheets');
+        setEnabled(existingIntegration?.enabled ?? true);
+      }
+    } catch {
+      toast.error('Failed to load integration status');
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    existingIntegration?._id,
+    existingIntegration?.enabled,
+    existingIntegration?.name,
+  ]);
 
   useEffect(() => {
     if (existingIntegration) {
@@ -51,23 +76,7 @@ export function GoogleSheetsConfig({
     } else {
       setLoading(false);
     }
-  }, [existingIntegration]);
-
-  async function fetchStatus() {
-    try {
-      const res = await fetch(`/api/v1/integrations/${existingIntegration?._id}/status`);
-      if (res.ok) {
-        const data = await res.json();
-        setStatus(data);
-        setName(existingIntegration?.name || data.name || "Google Sheets");
-        setEnabled(existingIntegration?.enabled ?? true);
-      }
-    } catch {
-      toast.error("Failed to load integration status");
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [existingIntegration, fetchStatus]);
 
   function handleConnect() {
     // Redirect to Google OAuth
@@ -75,47 +84,63 @@ export function GoogleSheetsConfig({
   }
 
   async function handleSave() {
-    if (!existingIntegration) return;
+    if (!existingIntegration) {
+      return;
+    }
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/v1/integrations/${existingIntegration._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, enabled }),
-      });
+      const res = await fetch(
+        `/api/v1/integrations/${existingIntegration._id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, enabled }),
+        }
+      );
 
       if (res.ok) {
-        toast.success("Integration updated");
+        toast.success('Integration updated');
         onSave();
       } else {
         const data = await res.json();
-        toast.error(data.error || "Failed to update integration");
+        toast.error(data.error || 'Failed to update integration');
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDisconnect() {
-    if (!existingIntegration) return;
-    if (!confirm("Are you sure you want to disconnect Google Sheets? This will remove the integration.")) return;
+    if (!existingIntegration) {
+      return;
+    }
+    if (
+      !confirm(
+        'Are you sure you want to disconnect Google Sheets? This will remove the integration.'
+      )
+    ) {
+      return;
+    }
 
     try {
-      const res = await fetch(`/api/v1/integrations/${existingIntegration._id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/v1/integrations/${existingIntegration._id}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       if (res.ok) {
-        toast.success("Google Sheets disconnected");
+        toast.success('Google Sheets disconnected');
         onDelete();
       } else {
-        toast.error("Failed to disconnect");
+        toast.error('Failed to disconnect');
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     }
   }
 
@@ -134,7 +159,9 @@ export function GoogleSheetsConfig({
     return (
       <div className="space-y-6 py-4">
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-foreground">Integration Name</Label>
+          <Label className="text-foreground text-sm font-medium">
+            Integration Name
+          </Label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -143,9 +170,10 @@ export function GoogleSheetsConfig({
           />
         </div>
 
-        <div className="p-4 rounded-lg border border-border bg-muted/30 text-center space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Connect your Google account to automatically save form submissions to a spreadsheet.
+        <div className="border-border bg-muted/30 space-y-3 rounded-lg border p-4 text-center">
+          <p className="text-muted-foreground text-sm">
+            Connect your Google account to automatically save form submissions
+            to a spreadsheet.
           </p>
           <Button onClick={handleConnect} className="gap-2">
             <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -170,7 +198,7 @@ export function GoogleSheetsConfig({
           </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           A new spreadsheet will be created automatically when you connect.
         </p>
       </div>
@@ -181,11 +209,11 @@ export function GoogleSheetsConfig({
   return (
     <div className="space-y-5 py-4">
       {/* Status toggle */}
-      <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-card/50">
+      <div className="border-border bg-card/50 flex items-center justify-between rounded-lg border p-4">
         <div className="space-y-0.5">
-          <Label className="text-sm font-medium text-foreground">Status</Label>
-          <p className="text-xs text-muted-foreground">
-            {enabled ? "Integration is active" : "Integration is paused"}
+          <Label className="text-foreground text-sm font-medium">Status</Label>
+          <p className="text-muted-foreground text-xs">
+            {enabled ? 'Integration is active' : 'Integration is paused'}
           </p>
         </div>
         <Switch checked={enabled} onCheckedChange={setEnabled} />
@@ -193,7 +221,9 @@ export function GoogleSheetsConfig({
 
       {/* Integration name */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-foreground">Integration Name</Label>
+        <Label className="text-foreground text-sm font-medium">
+          Integration Name
+        </Label>
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -206,19 +236,23 @@ export function GoogleSheetsConfig({
       {status && (
         <>
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Connected Account</Label>
-            <div className="p-3 rounded-lg border border-border bg-card/50">
-              <p className="text-sm text-foreground">{status.connectedEmail}</p>
+            <Label className="text-foreground text-sm font-medium">
+              Connected Account
+            </Label>
+            <div className="border-border bg-card/50 rounded-lg border p-3">
+              <p className="text-foreground text-sm">{status.connectedEmail}</p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Spreadsheet</Label>
+            <Label className="text-foreground text-sm font-medium">
+              Spreadsheet
+            </Label>
             <div className="flex gap-2">
               <Input
                 value={status.spreadsheetUrl}
                 readOnly
-                className="bg-card border-border font-mono text-xs flex-1"
+                className="bg-card border-border flex-1 font-mono text-xs"
               />
               <Button
                 variant="outline"
@@ -226,20 +260,25 @@ export function GoogleSheetsConfig({
                 asChild
                 className="shrink-0"
               >
-                <a href={status.spreadsheetUrl} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={status.spreadsheetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Sheet: {status.sheetName}
             </p>
           </div>
         </>
       )}
 
-      <p className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/30 border border-border">
-        Form submissions will be automatically added as rows to this spreadsheet.
+      <p className="text-muted-foreground bg-muted/30 border-border rounded-lg border p-3 text-xs">
+        Form submissions will be automatically added as rows to this
+        spreadsheet.
       </p>
 
       {/* Actions */}
@@ -258,7 +297,7 @@ export function GoogleSheetsConfig({
         </Button>
         <Button onClick={handleSave} disabled={saving || !name.trim()}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {saving ? "Saving..." : "Save Changes"}
+          {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
     </div>

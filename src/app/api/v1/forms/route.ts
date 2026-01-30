@@ -1,14 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { nanoid } from "nanoid";
-import { connectDB } from "@/lib/db";
-import { requireAuth } from "@/lib/auth";
-import Form from "@/lib/models/form";
-import { createFormSchema } from "@/lib/validations";
+import { nanoid } from 'nanoid';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { requireAuth } from '@/lib/auth';
+import { connectDB } from '@/lib/db';
+import Form from '@/lib/models/form';
+import { createFormSchema } from '@/lib/validations';
 
 /** GET /api/v1/forms - List all forms for the current user */
 export async function GET(req: NextRequest) {
   const { user, error } = await requireAuth(req);
-  if (error) return error;
+  if (error) {
+    return error;
+  }
 
   await connectDB();
 
@@ -18,9 +21,8 @@ export async function GET(req: NextRequest) {
 
   // Check if we need to reset for a new month
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const submissionsUsed = user.currentBillingMonth === currentMonth
-    ? user.monthlySubmissionCount
-    : 0;
+  const submissionsUsed =
+    user.currentBillingMonth === currentMonth ? user.monthlySubmissionCount : 0;
 
   return NextResponse.json({
     forms,
@@ -35,7 +37,9 @@ export async function GET(req: NextRequest) {
 /** POST /api/v1/forms - Create a new form */
 export async function POST(req: NextRequest) {
   const { user, error } = await requireAuth(req);
-  if (error) return error;
+  if (error) {
+    return error;
+  }
 
   try {
     const body = await req.json();
@@ -43,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: parsed.error.flatten() },
+        { error: 'Validation failed', details: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -59,7 +63,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ form }, { status: 201 });
   } catch (err) {
-    console.error("Create form error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error('Create form error:', err);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

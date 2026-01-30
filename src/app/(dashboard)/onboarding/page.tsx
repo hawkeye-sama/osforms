@@ -1,19 +1,39 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { ArrowRight, ArrowLeft, Check, ExternalLink, Loader2, CheckCircle2 } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { encrypt } from "@/lib/encryption";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  ExternalLink,
+  Loader2,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
-const STEPS = ["About You", "Connect Resend", "Create & Test"];
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { encrypt } from '@/lib/encryption';
+
+const STEPS = ['About You', 'Connect Resend', 'Create & Test'];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -21,35 +41,35 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
 
   // Step 1: Profile
-  const [fullName, setFullName] = useState("");
-  const [website, setWebsite] = useState("");
-  const [company, setCompany] = useState("");
-  const [role, setRole] = useState("");
-  const [usecase, setUsecase] = useState("");
-  const [source, setSource] = useState("");
+  const [fullName, setFullName] = useState('');
+  const [website, setWebsite] = useState('');
+  const [company, setCompany] = useState('');
+  const [role, setRole] = useState('');
+  const [usecase, setUsecase] = useState('');
+  const [source, setSource] = useState('');
 
   // Step 2: Resend integration
-  const [resendKey, setResendKey] = useState("");
+  const [resendKey, setResendKey] = useState('');
   const [resendConnected, setResendConnected] = useState(false);
 
   // Step 3: Create form + validate
-  const [formName, setFormName] = useState("");
-  const [formId, setFormId] = useState("");
-  const [formSlug, setFormSlug] = useState("");
+  const [formName, setFormName] = useState('');
+  const [formId, setFormId] = useState('');
+  const [formSlug, setFormSlug] = useState('');
   const [validating, setValidating] = useState(false);
   const [validated, setValidated] = useState(false);
 
   // Test form submission (controlled, no page reload)
-  const [testName, setTestName] = useState("");
-  const [testEmail, setTestEmail] = useState("");
-  const [testMessage, setTestMessage] = useState("");
+  const [testName, setTestName] = useState('');
+  const [testEmail, setTestEmail] = useState('');
+  const [testMessage, setTestMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     // Check if user already has Resend key
     async function checkResendStatus() {
       try {
-        const res = await fetch("/api/auth/me");
+        const res = await fetch('/api/auth/me');
         if (res.ok) {
           const data = await res.json();
           if (data.user.hasResendKey) {
@@ -64,16 +84,22 @@ export default function OnboardingPage() {
   }, []);
 
   async function handleSaveProfile() {
-    if (!fullName.trim() || !company.trim() || !role || !usecase.trim() || !source) {
-      toast.error("Please fill in all required fields");
+    if (
+      !fullName.trim() ||
+      !company.trim() ||
+      !role ||
+      !usecase.trim() ||
+      !source
+    ) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/me", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: fullName.trim(),
           website: website.trim(),
@@ -83,12 +109,12 @@ export default function OnboardingPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || "Failed to save profile");
+        toast.error(data.error || 'Failed to save profile');
         return;
       }
       setStep(1);
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -96,7 +122,7 @@ export default function OnboardingPage() {
 
   async function handleConnectResend() {
     if (!resendKey.trim()) {
-      toast.error("Please enter your Resend API key");
+      toast.error('Please enter your Resend API key');
       return;
     }
 
@@ -105,22 +131,22 @@ export default function OnboardingPage() {
       // Encrypt the key before storing
       const encrypted = encrypt(resendKey.trim());
 
-      const res = await fetch("/api/auth/me", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resendApiKey: encrypted }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || "Failed to save Resend key");
+        toast.error(data.error || 'Failed to save Resend key');
         return;
       }
 
       setResendConnected(true);
-      toast.success("Resend connected!");
+      toast.success('Resend connected!');
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -128,30 +154,30 @@ export default function OnboardingPage() {
 
   async function handleCreateForm() {
     if (!formName.trim()) {
-      toast.error("Please enter a form name");
+      toast.error('Please enter a form name');
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("/api/v1/forms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/v1/forms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: formName.trim() }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || "Failed to create form");
+        toast.error(data.error || 'Failed to create form');
         return;
       }
 
       const data = await res.json();
       setFormId(data.form._id);
       setFormSlug(data.form.slug);
-      toast.success("Form created!");
+      toast.success('Form created!');
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -161,50 +187,52 @@ export default function OnboardingPage() {
     e.preventDefault();
 
     if (!testName.trim() || !testEmail.trim()) {
-      toast.error("Please fill in name and email");
+      toast.error('Please fill in name and email');
       return;
     }
 
     setSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append("name", testName.trim());
-      formData.append("email", testEmail.trim());
+      formData.append('name', testName.trim());
+      formData.append('email', testEmail.trim());
       if (testMessage.trim()) {
-        formData.append("message", testMessage.trim());
+        formData.append('message', testMessage.trim());
       }
 
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const endpointUrl = `${baseUrl}/api/v1/f/${formSlug}`;
 
       const res = await fetch(endpointUrl, {
-        method: "POST",
+        method: 'POST',
         body: formData,
       });
 
       if (res.ok) {
-        toast.success("Test form submitted! Now click Validate.");
-        setTestName("");
-        setTestEmail("");
-        setTestMessage("");
+        toast.success('Test form submitted! Now click Validate.');
+        setTestName('');
+        setTestEmail('');
+        setTestMessage('');
       } else {
-        toast.error("Form submission failed");
+        toast.error('Form submission failed');
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleValidate() {
-    if (!formId) return;
+    if (!formId) {
+      return;
+    }
 
     setValidating(true);
     try {
       const res = await fetch(`/api/v1/forms/${formId}/submissions?limit=1`);
       if (!res.ok) {
-        toast.error("Failed to check submissions");
+        toast.error('Failed to check submissions');
         return;
       }
 
@@ -213,10 +241,12 @@ export default function OnboardingPage() {
         setValidated(true);
         toast.success("Integration validated! You're all set.");
       } else {
-        toast.error("No submissions found yet. Submit your test form and try again.");
+        toast.error(
+          'No submissions found yet. Submit your test form and try again.'
+        );
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setValidating(false);
     }
@@ -225,55 +255,59 @@ export default function OnboardingPage() {
   async function handleFinish() {
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/me", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ onboardingComplete: true }),
       });
       if (!res.ok) {
-        toast.error("Failed to complete onboarding");
+        toast.error('Failed to complete onboarding');
         return;
       }
-      toast.success("Welcome to FreeForms!");
-      router.push("/dashboard");
+      toast.success('Welcome to FreeForms!');
+      router.push('/dashboard');
       router.refresh(); // Force refresh to update auth state
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setLoading(false);
     }
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
-  const endpointUrl = formSlug ? `${baseUrl}/api/v1/f/${formSlug}` : "";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : '');
+  const endpointUrl = formSlug ? `${baseUrl}/api/v1/f/${formSlug}` : '';
 
   return (
-    <div className="dark flex min-h-screen flex-col items-center justify-center px-4 py-12 gradient-radial-dark">
+    <div className="dark gradient-radial-dark flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         {/* Logo */}
-        <h1 className="text-center text-2xl font-bold tracking-tight mb-8 text-foreground">
+        <h1 className="text-foreground mb-8 text-center text-2xl font-bold tracking-tight">
           FreeForms
         </h1>
 
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="mb-8 flex items-center justify-center gap-2">
           {STEPS.map((label, i) => (
             <div key={label} className="flex items-center gap-2">
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-                  i < step
-                    ? "bg-primary text-primary-foreground"
-                    : i === step
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
-                }`}
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${(() => {
+                  if (i < step) {
+                    return 'bg-primary text-primary-foreground';
+                  }
+                  if (i === step) {
+                    return 'bg-primary text-primary-foreground';
+                  }
+                  return 'bg-muted text-muted-foreground';
+                })()}`}
               >
                 {i < step ? <Check className="h-4 w-4" /> : i + 1}
               </div>
               {i < STEPS.length - 1 && (
                 <div
                   className={`h-0.5 w-8 ${
-                    i < step ? "bg-primary" : "bg-muted"
+                    i < step ? 'bg-primary' : 'bg-muted'
                   }`}
                 />
               )}
@@ -287,7 +321,7 @@ export default function OnboardingPage() {
             <CardHeader>
               <CardTitle>Tell us about yourself</CardTitle>
               <CardDescription>
-                Help us understand how you'll use FreeForms
+                Help us understand how you&apos;ll use FreeForms
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -335,7 +369,9 @@ export default function OnboardingPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="usecase">What will you use FreeForms for? *</Label>
+                <Label htmlFor="usecase">
+                  What will you use FreeForms for? *
+                </Label>
                 <Textarea
                   id="usecase"
                   value={usecase}
@@ -362,12 +398,12 @@ export default function OnboardingPage() {
                 </Select>
               </div>
               <Button
-                className="w-full mt-2"
+                className="mt-2 w-full"
                 onClick={handleSaveProfile}
                 disabled={loading}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {loading ? "Saving..." : "Continue"}
+                {loading ? 'Saving...' : 'Continue'}
                 {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
               </Button>
             </CardContent>
@@ -385,12 +421,16 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {resendConnected ? (
-                <div className="rounded-lg border bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900 p-4">
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/20">
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-500" />
                     <div>
-                      <p className="font-medium text-green-900 dark:text-green-100">Resend Connected</p>
-                      <p className="text-sm text-green-700 dark:text-green-300">Your API key is securely saved and encrypted</p>
+                      <p className="font-medium text-green-900 dark:text-green-100">
+                        Resend Connected
+                      </p>
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        Your API key is securely saved and encrypted
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -398,18 +438,21 @@ export default function OnboardingPage() {
                 <>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Resend API Key</Label>
+                      <Label className="text-sm font-medium">
+                        Resend API Key
+                      </Label>
                       <Link
                         href="https://resend.com/api-keys"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                        className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs"
                       >
                         Get API Key <ExternalLink className="h-3 w-3" />
                       </Link>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Enter your Resend API key to enable email notifications. Your key will be encrypted and stored securely.
+                    <p className="text-muted-foreground text-xs">
+                      Enter your Resend API key to enable email notifications.
+                      Your key will be encrypted and stored securely.
                     </p>
                     <Input
                       value={resendKey}
@@ -422,16 +465,19 @@ export default function OnboardingPage() {
                       disabled={loading || !resendKey.trim()}
                       className="w-full"
                     >
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {loading ? "Connecting..." : "Connect Resend"}
+                      {loading && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {loading ? 'Connecting...' : 'Connect Resend'}
                     </Button>
                   </div>
                 </>
               )}
 
-              <div className="rounded-lg border p-4 bg-muted/50">
-                <p className="text-xs text-muted-foreground">
-                  You can also configure integrations per form from your dashboard later. Resend is optional but recommended.
+              <div className="bg-muted/50 rounded-lg border p-4">
+                <p className="text-muted-foreground text-xs">
+                  You can also configure integrations per form from your
+                  dashboard later. Resend is optional but recommended.
                 </p>
               </div>
 
@@ -441,7 +487,7 @@ export default function OnboardingPage() {
                   Back
                 </Button>
                 <Button className="flex-1" onClick={() => setStep(2)}>
-                  {resendConnected ? "Continue" : "Skip for now"}
+                  {resendConnected ? 'Continue' : 'Skip for now'}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -472,10 +518,11 @@ export default function OnboardingPage() {
                     />
                   </div>
                   {resendConnected && (
-                    <div className="rounded-lg border bg-muted/50 p-3 flex items-center gap-2">
+                    <div className="bg-muted/50 flex items-center gap-2 rounded-lg border p-3">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span className="text-sm text-muted-foreground">
-                        Resend connected — submissions will be sent to your email
+                      <span className="text-muted-foreground text-sm">
+                        Resend connected — submissions will be sent to your
+                        email
                       </span>
                     </div>
                   )}
@@ -489,8 +536,10 @@ export default function OnboardingPage() {
                       onClick={handleCreateForm}
                       disabled={loading || !formName.trim()}
                     >
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {loading ? "Creating..." : "Create Form"}
+                      {loading && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {loading ? 'Creating...' : 'Create Form'}
                     </Button>
                   </div>
                 </>
@@ -501,19 +550,28 @@ export default function OnboardingPage() {
                       <Check className="h-5 w-5 text-green-600" />
                       <span className="font-medium">Form created!</span>
                     </div>
-                    <div className="rounded-lg border bg-muted/50 p-4">
-                      <Label className="text-xs text-muted-foreground">Your endpoint URL:</Label>
-                      <p className="mt-1 text-sm font-mono break-all">{endpointUrl}</p>
+                    <div className="bg-muted/50 rounded-lg border p-4">
+                      <Label className="text-muted-foreground text-xs">
+                        Your endpoint URL:
+                      </Label>
+                      <p className="mt-1 font-mono text-sm break-all">
+                        {endpointUrl}
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-sm font-medium">Test your form</Label>
-                    <div className="rounded-lg border bg-card p-4">
-                      <p className="text-sm text-muted-foreground mb-3">
+                    <Label className="text-sm font-medium">
+                      Test your form
+                    </Label>
+                    <div className="bg-card rounded-lg border p-4">
+                      <p className="text-muted-foreground mb-3 text-sm">
                         Submit a test to validate everything works:
                       </p>
-                      <form onSubmit={handleSubmitTestForm} className="space-y-3">
+                      <form
+                        onSubmit={handleSubmitTestForm}
+                        className="space-y-3"
+                      >
                         <Input
                           type="text"
                           value={testName}
@@ -534,14 +592,20 @@ export default function OnboardingPage() {
                           placeholder="Test message (optional)"
                           rows={2}
                         />
-                        <Button type="submit" variant="outline" className="w-full" size="sm" disabled={submitting}>
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          className="w-full"
+                          size="sm"
+                          disabled={submitting}
+                        >
                           {submitting ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                               Submitting...
                             </>
                           ) : (
-                            "Submit Test Form"
+                            'Submit Test Form'
                           )}
                         </Button>
                       </form>
@@ -549,29 +613,38 @@ export default function OnboardingPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-sm font-medium">Validate integration</Label>
-                    <p className="text-xs text-muted-foreground">
-                      After submitting the test above, click the button below to verify we received your submission.
+                    <Label className="text-sm font-medium">
+                      Validate integration
+                    </Label>
+                    <p className="text-muted-foreground text-xs">
+                      After submitting the test above, click the button below to
+                      verify we received your submission.
                     </p>
                     <Button
                       onClick={handleValidate}
                       disabled={validating || validated}
-                      variant={validated ? "default" : "outline"}
+                      variant={validated ? 'default' : 'outline'}
                       className="w-full"
                     >
-                      {validating ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Checking...
-                        </>
-                      ) : validated ? (
-                        <>
-                          <Check className="mr-2 h-4 w-4" />
-                          Validated!
-                        </>
-                      ) : (
-                        "Validate Integration"
-                      )}
+                      {(() => {
+                        if (validating) {
+                          return (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Checking...
+                            </>
+                          );
+                        }
+                        if (validated) {
+                          return (
+                            <>
+                              <Check className="mr-2 h-4 w-4" />
+                              Validated!
+                            </>
+                          );
+                        }
+                        return 'Validate Integration';
+                      })()}
                     </Button>
                   </div>
 
@@ -581,8 +654,18 @@ export default function OnboardingPage() {
                       disabled={loading}
                       className="flex-1"
                     >
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {loading ? "Finishing..." : validated ? "Go to Dashboard" : "Skip & Go to Dashboard"}
+                      {loading && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {(() => {
+                        if (loading) {
+                          return 'Finishing...';
+                        }
+                        if (validated) {
+                          return 'Go to Dashboard';
+                        }
+                        return 'Skip & Go to Dashboard';
+                      })()}
                       {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
                     </Button>
                   </div>

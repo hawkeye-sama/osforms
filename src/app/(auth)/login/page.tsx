@@ -1,38 +1,41 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/ui/form-field";
-import { AuthLayout } from "@/components/auth/auth-layout";
-import { AuthCard } from "@/components/auth/auth-card";
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { AuthCard } from '@/components/auth/auth-card';
+import { AuthLayout } from '@/components/auth/auth-layout';
+import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/ui/form-field';
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailState, setEmailState] = useState<"default" | "success" | "error">("default");
-  const [emailError, setEmailError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailState, setEmailState] = useState<'default' | 'success' | 'error'>(
+    'default'
+  );
+  const [emailError, setEmailError] = useState('');
 
   // Real-time email validation
   const validateEmail = (value: string) => {
     if (!value) {
-      setEmailState("default");
-      setEmailError("");
+      setEmailState('default');
+      setEmailError('');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(value)) {
-      setEmailState("error");
-      setEmailError("Please enter a valid email address");
+      setEmailState('error');
+      setEmailError('Please enter a valid email address');
     } else {
-      setEmailState("success");
-      setEmailError("");
+      setEmailState('success');
+      setEmailError('');
     }
   };
 
@@ -46,31 +49,31 @@ export default function LoginPage() {
     e.preventDefault();
 
     // Final validation before submit
-    if (emailState === "error" || !email || !password) {
-      toast.error("Please fill in all fields correctly");
+    if (emailState === 'error' || !email || !password) {
+      toast.error('Please fill in all fields correctly');
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Login failed");
+        toast.error(data.error || 'Login failed');
         return;
       }
 
-      toast.success("Welcome back!");
-      router.push("/dashboard");
+      toast.success('Welcome back!');
+      router.push('/dashboard');
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -82,9 +85,12 @@ export default function LoginPage() {
         title="Welcome back"
         description="Sign in to your account"
         footer={
-          <p className="text-sm text-muted-foreground text-center w-full">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-foreground font-medium hover:underline transition-colors">
+          <p className="text-muted-foreground w-full text-center text-sm">
+            Don&apos;t have an account?{' '}
+            <Link
+              href="/signup"
+              className="text-foreground font-medium transition-colors hover:underline"
+            >
               Sign up
             </Link>
           </p>

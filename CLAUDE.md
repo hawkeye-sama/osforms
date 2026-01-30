@@ -7,11 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **FreeForms** is an open-source, BYOK (Bring Your Own Keys) form backend SaaS — "Resend for Forms." Users point their HTML forms at a FreeForms endpoint, and we store submissions + forward them to the user's own integrations (Resend email, Google Sheets, webhooks). Free because users bring their own API keys — we never charge for integrations.
 
 ### Target Users
+
 - Developers who need quick form backends without vendor lock-in
 - LLMs building web applications that need form handling
 - Teams wanting privacy-first form handling (data goes to user's own services)
 
 ### Why This Exists
+
 Every competitor (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5-15+/month even though the user's own API keys power them. FreeForms flips that — 100 free submissions/month with ALL integrations included. See `.claude/competitor-analysis.md` for full competitive breakdown.
 
 ## Tech Stack
@@ -34,6 +36,7 @@ npm run lint         # Run ESLint
 ```
 
 Local MongoDB via Docker:
+
 ```bash
 docker-compose up -d   # Start MongoDB
 ```
@@ -41,6 +44,7 @@ docker-compose up -d   # Start MongoDB
 ## Architecture
 
 ### Submission Flow
+
 ```
 HTML Form POST → /api/v1/f/{slug} → Validate → Store in MongoDB → Execute Integrations (sync)
                                                                     ├── Resend Email
@@ -49,11 +53,13 @@ HTML Form POST → /api/v1/f/{slug} → Validate → Store in MongoDB → Execut
 ```
 
 ### User Flow
+
 ```
 Signup → Onboarding (3 steps) → Dashboard → Create Forms → Configure Integrations → Collect Submissions
 ```
 
 ### Onboarding Steps
+
 1. **Profile**: Full name, website, company/project, role (developer/agency/startup/other)
 2. **Integrations**: Connect Resend API key, Google Sheets credentials (encrypted at rest)
 3. **Test**: Install SDK, paste sample code, submit test form, validate integration works
@@ -110,14 +116,17 @@ src/
 ## API Endpoints
 
 ### Public (no auth)
+
 - `POST /api/v1/f/{slug}` — Submit form data (HTML form post or JSON API)
 
 ### Auth
+
 - `POST /api/auth/signup` — Create account, returns JWT
 - `POST /api/auth/login` — Verify credentials, returns JWT
 - `GET /api/auth/me` — Current user from JWT
 
 ### Protected (JWT required)
+
 - `GET/POST /api/v1/forms` — List / create forms
 - `GET/PATCH/DELETE /api/v1/forms/{id}` — Form detail / update / delete
 - `GET /api/v1/forms/{id}/submissions` — Paginated submissions

@@ -14,5 +14,8 @@ export interface IntegrationResult {
 export interface IntegrationHandler {
   type: string;
   validate(config: Record<string, unknown>): { valid: boolean; error?: string };
-  execute(ctx: IntegrationContext, config: Record<string, unknown>): Promise<IntegrationResult>;
+  execute(
+    ctx: IntegrationContext,
+    config: Record<string, unknown>
+  ): Promise<IntegrationResult>;
 }

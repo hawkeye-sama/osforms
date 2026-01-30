@@ -1,21 +1,22 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Check, Copy } from "lucide-react";
-import { useState } from "react";
+import { Check, Copy } from 'lucide-react';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/button';
 
 interface CodeSnippetsProps {
   endpointUrl: string;
 }
 
 export function CodeSnippets({ endpointUrl }: CodeSnippetsProps) {
-  const [copied, setCopied] = useState("");
-  const [activeTab, setActiveTab] = useState("html");
+  const [copied, setCopied] = useState('');
+  const [activeTab, setActiveTab] = useState('html');
 
   const copyText = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopied(label);
-    setTimeout(() => setCopied(""), 2000);
+    setTimeout(() => setCopied(''), 2000);
   };
 
   const htmlBasic = `<form action="${endpointUrl}" method="POST">
@@ -53,8 +54,8 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 </form>`;
 
   const tabs = [
-    { key: "html", label: "HTML", code: htmlBasic },
-    { key: "react", label: "React/NextJS", code: reactNext },
+    { key: 'html', label: 'HTML', code: htmlBasic },
+    { key: 'react', label: 'React/NextJS', code: reactNext },
   ];
 
   const activeCode = tabs.find((t) => t.key === activeTab)?.code || htmlBasic;
@@ -62,31 +63,31 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
   return (
     <div className="space-y-4">
       {/* Tab buttons */}
-      <div className="flex gap-1 border-b border-border">
+      <div className="border-border flex gap-1 border-b">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2 text-sm font-medium transition-colors relative cursor-pointer ${
+            className={`relative cursor-pointer px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {tab.label}
             {activeTab === tab.key && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              <span className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
             )}
           </button>
         ))}
       </div>
 
       {/* Code block */}
-      <div className="relative rounded-lg border border-border bg-[#1a1a2e] overflow-hidden">
+      <div className="border-border relative overflow-hidden rounded-lg border bg-[#1a1a2e]">
         <Button
           variant="ghost"
           size="sm"
-          className="absolute top-3 right-3 h-8 text-xs text-muted-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary"
+          className="text-muted-foreground hover:text-foreground bg-secondary/50 hover:bg-secondary absolute top-3 right-3 h-8 text-xs"
           onClick={() => copyText(activeCode, activeTab)}
         >
           {copied === activeTab ? (
@@ -99,9 +100,9 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
             </>
           )}
         </Button>
-        <pre className="p-4 pr-24 text-sm font-mono overflow-x-auto leading-relaxed">
+        <pre className="overflow-x-auto p-4 pr-24 font-mono text-sm leading-relaxed">
           <code className="text-[#e0e0e0]">
-            {activeCode.split("\n").map((line, i) => (
+            {activeCode.split('\n').map((line, i) => (
               <span key={i} className="block">
                 {highlightSyntax(line)}
               </span>
@@ -116,7 +117,7 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
 // Simple syntax highlighting
 function highlightSyntax(line: string): React.ReactNode {
   // Comments
-  if (line.trim().startsWith("//") || line.trim().startsWith("<!--")) {
+  if (line.trim().startsWith('//') || line.trim().startsWith('<!--')) {
     return <span className="text-[#6a9955]">{line}</span>;
   }
 

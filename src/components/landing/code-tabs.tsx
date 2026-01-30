@@ -1,121 +1,122 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { CopyButton } from "./copy-button";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { AnimatePresence, motion } from 'motion/react';
+import { useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+
+import { CopyButton } from './copy-button';
 
 // Monotone grayscale syntax highlighting theme
 const monotoneDark = {
   'code[class*="language-"]': {
-    color: "#FAFAFA",
-    background: "transparent",
-    fontFamily: "var(--font-mono), monospace",
-    fontSize: "0.875rem",
-    lineHeight: "1.6",
+    color: '#FAFAFA',
+    background: 'transparent',
+    fontFamily: 'var(--font-mono), monospace',
+    fontSize: '0.875rem',
+    lineHeight: '1.6',
   },
   'pre[class*="language-"]': {
-    color: "#FAFAFA",
-    background: "transparent",
+    color: '#FAFAFA',
+    background: 'transparent',
     margin: 0,
     padding: 0,
   },
   comment: {
-    color: "#737373",
-    fontStyle: "italic",
+    color: '#737373',
+    fontStyle: 'italic',
   },
   prolog: {
-    color: "#737373",
+    color: '#737373',
   },
   doctype: {
-    color: "#737373",
+    color: '#737373',
   },
   cdata: {
-    color: "#737373",
+    color: '#737373',
   },
   punctuation: {
-    color: "#B3B3B3",
+    color: '#B3B3B3',
   },
   property: {
-    color: "#FAFAFA",
+    color: '#FAFAFA',
   },
   tag: {
-    color: "#FAFAFA",
-    fontWeight: "600",
+    color: '#FAFAFA',
+    fontWeight: '600',
   },
   boolean: {
-    color: "#D4D4D4",
+    color: '#D4D4D4',
   },
   number: {
-    color: "#D4D4D4",
+    color: '#D4D4D4',
   },
   constant: {
-    color: "#D4D4D4",
+    color: '#D4D4D4',
   },
   symbol: {
-    color: "#D4D4D4",
+    color: '#D4D4D4',
   },
   selector: {
-    color: "#FAFAFA",
+    color: '#FAFAFA',
   },
-  "attr-name": {
-    color: "#B3B3B3",
+  'attr-name': {
+    color: '#B3B3B3',
   },
   string: {
-    color: "#B3B3B3",
+    color: '#B3B3B3',
   },
   char: {
-    color: "#B3B3B3",
+    color: '#B3B3B3',
   },
   builtin: {
-    color: "#FAFAFA",
+    color: '#FAFAFA',
   },
   operator: {
-    color: "#B3B3B3",
+    color: '#B3B3B3',
   },
   entity: {
-    color: "#FAFAFA",
+    color: '#FAFAFA',
   },
   url: {
-    color: "#B3B3B3",
+    color: '#B3B3B3',
   },
-  ".language-css .token.string": {
-    color: "#B3B3B3",
+  '.language-css .token.string': {
+    color: '#B3B3B3',
   },
-  ".style .token.string": {
-    color: "#B3B3B3",
+  '.style .token.string': {
+    color: '#B3B3B3',
   },
   variable: {
-    color: "#D4D4D4",
+    color: '#D4D4D4',
   },
   atrule: {
-    color: "#FAFAFA",
+    color: '#FAFAFA',
   },
-  "attr-value": {
-    color: "#B3B3B3",
+  'attr-value': {
+    color: '#B3B3B3',
   },
   keyword: {
-    color: "#FAFAFA",
-    fontWeight: "600",
+    color: '#FAFAFA',
+    fontWeight: '600',
   },
   function: {
-    color: "#FAFAFA",
+    color: '#FAFAFA',
   },
-  "class-name": {
-    color: "#FAFAFA",
+  'class-name': {
+    color: '#FAFAFA',
   },
   regex: {
-    color: "#B3B3B3",
+    color: '#B3B3B3',
   },
   important: {
-    color: "#FAFAFA",
-    fontWeight: "bold",
+    color: '#FAFAFA',
+    fontWeight: 'bold',
   },
   bold: {
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   italic: {
-    fontStyle: "italic",
+    fontStyle: 'italic',
   },
 };
 
@@ -152,8 +153,8 @@ const REACT_CODE = `export function ContactForm() {
 }`;
 
 const TABS = [
-  { label: "HTML", file: "index.html", code: HTML_CODE, lang: "html" },
-  { label: "React", file: "ContactForm.tsx", code: REACT_CODE, lang: "tsx" },
+  { label: 'HTML', file: 'index.html', code: HTML_CODE, lang: 'html' },
+  { label: 'React', file: 'ContactForm.tsx', code: REACT_CODE, lang: 'tsx' },
 ];
 
 export function CodeTabs() {
@@ -161,24 +162,24 @@ export function CodeTabs() {
   const tab = TABS[active];
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="rounded-xl code-block-dark overflow-hidden shadow-2xl shadow-black/20">
+    <div className="mx-auto w-full max-w-2xl">
+      <div className="code-block-dark overflow-hidden rounded-xl shadow-2xl shadow-black/20">
         {/* Tab bar + window chrome */}
-        <div className="flex items-center border-b border-border/50">
+        <div className="border-border/50 flex items-center border-b">
           <div className="flex items-center gap-2 px-4 py-3">
             <div className="h-3 w-3 rounded-full bg-white/10" />
             <div className="h-3 w-3 rounded-full bg-white/10" />
             <div className="h-3 w-3 rounded-full bg-white/10" />
           </div>
-          <div className="flex -mb-px">
+          <div className="-mb-px flex">
             {TABS.map((t, i) => (
               <button
                 key={t.label}
                 onClick={() => setActive(i)}
-                className={`px-4 py-3 text-xs font-mono transition-colors border-b-2 ${
+                className={`border-b-2 px-4 py-3 font-mono text-xs transition-colors ${
                   i === active
-                    ? "text-foreground border-foreground"
-                    : "text-muted-foreground border-transparent hover:text-foreground/70"
+                    ? 'text-foreground border-foreground'
+                    : 'text-muted-foreground hover:text-foreground/70 border-transparent'
                 }`}
               >
                 {t.file}
@@ -204,13 +205,13 @@ export function CodeTabs() {
                 style={monotoneDark}
                 customStyle={{
                   margin: 0,
-                  padding: "1.25rem",
-                  background: "transparent",
-                  fontSize: "0.875rem",
+                  padding: '1.25rem',
+                  background: 'transparent',
+                  fontSize: '0.875rem',
                 }}
                 codeTagProps={{
                   style: {
-                    fontFamily: "var(--font-mono), monospace",
+                    fontFamily: 'var(--font-mono), monospace',
                   },
                 }}
               >

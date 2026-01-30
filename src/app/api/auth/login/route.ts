@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { verifyPassword, signToken, setAuthCookie } from "@/lib/auth";
-import User from "@/lib/models/user";
-import { signInSchema } from "@/lib/validations";
+import { NextRequest, NextResponse } from 'next/server';
+
+import { setAuthCookie, signToken, verifyPassword } from '@/lib/auth';
+import { connectDB } from '@/lib/db';
+import User from '@/lib/models/user';
+import { signInSchema } from '@/lib/validations';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: 'Invalid email or password' },
         { status: 400 }
       );
     }
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
     const valid = await verifyPassword(password, user.password);
     if (!valid) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
@@ -44,12 +45,14 @@ export async function POST(req: NextRequest) {
         id: user._id,
         name: user.name,
         email: user.email,
-        apiKey: user.apiKey,
         onboardingComplete: user.onboardingComplete,
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error('Login error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

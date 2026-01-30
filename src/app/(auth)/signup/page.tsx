@@ -1,77 +1,79 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/ui/form-field";
-import { AuthLayout } from "@/components/auth/auth-layout";
-import { AuthCard } from "@/components/auth/auth-card";
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
-type FieldState = "default" | "success" | "error";
+import { AuthCard } from '@/components/auth/auth-card';
+import { AuthLayout } from '@/components/auth/auth-layout';
+import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/ui/form-field';
+
+type FieldState = 'default' | 'success' | 'error';
 
 export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   // Form values
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Field states
-  const [nameState, setNameState] = useState<FieldState>("default");
-  const [emailState, setEmailState] = useState<FieldState>("default");
-  const [passwordState, setPasswordState] = useState<FieldState>("default");
-  const [confirmPasswordState, setConfirmPasswordState] = useState<FieldState>("default");
+  const [nameState, setNameState] = useState<FieldState>('default');
+  const [emailState, setEmailState] = useState<FieldState>('default');
+  const [passwordState, setPasswordState] = useState<FieldState>('default');
+  const [confirmPasswordState, setConfirmPasswordState] =
+    useState<FieldState>('default');
 
   // Error messages
-  const [nameError, setNameError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
   // Validation functions
   const validateName = (value: string) => {
     if (!value) {
-      setNameState("default");
-      setNameError("");
+      setNameState('default');
+      setNameError('');
       return;
     }
 
     if (value.length < 2) {
-      setNameState("error");
-      setNameError("Name must be at least 2 characters");
+      setNameState('error');
+      setNameError('Name must be at least 2 characters');
     } else {
-      setNameState("success");
-      setNameError("");
+      setNameState('success');
+      setNameError('');
     }
   };
 
   const validateEmail = (value: string) => {
     if (!value) {
-      setEmailState("default");
-      setEmailError("");
+      setEmailState('default');
+      setEmailError('');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(value)) {
-      setEmailState("error");
-      setEmailError("Please enter a valid email address");
+      setEmailState('error');
+      setEmailError('Please enter a valid email address');
     } else {
-      setEmailState("success");
-      setEmailError("");
+      setEmailState('success');
+      setEmailError('');
     }
   };
 
   const validatePassword = (value: string) => {
     if (!value) {
-      setPasswordState("default");
-      setPasswordError("");
+      setPasswordState('default');
+      setPasswordError('');
       return;
     }
 
@@ -80,17 +82,17 @@ export default function SignupPage() {
     const hasNumber = /[0-9]/.test(value);
 
     if (!hasMinLength) {
-      setPasswordState("error");
-      setPasswordError("Password must be at least 8 characters");
+      setPasswordState('error');
+      setPasswordError('Password must be at least 8 characters');
     } else if (!hasUpperCase) {
-      setPasswordState("error");
-      setPasswordError("Password must contain at least 1 uppercase letter");
+      setPasswordState('error');
+      setPasswordError('Password must contain at least 1 uppercase letter');
     } else if (!hasNumber) {
-      setPasswordState("error");
-      setPasswordError("Password must contain at least 1 number");
+      setPasswordState('error');
+      setPasswordError('Password must contain at least 1 number');
     } else {
-      setPasswordState("success");
-      setPasswordError("");
+      setPasswordState('success');
+      setPasswordError('');
     }
 
     // Also re-validate confirm password if it has a value
@@ -100,20 +102,21 @@ export default function SignupPage() {
   };
 
   const validateConfirmPassword = (value: string, passwordValue?: string) => {
-    const currentPassword = passwordValue !== undefined ? passwordValue : password;
+    const currentPassword =
+      passwordValue !== undefined ? passwordValue : password;
 
     if (!value) {
-      setConfirmPasswordState("default");
-      setConfirmPasswordError("");
+      setConfirmPasswordState('default');
+      setConfirmPasswordError('');
       return;
     }
 
     if (value !== currentPassword) {
-      setConfirmPasswordState("error");
-      setConfirmPasswordError("Passwords do not match");
+      setConfirmPasswordState('error');
+      setConfirmPasswordError('Passwords do not match');
     } else {
-      setConfirmPasswordState("success");
-      setConfirmPasswordError("");
+      setConfirmPasswordState('success');
+      setConfirmPasswordError('');
     }
   };
 
@@ -136,7 +139,9 @@ export default function SignupPage() {
     validatePassword(value);
   };
 
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleConfirmPasswordChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
     setConfirmPassword(value);
     validateConfirmPassword(value);
@@ -147,39 +152,39 @@ export default function SignupPage() {
 
     // Final validation before submit
     if (
-      nameState === "error" ||
-      emailState === "error" ||
-      passwordState === "error" ||
-      confirmPasswordState === "error" ||
+      nameState === 'error' ||
+      emailState === 'error' ||
+      passwordState === 'error' ||
+      confirmPasswordState === 'error' ||
       !name ||
       !email ||
       !password ||
       !confirmPassword
     ) {
-      toast.error("Please fill in all fields correctly");
+      toast.error('Please fill in all fields correctly');
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Signup failed");
+        toast.error(data.error || 'Signup failed');
         return;
       }
 
-      toast.success("Account created!");
-      router.push("/onboarding");
+      toast.success('Account created!');
+      router.push('/onboarding');
     } catch {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -191,9 +196,12 @@ export default function SignupPage() {
         title="Create your account"
         description="Start collecting form submissions for free"
         footer={
-          <p className="text-sm text-muted-foreground text-center w-full">
-            Already have an account?{" "}
-            <Link href="/login" className="text-foreground font-medium hover:underline transition-colors">
+          <p className="text-muted-foreground w-full text-center text-sm">
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="text-foreground font-medium transition-colors hover:underline"
+            >
               Sign in
             </Link>
           </p>

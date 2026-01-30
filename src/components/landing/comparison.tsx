@@ -1,34 +1,32 @@
-"use client";
+'use client';
 
-import { Check, X } from "lucide-react";
-import { AnimatedSection } from "./animated-section";
+import { Check, X } from 'lucide-react';
+
+import { AnimatedSection } from './animated-section';
 
 const FEATURES = [
-  "Email notifications",
-  "Google Sheets sync",
-  "Custom webhooks",
-  "Spam protection",
-  "Self-hostable",
-  "Open source",
+  'Email notifications',
+  'Google Sheets sync',
+  'Custom webhooks',
+  'Spam protection',
+  'Self-hostable',
+  'Open source',
 ];
 
 export function Comparison() {
   return (
-    <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+    <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
       {/* Others */}
       <AnimatedSection delay={0}>
-        <div className="rounded-xl border border-border/30 bg-card/50 p-6 opacity-60">
-          <h3 className="text-lg font-semibold text-muted-foreground mb-6">
+        <div className="border-border/30 bg-card/50 rounded-xl border p-6 opacity-60">
+          <h3 className="text-muted-foreground mb-6 text-lg font-semibold">
             Other Form Backends
           </h3>
           <ul className="space-y-4">
             {FEATURES.map((f) => (
-              <li
-                key={f}
-                className="flex items-center justify-between text-sm"
-              >
+              <li key={f} className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{f}</span>
-                <span className="flex items-center gap-1.5 text-muted-foreground/50">
+                <span className="text-muted-foreground/50 flex items-center gap-1.5">
                   <X className="h-4 w-4" />
                   <span className="text-xs">$10+/mo</span>
                 </span>
@@ -40,19 +38,16 @@ export function Comparison() {
 
       {/* FreeForms */}
       <AnimatedSection delay={0.15}>
-        <div className="rounded-xl border-2 border-foreground/20 bg-card p-6 relative">
-          <div className="absolute -top-3 left-6 bg-foreground text-background text-xs font-semibold px-3 py-1 rounded-full">
+        <div className="border-foreground/20 bg-card relative rounded-xl border-2 p-6">
+          <div className="bg-foreground text-background absolute -top-3 left-6 rounded-full px-3 py-1 text-xs font-semibold">
             Free
           </div>
-          <h3 className="text-lg font-semibold mb-6">FreeForms</h3>
+          <h3 className="mb-6 text-lg font-semibold">FreeForms</h3>
           <ul className="space-y-4">
             {FEATURES.map((f) => (
-              <li
-                key={f}
-                className="flex items-center justify-between text-sm"
-              >
+              <li key={f} className="flex items-center justify-between text-sm">
                 <span>{f}</span>
-                <span className="flex items-center gap-1.5 text-foreground">
+                <span className="text-foreground flex items-center gap-1.5">
                   <Check className="h-4 w-4" />
                   <span className="text-xs">Included</span>
                 </span>

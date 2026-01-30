@@ -1,36 +1,50 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
-import { motion, useInView, useAnimation } from "motion/react";
+import { motion, useAnimation, useInView } from 'motion/react';
+import { useEffect, useRef } from 'react';
 
 interface ScrollRevealProps {
   children: React.ReactNode;
   className?: string;
   delay?: number;
-  direction?: "up" | "down" | "left" | "right" | "fade";
+  direction?: 'up' | 'down' | 'left' | 'right' | 'fade';
 }
 
 export function ScrollReveal({
   children,
-  className = "",
+  className = '',
   delay = 0,
-  direction = "up",
+  direction = 'up',
 }: ScrollRevealProps) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
   const controls = useAnimation();
 
   useEffect(() => {
     if (isInView) {
-      controls.start("visible");
+      controls.start('visible');
     }
   }, [isInView, controls]);
+
+  let y = 0;
+  if (direction === 'up') {
+    y = 40;
+  } else if (direction === 'down') {
+    y = -40;
+  }
+
+  let x = 0;
+  if (direction === 'left') {
+    x = 40;
+  } else if (direction === 'right') {
+    x = -40;
+  }
 
   const variants = {
     hidden: {
       opacity: 0,
-      y: direction === "up" ? 40 : direction === "down" ? -40 : 0,
-      x: direction === "left" ? 40 : direction === "right" ? -40 : 0,
+      y,
+      x,
     },
     visible: {
       opacity: 1,
@@ -60,7 +74,7 @@ export function ScrollReveal({
       ref={ref}
       initial="hidden"
       animate={controls}
-      variants={direction === "fade" ? fadeVariants : variants}
+      variants={direction === 'fade' ? fadeVariants : variants}
       className={className}
     >
       {children}

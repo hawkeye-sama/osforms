@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from 'mongoose';
 
 export interface IForm extends Document {
   _id: mongoose.Types.ObjectId;
@@ -22,14 +22,19 @@ export interface IForm extends Document {
 
 const formSchema = new Schema<IForm>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true },
 
     allowedOrigins: { type: [String], default: [] },
-    redirectUrl: { type: String, default: "" },
-    honeypotField: { type: String, default: "" },
-    recaptchaSecret: { type: String, default: "" },
+    redirectUrl: { type: String, default: '' },
+    honeypotField: { type: String, default: '' },
+    recaptchaSecret: { type: String, default: '' },
 
     rateLimit: { type: Number, default: 10 },
 
@@ -38,5 +43,6 @@ const formSchema = new Schema<IForm>(
   { timestamps: true }
 );
 
-const Form: Model<IForm> = mongoose.models.Form ||  mongoose.model<IForm>("Form", formSchema);
+const Form: Model<IForm> =
+  mongoose.models.Form || mongoose.model<IForm>('Form', formSchema);
 export default Form;

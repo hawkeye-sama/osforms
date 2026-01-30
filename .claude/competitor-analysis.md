@@ -16,12 +16,12 @@ Form backend services handle form submissions without server-side code. Users po
 
 ### Formspree (formspree.io)
 
-| Tier | Price | Submissions/mo | Key Limits |
-|------|-------|----------------|------------|
-| Free | $0 | 50 | No plugins, 30-day archive, 2 emails, no file uploads |
-| Personal | $15/mo | 200 | Basic plugins (Sheets, Slack, webhooks), 1GB uploads |
-| Professional | $30/mo | 2,000 | Premium plugins (HubSpot, Salesforce, Notion), rules engine |
-| Business | $90/mo | 20,000 | Custom honeypot, custom email templates/domains |
+| Tier         | Price  | Submissions/mo | Key Limits                                                  |
+| ------------ | ------ | -------------- | ----------------------------------------------------------- |
+| Free         | $0     | 50             | No plugins, 30-day archive, 2 emails, no file uploads       |
+| Personal     | $15/mo | 200            | Basic plugins (Sheets, Slack, webhooks), 1GB uploads        |
+| Professional | $30/mo | 2,000          | Premium plugins (HubSpot, Salesforce, Notion), rules engine |
+| Business     | $90/mo | 20,000         | Custom honeypot, custom email templates/domains             |
 
 **What's paywalled**: ALL integrations (free = email only, no Sheets/Slack/webhooks), API access (Professional+), file uploads (paid only), custom spam rules (Business only), submission archive beyond 30 days.
 
@@ -31,12 +31,12 @@ Form backend services handle form submissions without server-side code. Users po
 
 ### FormBold (formbold.com)
 
-| Tier | Price | Submissions/mo | Key Limits |
-|------|-------|----------------|------------|
-| Free | $0 | 100 | 5 forms, 2 emails, no file attachments, no API, no webhooks |
-| Starter | $4-6/mo | 3,000 | 100 forms, file attachments, API, webhooks |
-| Premium | $9-15/mo | 5,000 | Autoresponder, custom redirects |
-| Business | $16-24/mo | 15,000 | Branding removal, domain restrictions |
+| Tier     | Price     | Submissions/mo | Key Limits                                                  |
+| -------- | --------- | -------------- | ----------------------------------------------------------- |
+| Free     | $0        | 100            | 5 forms, 2 emails, no file attachments, no API, no webhooks |
+| Starter  | $4-6/mo   | 3,000          | 100 forms, file attachments, API, webhooks                  |
+| Premium  | $9-15/mo  | 5,000          | Autoresponder, custom redirects                             |
+| Business | $16-24/mo | 15,000         | Branding removal, domain restrictions                       |
 
 **What's paywalled**: API access (Starter+), webhooks (Starter+), file attachments (Starter+), autoresponder (Premium+), branding removal (Business).
 
@@ -46,13 +46,13 @@ Form backend services handle form submissions without server-side code. Users po
 
 ### Basin (usebasin.com)
 
-| Tier | Price | Submissions/mo | Key Limits |
-|------|-------|----------------|------------|
-| Free | $0 | 50 | 1 form, 30-day retention, basic only |
-| Basic | $5.83/mo | 250 | 3 forms, 365-day retention, data export |
-| Standard | $12.50/mo | 1,000 | Unlimited forms, Slack/Sheets/webhooks, API |
-| Premium | $27.50/mo | 5,000 | Custom templates, custom domains, AI spam |
-| Agency | $81.25/mo | 25,000 | Progressive capture, priority support |
+| Tier     | Price     | Submissions/mo | Key Limits                                  |
+| -------- | --------- | -------------- | ------------------------------------------- |
+| Free     | $0        | 50             | 1 form, 30-day retention, basic only        |
+| Basic    | $5.83/mo  | 250            | 3 forms, 365-day retention, data export     |
+| Standard | $12.50/mo | 1,000          | Unlimited forms, Slack/Sheets/webhooks, API |
+| Premium  | $27.50/mo | 5,000          | Custom templates, custom domains, AI spam   |
+| Agency   | $81.25/mo | 25,000         | Progressive capture, priority support       |
 
 **What's paywalled**: Google Sheets / Slack / webhooks / API all locked to Standard ($12.50/mo). Custom spam rules at Premium ($27.50/mo).
 
@@ -62,12 +62,12 @@ Form backend services handle form submissions without server-side code. Users po
 
 ### Formcarry (formcarry.com)
 
-| Tier | Price | Submissions/mo | Key Limits |
-|------|-------|----------------|------------|
-| Baby (Free) | $0 | 50 | 1 form, 1 team member |
-| Starter | $5/mo | 500 | Unlimited forms, 1GB uploads, 500 integration calls |
-| Basic | $15/mo | 2,000 | 5 team members, 2GB uploads |
-| Premium | $80/mo | 30,000 | 20 team members, 30GB uploads |
+| Tier        | Price  | Submissions/mo | Key Limits                                          |
+| ----------- | ------ | -------------- | --------------------------------------------------- |
+| Baby (Free) | $0     | 50             | 1 form, 1 team member                               |
+| Starter     | $5/mo  | 500            | Unlimited forms, 1GB uploads, 500 integration calls |
+| Basic       | $15/mo | 2,000          | 5 team members, 2GB uploads                         |
+| Premium     | $80/mo | 30,000         | 20 team members, 30GB uploads                       |
 
 **Notable**: Custom email server on ALL tiers (including free). File uploads on free tier. AJAX/API on all tiers. GDPR/CCPA compliant.
 
@@ -77,9 +77,9 @@ Form backend services handle form submissions without server-side code. Users po
 
 ### Formspark (formspark.io)
 
-| Model | Price | Submissions |
-|-------|-------|-------------|
-| Free | $0 | 500 total (not monthly) |
+| Model  | Price        | Submissions                  |
+| ------ | ------------ | ---------------------------- |
+| Free   | $0           | 500 total (not monthly)      |
 | Bundle | $25 one-time | 50,000 total (never expires) |
 
 **Notable**: One-time payment model is unique. No monthly fees. 500 free submissions lifetime.
@@ -90,18 +90,18 @@ Form backend services handle form submissions without server-side code. Users po
 
 ## Competitive Matrix
 
-| Feature | Formspree | FormBold | Basin | Formcarry | **FreeForms** |
-|---------|-----------|----------|-------|-----------|---------------|
-| Free submissions/mo | 50 | 100 | 50 | 50 | **200** |
-| Free integrations | None | Limited | None | Limited | **All (BYOK)** |
-| Google Sheets (free) | No | No | No | No | **Yes** |
-| Webhooks (free) | No | No | No | No | **Yes** |
-| Email notifications (free) | Yes (2) | Yes (2) | Yes | Yes | **Yes (unlimited)** |
-| API access (free) | No | No | No | Yes | **Yes** |
-| File uploads (free) | No | No | No | Yes | Future |
-| Self-hostable | No | No | No | No | **Yes** |
-| Open source | No | No | No | No | **Yes** |
-| Submission archive | 30 days | ? | 30 days | Forever | **Forever** |
+| Feature                    | Formspree | FormBold | Basin   | Formcarry | **FreeForms**       |
+| -------------------------- | --------- | -------- | ------- | --------- | ------------------- |
+| Free submissions/mo        | 50        | 100      | 50      | 50        | **200**             |
+| Free integrations          | None      | Limited  | None    | Limited   | **All (BYOK)**      |
+| Google Sheets (free)       | No        | No       | No      | No        | **Yes**             |
+| Webhooks (free)            | No        | No       | No      | No        | **Yes**             |
+| Email notifications (free) | Yes (2)   | Yes (2)  | Yes     | Yes       | **Yes (unlimited)** |
+| API access (free)          | No        | No       | No      | Yes       | **Yes**             |
+| File uploads (free)        | No        | No       | No      | Yes       | Future              |
+| Self-hostable              | No        | No       | No      | No        | **Yes**             |
+| Open source                | No        | No       | No      | No        | **Yes**             |
+| Submission archive         | 30 days   | ?        | 30 days | Forever   | **Forever**         |
 
 ---
 
@@ -125,10 +125,10 @@ Form backend services handle form submissions without server-side code. Users po
 
 ## Pricing Strategy
 
-| Tier | Price | Submissions/mo | What You Get |
-|------|-------|----------------|--------------|
-| Free | $0 | 100 | All integrations (BYOK), unlimited forms, API access, permanent archive |
-| Self-hosted | Free | Unlimited | Run your own instance, bring your own DB |
+| Tier        | Price | Submissions/mo | What You Get                                                            |
+| ----------- | ----- | -------------- | ----------------------------------------------------------------------- |
+| Free        | $0    | 100            | All integrations (BYOK), unlimited forms, API access, permanent archive |
+| Self-hosted | Free  | Unlimited      | Run your own instance, bring your own DB                                |
 
 **Why this works**: Our costs are minimal (MongoDB storage, compute for submission processing). Users handle their own email/Sheets/webhook costs through their own accounts.
 

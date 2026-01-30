@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import * as React from 'react';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -10,9 +10,9 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="dark relative min-h-screen w-full bg-background text-foreground">
+    <div className="dark bg-background text-foreground relative min-h-screen w-full">
       {/* Grid background with radial glow */}
-      <div className="fixed inset-0 bg-grid-glow" />
+      <div className="bg-grid-glow fixed inset-0" />
 
       {/* Content container */}
       <div className="relative flex min-h-screen flex-col">
@@ -23,13 +23,16 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           transition={{ duration: 0.4 }}
           className="container mx-auto px-4 py-8"
         >
-          <Link href="/" className="inline-flex items-center space-x-2 text-xl font-bold hover:opacity-80 transition-opacity">
+          <Link
+            href="/"
+            className="inline-flex items-center space-x-2 text-xl font-bold transition-opacity hover:opacity-80"
+          >
             <span>FreeForms</span>
           </Link>
         </motion.header>
 
         {/* Main content */}
-        <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <main className="flex flex-1 items-center justify-center px-4 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -47,16 +50,28 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           transition={{ duration: 0.4, delay: 0.2 }}
           className="container mx-auto px-4 py-8"
         >
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} FreeForms. Open source form backend.</p>
+          <div className="text-muted-foreground flex flex-col items-center justify-between gap-4 text-sm sm:flex-row">
+            <p>
+              &copy; {new Date().getFullYear()} FreeForms. Open source form
+              backend.
+            </p>
             <div className="flex items-center gap-6">
-              <Link href="/privacy" className="hover:text-foreground transition-colors">
+              <Link
+                href="/privacy"
+                className="hover:text-foreground transition-colors"
+              >
                 Privacy
               </Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors">
+              <Link
+                href="/terms"
+                className="hover:text-foreground transition-colors"
+              >
                 Terms
               </Link>
-              <Link href="https://github.com/yourusername/freeforms" className="hover:text-foreground transition-colors">
+              <Link
+                href="https://github.com/yourusername/freeforms"
+                className="hover:text-foreground transition-colors"
+              >
                 GitHub
               </Link>
             </div>

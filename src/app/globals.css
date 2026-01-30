@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -63,7 +63,7 @@
   --bg-subtle: oklch(0.11 0 0); /* #1C1C1C - Slightly elevated (was 0.078) */
   --bg-element: oklch(0.13 0 0); /* #212121 - Cards, panels (was 0.10) */
   --bg-hover: oklch(0.16 0 0); /* #292929 - Hover states (was 0.141) */
-  --bg-active: oklch(0.20 0 0); /* #333333 - Active states (was 0.18) */
+  --bg-active: oklch(0.2 0 0); /* #333333 - Active states (was 0.18) */
 
   /* Elevated surfaces - lightened for better contrast */
   --card: oklch(0.13 0 0); /* #212121 - Cards, panels (was 0.10) */
@@ -81,7 +81,9 @@
 
   /* Muted elements */
   --muted: oklch(0.11 0 0); /* #1C1C1C - Subtle surfaces (was 0.078) */
-  --muted-foreground: oklch(0.65 0 0); /* #A8A8A8 - Secondary text (was 0.627) */
+  --muted-foreground: oklch(
+    0.65 0 0
+  ); /* #A8A8A8 - Secondary text (was 0.627) */
 
   /* Text hierarchy - improved contrast */
   --text-tertiary: oklch(0.52 0 0); /* #858585 - Tertiary text (was 0.45) */
@@ -96,10 +98,12 @@
   --destructive-foreground: oklch(1 0 0);
 
   /* Borders - subtle layering */
-  --border: oklch(0.20 0 0); /* #333333 - Standard borders (was 0.165) */
+  --border: oklch(0.2 0 0); /* #333333 - Standard borders (was 0.165) */
   --border-subtle: oklch(0.13 0 0); /* #212121 - Barely visible (was 0.10) */
   --border-strong: oklch(0.28 0 0); /* #474747 - Prominent borders (was 0.25) */
-  --input: oklch(0.08 0 0); /* #141414 - Slightly lighter input bg (was 0.039) */
+  --input: oklch(
+    0.08 0 0
+  ); /* #141414 - Slightly lighter input bg (was 0.039) */
   --ring: oklch(1 0 0); /* #FFFFFF - White focus ring */
 }
 
@@ -129,40 +133,75 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes glow-pulse {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.12),
-                0 0 40px rgba(255, 255, 255, 0.06);
+  0%,
+  100% {
+    box-shadow:
+      0 0 20px rgba(255, 255, 255, 0.12),
+      0 0 40px rgba(255, 255, 255, 0.06);
   }
   50% {
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.20),
-                0 0 60px rgba(255, 255, 255, 0.10);
+    box-shadow:
+      0 0 30px rgba(255, 255, 255, 0.2),
+      0 0 60px rgba(255, 255, 255, 0.1);
   }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
-  20%, 40%, 60%, 80% { transform: translateX(8px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-8px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(8px);
+  }
 }
 
 @keyframes scale-in {
@@ -193,8 +232,14 @@ body {
 .bg-grid-glow {
   background-image:
     radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    radial-gradient(ellipse 800px 600px at 50% 0%, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
-  background-size: 32px 32px, 100% 100%;
+    radial-gradient(
+      ellipse 800px 600px at 50% 0%,
+      rgba(255, 255, 255, 0.06) 0%,
+      transparent 50%
+    );
+  background-size:
+    32px 32px,
+    100% 100%;
 }
 
 .gradient-radial-glow {
@@ -224,13 +269,15 @@ body {
 }
 
 .glow-medium {
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.18),
-              0 0 60px rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 0 30px rgba(255, 255, 255, 0.18),
+    0 0 60px rgba(255, 255, 255, 0.1);
 }
 
 .glow-strong {
-  box-shadow: 0 0 40px rgba(255, 255, 255, 0.25),
-              0 0 80px rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 0 40px rgba(255, 255, 255, 0.25),
+    0 0 80px rgba(255, 255, 255, 0.15);
 }
 
 .glow-hover {
@@ -238,8 +285,9 @@ body {
 }
 
 .glow-hover:hover {
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.25),
-              0 0 60px rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 30px rgba(255, 255, 255, 0.25),
+    0 0 60px rgba(255, 255, 255, 0.12);
 }
 
 .glow-pulse {
@@ -256,7 +304,7 @@ body {
 .card-hover:hover {
   transform: translateY(-4px);
   border-color: var(--border-strong);
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.10);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
 }
 
 .card-interactive {
@@ -298,7 +346,7 @@ body {
 
 .code-block-dark {
   background: oklch(0.039 0 0);
-  border: 1px solid oklch(0.10 0 0);
+  border: 1px solid oklch(0.1 0 0);
   box-shadow: 0 0 40px rgba(255, 255, 255, 0.04);
 }
 

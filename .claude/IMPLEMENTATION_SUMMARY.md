@@ -13,6 +13,7 @@
 - Included best practices from Linear, Vercel, GitHub, and Stripe
 
 **Key Changes**:
+
 - Background layers: `#0F0F0F` → `#1A1A1A` → `#262626` → `#303030`
 - Text hierarchy: `#FAFAFA` → `#B3B3B3` → `#737373` → `#525252`
 - Borders: `#1F1F1F` (subtle) → `#2A2A2A` (default) → `#404040` (strong)
@@ -23,6 +24,7 @@
 **File**: [LANDING_PAGE_GUIDE.md](../LANDING_PAGE_GUIDE.md)
 
 Complete specifications for:
+
 - 7-section landing page structure
 - Exact CSS for every component
 - Mobile-responsive patterns
@@ -35,6 +37,7 @@ Complete specifications for:
 **File**: [CONTENT_GUIDE.md](../CONTENT_GUIDE.md)
 
 Comprehensive copywriting framework:
+
 - Voice & tone guidelines (technical but approachable)
 - Messaging framework (3 pillars: Lock-In, Integrations, Developer-First)
 - Writing rules for headlines, CTAs, features
@@ -53,14 +56,11 @@ Comprehensive copywriting framework:
 - Updated card hover to 2px lift (subtle)
 
 **CSS Variables Added**:
+
 ```css
---bg-subtle: #1A1A1A
---bg-hover: #303030
---bg-active: #3A3A3A
---text-tertiary: #737373
---text-quaternary: #525252
---border-subtle: #1F1F1F
---border-strong: #404040
+--bg-subtle: #1a1a1a --bg-hover: #303030 --bg-active: #3a3a3a
+  --text-tertiary: #737373 --text-quaternary: #525252 --border-subtle: #1f1f1f
+  --border-strong: #404040;
 ```
 
 ### 5. Implemented New Landing Page ✅
@@ -68,6 +68,7 @@ Comprehensive copywriting framework:
 **File**: [src/app/page.tsx](../src/app/page.tsx)
 
 Completely rewritten landing page with:
+
 - **Navigation**: Sticky header with Docs/Pricing/GitHub links
 - **Hero**: "The Form Backend That Respects Your Keys" headline
 - **Code Tabs**: Interactive HTML/React code examples
@@ -78,6 +79,7 @@ Completely rewritten landing page with:
 - **Footer**: 4-column layout with proper link structure
 
 **Messaging**:
+
 - Follows content guide exactly
 - Direct, technical language
 - No marketing buzzwords
@@ -99,27 +101,34 @@ Completely rewritten landing page with:
 ## Design Principles Applied
 
 ### Monotone Hierarchy
+
 ✅ All visual hierarchy created through:
+
 - Typography scale (12px to 48px)
 - Font weights (400, 500, 600, 700)
 - Spacing (4px base unit)
 - Opacity variations in grayscale
 
 ### No Color Accents
+
 ✅ Removed:
+
 - Cyan/neon glow effects
 - Color-based focus states
 - Colored syntax highlighting
 - Accent color variables
 
 ✅ Replaced with:
+
 - Grayscale variations
 - Subtle hover states (border changes, 2px lift)
 - Typography-driven hierarchy
 - Monotone syntax highlighting
 
 ### Developer-First Content
+
 ✅ Landing page copy:
+
 - "The Form Backend That Respects Your Keys" (direct)
 - "Competitors paywall these behind $15/mo. We don't." (honest)
 - "Built for developers who read docs, not marketing pages." (technical)
@@ -146,12 +155,14 @@ w:\Personal\free-form\
 ## Next Steps (Optional)
 
 ### Immediate
+
 - [ ] Test landing page on `npm run dev`
 - [ ] Verify all links work (/docs, /pricing, etc.)
 - [ ] Check mobile responsiveness
 - [ ] Review copy for typos
 
 ### Future Enhancements
+
 - [ ] Add animations (fade-in on scroll)
 - [ ] Implement comparison table (FreeForms vs. competitors)
 - [ ] Add testimonials/social proof section
@@ -162,6 +173,7 @@ w:\Personal\free-form\
 ## Testing Checklist
 
 ### Visual
+
 - [ ] All text uses grayscale colors only
 - [ ] No cyan/neon colors visible
 - [ ] Buttons have consistent styling (white primary, bordered secondary)
@@ -169,6 +181,7 @@ w:\Personal\free-form\
 - [ ] Hover states work (2px lift on cards, border color change)
 
 ### Content
+
 - [ ] Headline: "The Form Backend That Respects Your Keys"
 - [ ] Subheadline: Mentions Resend, Google Sheets, webhooks, 100 free
 - [ ] Features: Lock-In, Integrations, Developer-First
@@ -176,6 +189,7 @@ w:\Personal\free-form\
 - [ ] Technical but approachable tone
 
 ### Technical
+
 - [ ] Code tabs switch between HTML/React
 - [ ] Syntax highlighting is grayscale only
 - [ ] All internal links work
@@ -186,6 +200,7 @@ w:\Personal\free-form\
 ## Research Sources
 
 All guides based on 2026 best practices from:
+
 - [SaaS Landing Page Trends 2026](https://www.saasframe.io/blog/10-saas-landing-page-trends-for-2026-with-real-examples)
 - [Vercel Design Guidelines](https://vercel.com/design/guidelines)
 - [SaaS Copywriting Best Practices](https://www.phoebelown.com/blog/the-ultimate-guide-to-saas-copywriting-20-tips-tricks-and-best-practices)
