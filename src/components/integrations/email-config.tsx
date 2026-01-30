@@ -43,7 +43,7 @@ export function EmailConfig({
   const [emailFrom, setEmailFrom] = useState('');
   const [emailTo, setEmailTo] = useState('');
   const [emailSubject, setEmailSubject] = useState('New Form Submission');
-  const [useAccountKey, setUseAccountKey] = useState(true);
+  const [useAccountKey, setUseAccountKey] = useState(!!existingIntegration);
   const [customApiKey, setCustomApiKey] = useState('');
 
   async function handleSave(e: React.FormEvent) {
@@ -233,21 +233,25 @@ export function EmailConfig({
           Resend API Key
         </Label>
         <div className="space-y-2">
-          <label className="border-border bg-card hover:bg-card/80 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors">
-            <input
-              type="radio"
-              name="apiKeySource"
-              checked={useAccountKey}
-              onChange={() => setUseAccountKey(true)}
-              className="accent-primary h-4 w-4"
-            />
-            <div className="flex-1">
-              <p className="text-foreground text-sm font-medium">
-                Use account Resend key
-              </p>
-              <p className="text-muted-foreground text-xs">Existing API Key</p>
-            </div>
-          </label>
+          {existingIntegration && (
+            <label className="border-border bg-card hover:bg-card/80 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors">
+              <input
+                type="radio"
+                name="apiKeySource"
+                checked={useAccountKey}
+                onChange={() => setUseAccountKey(true)}
+                className="accent-primary h-4 w-4"
+              />
+              <div className="flex-1">
+                <p className="text-foreground text-sm font-medium">
+                  Use existing Resend key
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Existing API Key
+                </p>
+              </div>
+            </label>
+          )}
           <label className="border-border bg-card hover:bg-card/80 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors">
             <input
               type="radio"
