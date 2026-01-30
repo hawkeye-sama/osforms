@@ -29,7 +29,7 @@ export default function LandingPage() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="border-border/40 bg-background/80 sticky top-0 z-50 w-full border-b backdrop-blur-xl"
+        className="border-border/40 bg-background/10 sticky top-0 z-50 w-full border-b backdrop-blur-xl"
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-8">
           <Link
@@ -38,7 +38,7 @@ export default function LandingPage() {
           >
             OSForms
           </Link>
-          <nav className="hidden items-center gap-6 text-sm md:flex">
+          {/* <nav className="hidden items-center gap-6 text-sm md:flex">
             <Link
               href="/docs"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -59,7 +59,7 @@ export default function LandingPage() {
             >
               GitHub
             </Link>
-          </nav>
+          </nav> */}
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -145,7 +145,7 @@ export default function LandingPage() {
                 rel="noopener noreferrer"
               >
                 <Github className="mr-2 h-4 w-4" />
-                View on GitHub
+                View on GitHub (Coming Soon)
               </Link>
             </Button>
           </motion.div>
