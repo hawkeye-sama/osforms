@@ -53,9 +53,18 @@ async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
   <button type="submit">Send</button>
 </form>`;
 
+  const curlExample = `curl -X POST ${endpointUrl} \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "email": "user@example.com",
+    "name": "John Doe",
+    "message": "Test message from cURL"
+  }'`;
+
   const tabs = [
     { key: 'html', label: 'HTML', code: htmlBasic },
     { key: 'react', label: 'React/NextJS', code: reactNext },
+    { key: 'curl', label: 'cURL', code: curlExample },
   ];
 
   const activeCode = tabs.find((t) => t.key === activeTab)?.code || htmlBasic;

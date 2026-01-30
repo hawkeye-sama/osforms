@@ -21,7 +21,6 @@ export async function GET(req: NextRequest) {
       website: user.website,
       company: user.company,
       role: user.role,
-      hasResendKey: Boolean(user.resendApiKey),
     },
   });
 }
@@ -43,7 +42,6 @@ export async function PATCH(req: NextRequest) {
       'company',
       'role',
       'onboardingComplete',
-      'resendApiKey', // Encrypted Resend API key
     ] as const;
 
     const update: Record<string, unknown> = {};
@@ -71,7 +69,6 @@ export async function PATCH(req: NextRequest) {
         website: user.website,
         company: user.company,
         role: user.role,
-        hasResendKey: Boolean(user.resendApiKey),
       },
     });
   } catch {

@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
-import { decrypt } from '@/lib/encryption';
 import Form from '@/lib/models/form';
 import Integration from '@/lib/models/integration';
-import User from '@/lib/models/user';
 import { createOrUpdateIntegration } from '@/lib/services/integration';
 import { createIntegrationSchema } from '@/lib/validations';
 
@@ -63,34 +61,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Form not found' }, { status: 404 });
     }
 
-    // For EMAIL integrations, auto-inject user's saved Resend key if available
-    let finalConfig = config as Record<string, unknown>;
-    if (type === 'EMAIL') {
-      const fullUser = await User.findById(user._id);
-      if (fullUser?.resendApiKey) {
-        try {
-          const decryptedKey = decrypt(fullUser.resendApiKey);
-          // If config doesn't have an apiKey or has placeholder, use the user's saved one
-          if (
-            !finalConfig.apiKey ||
-            finalConfig.apiKey === 're_xxxx' ||
-            finalConfig.apiKey === 'auto'
-          ) {
-            finalConfig = { ...finalConfig, apiKey: decryptedKey };
-          }
-        } catch (err) {
-          console.error("Failed to decrypt user's Resend key:", err);
-        }
-      }
-      // If user doesn't have a saved key, they can provide one directly in the config
-    }
-
     // Validate integration config
     const integration = await createOrUpdateIntegration({
       formId,
       type,
       name,
-      config: finalConfig,
+      config,
       enabled,
     });
 

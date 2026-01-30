@@ -5,12 +5,21 @@ import { getOAuth2Client } from '@/lib/google';
 export async function GET(request: NextRequest) {
   const queryParameters = request.nextUrl.searchParams;
   const formId = queryParameters.get('formId');
+  const returnTo = queryParameters.get('returnTo');
 
   if (!formId) {
     return NextResponse.json({ error: 'No formId provided' }, { status: 400 });
   }
 
   const oauth2Client = getOAuth2Client();
+
+  // Encode formId and optional returnTo in state parameter
+  const stateData = JSON.stringify({
+    formId,
+    ...(returnTo && { returnTo }),
+  });
+
+  console.log('OAuth State Data:', stateData);
 
   // Generate the URL the user needs to visit to authorize your app
   const url = oauth2Client.generateAuthUrl({
@@ -21,7 +30,7 @@ export async function GET(request: NextRequest) {
     // Without this, Google won't send a Refresh Token on subsequent logins.
     prompt: 'consent',
 
-    state: formId, // Pass the formId in the state parameter so we can verify it later and attach oauth with a form id
+    state: stateData, // Pass formId and returnTo in state parameter
 
     scope: [
       'https://www.googleapis.com/auth/userinfo.email', // To identify who they are

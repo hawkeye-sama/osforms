@@ -13,9 +13,6 @@ export interface IUser extends Document {
   company: string;
   role: 'developer' | 'agency' | 'startup' | 'other';
 
-  // Optional: Store user's Resend API key (encrypted)
-  resendApiKey?: string;
-
   // Monthly submission tracking
   monthlySubmissionCount: number;
   monthlySubmissionLimit: number;
@@ -46,9 +43,6 @@ const userSchema = new Schema<IUser>(
       enum: ['developer', 'agency', 'startup', 'other'],
       default: 'developer',
     },
-
-    // Encrypted Resend API key
-    resendApiKey: { type: String, default: '' },
 
     // Monthly submission tracking
     monthlySubmissionCount: { type: Number, default: 0 },
