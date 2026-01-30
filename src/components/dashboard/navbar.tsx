@@ -64,7 +64,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         {/* Right side - GitHub + Account dropdown */}
         <div className="flex items-center gap-2">
           {/* GitHub Link */}
-          <Button
+          {/* <Button
             variant="ghost"
             size="icon"
             className="text-foreground hover:text-foreground"
@@ -74,7 +74,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
               <Github className="h-5 w-5" />
               <span className="sr-only">GitHub</span>
             </a>
-          </Button>
+          </Button> */}
 
           {/* Account Dropdown */}
           <DropdownMenu>
