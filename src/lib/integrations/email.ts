@@ -1,6 +1,6 @@
-import { Resend } from "resend";
-import type { IntegrationHandler, IntegrationContext, IntegrationResult } from "./base";
 import { emailConfigSchema, type EmailConfig } from "@/lib/validations";
+import { Resend } from "resend";
+import type { IntegrationContext, IntegrationHandler, IntegrationResult } from "./base";
 
 function formatHTML(ctx: IntegrationContext): string {
   const rows = Object.entries(ctx.data)
@@ -34,21 +34,6 @@ async function sendViaResend(config: EmailConfig, ctx: IntegrationContext): Prom
   return { success: true, message: "Email sent via Resend" };
 }
 
-async function sendViaSendGrid(config: EmailConfig, ctx: IntegrationContext): Promise<IntegrationResult> {
-  const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      personalizations: [{ to: config.to.map((email) => ({ email })) }],
-      from: { email: config.from },
-      subject: `${config.subject} - ${ctx.formName}`,
-      content: [{ type: "text/html", value: formatHTML(ctx) }],
-    }),
-  });
-  if (!res.ok) return { success: false, message: `SendGrid ${res.status}: ${await res.text()}` };
-  return { success: true, message: "Email sent via SendGrid" };
-}
-
 export const emailIntegration: IntegrationHandler = {
   type: "EMAIL",
 
@@ -61,7 +46,6 @@ export const emailIntegration: IntegrationHandler = {
   async execute(ctx, config) {
     const c = emailConfigSchema.parse(config);
     if (c.provider === "resend") return sendViaResend(c, ctx);
-    if (c.provider === "sendgrid") return sendViaSendGrid(c, ctx);
     return { success: false, message: `SMTP not yet supported in MVP` };
   },
 };

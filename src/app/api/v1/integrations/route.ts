@@ -1,10 +1,10 @@
 import { requireAuth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { decrypt, encryptJSON } from "@/lib/encryption";
-import { getHandler } from "@/lib/integrations";
+import { decrypt } from "@/lib/encryption";
 import Form from "@/lib/models/form";
 import Integration from "@/lib/models/integration";
 import User from "@/lib/models/user";
+import { createOrUpdateIntegration } from "@/lib/services/integration";
 import { createIntegrationSchema } from "@/lib/validations";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -71,17 +71,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate integration config
-    const handler = getHandler(type);
-    if (!handler) return NextResponse.json({ error: `Unsupported type: ${type}` }, { status: 400 });
-
-    const validation = handler.validate(finalConfig);
-    if (!validation.valid) {
-      return NextResponse.json({ error: `Invalid config: ${validation.error}` }, { status: 400 });
-    }
-
-    const configEncrypted = encryptJSON(finalConfig);
-
-    const integration = await Integration.create({ formId, type, name, configEncrypted, enabled });
+    const integration = await createOrUpdateIntegration({
+      formId,
+      type,
+      name,
+      config: finalConfig,
+      enabled
+    });
 
     return NextResponse.json(
       {
