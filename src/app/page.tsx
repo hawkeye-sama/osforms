@@ -36,7 +36,7 @@ export default function LandingPage() {
             href="/"
             className="text-base font-semibold tracking-tight transition-opacity hover:opacity-80"
           >
-            FreeForms
+            OSForms
           </Link>
           <nav className="hidden items-center gap-6 text-sm md:flex">
             <Link
@@ -366,7 +366,7 @@ export default function LandingPage() {
       <footer className="border-border/40 bg-card/20 border-t px-8 py-16 backdrop-blur-sm">
         <div className="mx-auto grid max-w-300 grid-cols-1 gap-12 sm:grid-cols-4">
           <div>
-            <div className="text-base font-semibold">FreeForms</div>
+            <div className="text-base font-semibold">OSForms</div>
             <p className="text-muted-foreground mt-3 text-sm">
               Built by developers,
               <br />
@@ -451,7 +451,7 @@ export default function LandingPage() {
 
         <div className="border-border/40 mx-auto mt-12 max-w-300 border-t pt-8 text-center">
           <p className="text-muted-foreground text-xs">
-            © {new Date().getFullYear()} FreeForms. Open source, MIT License.
+            © {new Date().getFullYear()} OSForms. Open source, MIT License.
           </p>
         </div>
       </footer>

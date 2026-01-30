@@ -36,12 +36,12 @@ export const webhookIntegration: IntegrationHandler = {
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'User-Agent': 'FreeForms-Webhook/1.0',
+      'User-Agent': 'osforms-Webhook/1.0',
       ...c.headers,
     };
 
     if (c.secret) {
-      headers['X-FreeForms-Signature'] = crypto
+      headers['X-osforms-Signature'] = crypto
         .createHmac('sha256', c.secret)
         .update(payload)
         .digest('hex');

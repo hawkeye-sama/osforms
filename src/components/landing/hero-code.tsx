@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-const CODE = `<form action="https://freeforms.com/api/v1/f/abc123" method="POST">
+const CODE = `<form action="https://osforms.com/api/v1/f/abc123" method="POST">
   <input type="text" name="name" placeholder="Name" required />
   <input type="email" name="email" placeholder="Email" required />
   <textarea name="message" placeholder="Message"></textarea>

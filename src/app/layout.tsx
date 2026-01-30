@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'FreeForms - Open Source Form Backend',
+  title: 'OSForms - Open Source Form Backend',
   description:
     'The open-source form backend for developers. Bring your own API keys, get unlimited power. Email notifications, Google Sheets, webhooks — all free.',
 };
