@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
-import { encryptJSON, decrypt } from "@/lib/encryption";
+import { connectDB } from "@/lib/db";
+import { decrypt, encryptJSON } from "@/lib/encryption";
 import { getHandler } from "@/lib/integrations";
 import Form from "@/lib/models/form";
 import Integration from "@/lib/models/integration";
 import User from "@/lib/models/user";
 import { createIntegrationSchema } from "@/lib/validations";
+import { NextRequest, NextResponse } from "next/server";
 
 /** GET /api/v1/integrations?formId=xxx */
 export async function GET(req: NextRequest) {
@@ -66,10 +66,8 @@ export async function POST(req: NextRequest) {
         } catch (err) {
           console.error("Failed to decrypt user's Resend key:", err);
         }
-      } else {
-        // User hasn't saved a Resend key yet
-        return NextResponse.json({ error: "Please add your Resend API key in onboarding first" }, { status: 400 });
       }
+      // If user doesn't have a saved key, they can provide one directly in the config
     }
 
     // Validate integration config

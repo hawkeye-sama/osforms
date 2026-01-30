@@ -71,7 +71,11 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
   const [intType, setIntType] = useState("WEBHOOK");
   const [intName, setIntName] = useState("");
   const [intConfig, setIntConfig] = useState("");
-  const [intCreating, setIntCreating] = useState(false);
+  const [intSaving, setIntSaving] = useState(false);
+
+  // Edit mode - tracks the integration being edited (null = create mode)
+  const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
+  const [intEnabled, setIntEnabled] = useState(true);
 
   // Resend Email form fields
   const [emailFrom, setEmailFrom] = useState("");
@@ -106,106 +110,205 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
     setEmailSubject("New Form Submission");
     setUseAccountKey(true);
     setCustomApiKey("");
+    setEditingIntegration(null);
+    setIntEnabled(true);
   }
 
-  async function handleCreateIntegration(e: React.FormEvent) {
+  // Helper to find existing integration by type
+  function getExistingIntegration(type: string): Integration | undefined {
+    return integrations.find((i) => i.type === type);
+  }
+
+  // Open dialog for a specific integration type (create or edit)
+  function openIntegrationDialog(type: string) {
+    const existing = getExistingIntegration(type);
+    setIntType(type);
+
+    if (existing) {
+      // Edit mode - populate with existing data
+      setEditingIntegration(existing);
+      setIntName(existing.name);
+      setIntEnabled(existing.enabled);
+      // Note: We can't populate config fields since they're encrypted on the server
+      // User will need to re-enter if they want to change
+      if (type === "EMAIL") {
+        setEmailFrom("");
+        setEmailTo("");
+        setEmailSubject("New Form Submission");
+        setUseAccountKey(true);
+        setCustomApiKey("");
+      } else {
+        setIntConfig(configTemplates[type] || "{}");
+      }
+    } else {
+      // Create mode
+      resetIntegrationForm();
+      setIntType(type);
+      if (type === "EMAIL") {
+        setIntName("Email Notifications");
+      } else if (type === "WEBHOOK") {
+        setIntName("Webhook");
+        setIntConfig(configTemplates["WEBHOOK"]);
+      } else {
+        setIntName("");
+        setIntConfig(configTemplates[type] || "{}");
+      }
+    }
+
+    setIntDialogOpen(true);
+  }
+
+  async function handleSaveIntegration(e: React.FormEvent) {
     e.preventDefault();
-    setIntCreating(true);
+    setIntSaving(true);
     try {
       let config: Record<string, unknown>;
 
       if (intType === "EMAIL") {
-        if (!emailFrom.trim() || !emailTo.trim()) {
+        // For edit mode, fields might be empty if user doesn't want to change config
+        // Only validate if this is a new integration or user has entered values
+        const hasEmailConfig = emailFrom.trim() || emailTo.trim();
+
+        if (!editingIntegration && (!emailFrom.trim() || !emailTo.trim())) {
           toast.error("From and To email addresses are required");
-          setIntCreating(false);
+          setIntSaving(false);
           return;
         }
 
-        if (!useAccountKey && !customApiKey.trim()) {
-          toast.error("Please enter a custom API key or use your account key");
-          setIntCreating(false);
+        if (hasEmailConfig) {
+          if (!emailFrom.trim() || !emailTo.trim()) {
+            toast.error("Both From and To email addresses are required");
+            setIntSaving(false);
+            return;
+          }
+
+          if (!useAccountKey && !customApiKey.trim()) {
+            toast.error("Please enter a custom API key or use your account key");
+            setIntSaving(false);
+            return;
+          }
+
+          const toEmails = emailTo.split(",").map((e) => e.trim()).filter(Boolean);
+          if (toEmails.length === 0) {
+            toast.error("At least one recipient email is required");
+            setIntSaving(false);
+            return;
+          }
+
+          config = {
+            provider: "resend",
+            apiKey: useAccountKey ? "auto" : customApiKey.trim(),
+            from: emailFrom.trim(),
+            to: toEmails,
+            subject: emailSubject.trim() || "New Form Submission",
+          };
+        } else if (editingIntegration) {
+          // Edit mode with no config changes - just update name/enabled
+          const res = await fetch(`/api/v1/integrations/${editingIntegration._id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: intName,
+              enabled: intEnabled,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            toast.error(data.error || "Failed to update integration");
+            return;
+          }
+
+          toast.success(`${intName} updated successfully!`);
+          setIntDialogOpen(false);
+          resetIntegrationForm();
+          fetchIntegrations();
+          return;
+        } else {
+          // Shouldn't reach here
+          toast.error("From and To email addresses are required");
+          setIntSaving(false);
           return;
         }
-
-        const toEmails = emailTo.split(",").map((e) => e.trim()).filter(Boolean);
-        if (toEmails.length === 0) {
-          toast.error("At least one recipient email is required");
-          setIntCreating(false);
-          return;
-        }
-
-        config = {
-          provider: "resend",
-          apiKey: useAccountKey ? "auto" : customApiKey.trim(),
-          from: emailFrom.trim(),
-          to: toEmails,
-          subject: emailSubject.trim() || "New Form Submission",
-        };
       } else {
         try {
           config = JSON.parse(intConfig);
         } catch {
           toast.error("Config must be valid JSON");
-          setIntCreating(false);
+          setIntSaving(false);
           return;
         }
       }
 
-      const res = await fetch("/api/v1/integrations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          formId,
-          type: intType,
-          name: intName,
-          config,
-        }),
-      });
+      if (editingIntegration) {
+        // Update existing integration
+        const res = await fetch(`/api/v1/integrations/${editingIntegration._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: intName,
+            config,
+            enabled: intEnabled,
+          }),
+        });
 
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || "Failed to create integration");
-        return;
+        const data = await res.json();
+        if (!res.ok) {
+          toast.error(data.error || "Failed to update integration");
+          return;
+        }
+
+        toast.success(`${intName} updated successfully!`);
+      } else {
+        // Create new integration
+        const res = await fetch("/api/v1/integrations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            formId,
+            type: intType,
+            name: intName,
+            config,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          toast.error(data.error || "Failed to create integration");
+          return;
+        }
+
+        toast.success(`${intName} integration added successfully!`);
       }
 
-      toast.success(`${intName} integration added successfully!`);
       setIntDialogOpen(false);
       resetIntegrationForm();
       fetchIntegrations();
     } catch {
       toast.error("Something went wrong");
     } finally {
-      setIntCreating(false);
+      setIntSaving(false);
     }
   }
 
-  async function handleDeleteIntegration(integrationId: string) {
-    if (!confirm("Remove this integration?")) return;
+  async function handleDeleteFromDialog() {
+    if (!editingIntegration) return;
+    if (!confirm("Are you sure you want to remove this integration?")) return;
+
     try {
-      const res = await fetch(`/api/v1/integrations/${integrationId}`, {
+      const res = await fetch(`/api/v1/integrations/${editingIntegration._id}`, {
         method: "DELETE",
       });
       if (res.ok) {
         toast.success("Integration removed");
+        setIntDialogOpen(false);
+        resetIntegrationForm();
         fetchIntegrations();
       } else {
-        toast.error("Failed to remove");
+        toast.error("Failed to remove integration");
       }
     } catch {
       toast.error("Something went wrong");
-    }
-  }
-
-  async function handleToggleIntegration(integrationId: string, enabled: boolean) {
-    try {
-      await fetch(`/api/v1/integrations/${integrationId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled }),
-      });
-      fetchIntegrations();
-    } catch {
-      toast.error("Failed to update");
     }
   }
 
@@ -237,19 +340,20 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
           {/* Webhooks */}
           <Card
             className="group cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => {
-              setIntType("WEBHOOK");
-              setIntName("Webhook");
-              setIntConfig(configTemplates["WEBHOOK"]);
-              setIntDialogOpen(true);
-            }}
+            onClick={() => openIntegrationDialog("WEBHOOK")}
           >
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <Webhook className="h-5 w-5 text-blue-500" />
                 </div>
-                <Badge variant="outline" className="text-xs">Popular</Badge>
+                {getExistingIntegration("WEBHOOK") ? (
+                  <Badge className="text-xs bg-green-500/10 text-green-500 hover:bg-green-500/20">
+                    Connected
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs">Popular</Badge>
+                )}
               </div>
               <h4 className="font-semibold text-sm text-foreground mb-1">Webhooks</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -261,23 +365,19 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
           {/* Resend Email */}
           <Card
             className="group cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => {
-              setIntType("EMAIL");
-              setIntName("Email Notifications");
-              resetIntegrationForm();
-              setIntName("Email Notifications");
-              setIntDialogOpen(true);
-            }}
+            onClick={() => openIntegrationDialog("EMAIL")}
           >
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                   <Mail className="h-5 w-5 text-green-500" />
                 </div>
-                {integrations.some((i) => i.type === "EMAIL") && (
+                {getExistingIntegration("EMAIL") ? (
                   <Badge className="text-xs bg-green-500/10 text-green-500 hover:bg-green-500/20">
                     Connected
                   </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs">Popular</Badge>
                 )}
               </div>
               <h4 className="font-semibold text-sm text-foreground mb-1">Email (Resend)</h4>
@@ -400,78 +500,73 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
           </Card>
         </div>
 
-        {/* Active Integrations List */}
-        {integrations.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">Active Integrations</h3>
-            <div className="space-y-2">
-              {integrations.map((int) => (
-                <Card key={int._id}>
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="font-mono text-xs">
-                        {int.type}
-                      </Badge>
-                      <span className="font-medium text-sm text-foreground">{int.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Switch
-                        checked={int.enabled}
-                        onCheckedChange={(val) => handleToggleIntegration(int._id, val)}
-                      />
-                      <Separator orientation="vertical" className="h-6" />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDeleteIntegration(int._id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Integration Dialog */}
-      <Dialog open={intDialogOpen} onOpenChange={setIntDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <form onSubmit={handleCreateIntegration}>
-            <DialogHeader>
-              <DialogTitle className="text-foreground">
-                {intType === "EMAIL" && "Configure Email Notifications"}
-                {intType === "WEBHOOK" && "Configure Webhook"}
-                {intType === "GOOGLE_SHEETS" && "Configure Google Sheets"}
+      <Dialog open={intDialogOpen} onOpenChange={(open) => {
+        setIntDialogOpen(open);
+        if (!open) resetIntegrationForm();
+      }}>
+        <DialogContent className="max-w-lg bg-background border-border">
+          <form onSubmit={handleSaveIntegration}>
+            <DialogHeader className="space-y-3">
+              <DialogTitle className="text-xl font-semibold text-foreground">
+                {editingIntegration ? "Edit" : "Configure"}{" "}
+                {intType === "EMAIL" && "Email Notifications"}
+                {intType === "WEBHOOK" && "Webhook"}
+                {intType === "GOOGLE_SHEETS" && "Google Sheets"}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-sm text-muted-foreground">
                 {intType === "WEBHOOK" && "Send form data to any URL via HTTP POST"}
                 {intType === "EMAIL" && "Get email notifications for each submission"}
                 {intType === "GOOGLE_SHEETS" && "Append submissions to a spreadsheet"}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+
+            <div className="space-y-5 py-6">
+              {/* Edit mode: Show enabled toggle */}
+              {editingIntegration && (
+                <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-card/50">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-medium text-foreground">Status</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {intEnabled ? "Integration is active" : "Integration is paused"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={intEnabled}
+                    onCheckedChange={setIntEnabled}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-foreground">Integration Name</Label>
+                <Input
+                  value={intName}
+                  onChange={(e) => setIntName(e.target.value)}
+                  placeholder={intType === "EMAIL" ? "Email Notifications" : "e.g. Team Notifications"}
+                  className="bg-card border-border"
+                  required
+                />
+              </div>
+
               {intType === "EMAIL" ? (
                 <>
-                  <div className="space-y-2">
-                    <Label className="text-foreground">Integration Name</Label>
-                    <Input
-                      value={intName}
-                      onChange={(e) => setIntName(e.target.value)}
-                      placeholder="Email Notifications"
-                      className="bg-card"
-                      required
-                    />
-                  </div>
+                  {/* Edit mode notice */}
+                  {editingIntegration && (
+                    <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                      <p className="text-xs text-muted-foreground">
+                        Leave email fields empty to keep existing configuration, or fill them all to update.
+                      </p>
+                    </div>
+                  )}
 
                   {/* API Key Selection */}
                   <div className="space-y-3">
-                    <Label className="text-foreground">Resend API Key</Label>
+                    <Label className="text-sm font-medium text-foreground">Resend API Key</Label>
                     <div className="space-y-2">
-                      <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50 cursor-pointer hover:bg-card transition-colors">
+                      <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card cursor-pointer hover:bg-card/80 transition-colors">
                         <input
                           type="radio"
                           name="apiKeySource"
@@ -484,7 +579,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
                           <p className="text-xs text-muted-foreground">From your onboarding setup</p>
                         </div>
                       </label>
-                      <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50 cursor-pointer hover:bg-card transition-colors">
+                      <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card cursor-pointer hover:bg-card/80 transition-colors">
                         <input
                           type="radio"
                           name="apiKeySource"
@@ -505,93 +600,103 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
                         value={customApiKey}
                         onChange={(e) => setCustomApiKey(e.target.value)}
                         placeholder="re_xxxx..."
-                        className="bg-card mt-2"
+                        className="bg-card border-border"
                       />
                     )}
-
-                    <p className="text-xs text-muted-foreground bg-secondary/50 p-2 rounded">
-                      API keys are encrypted at rest and never exposed in the UI.
-                    </p>
                   </div>
 
+                  <Separator className="bg-border" />
+
                   <div className="space-y-2">
-                    <Label className="text-foreground">From Email</Label>
+                    <Label className="text-sm font-medium text-foreground">From Email</Label>
                     <Input
                       type="email"
                       value={emailFrom}
                       onChange={(e) => setEmailFrom(e.target.value)}
                       placeholder="noreply@yourdomain.com"
-                      className="bg-card"
-                      required
+                      className="bg-card border-border"
+                      required={!editingIntegration}
                     />
                     <p className="text-xs text-muted-foreground">
                       Must be a verified domain in your Resend account
                     </p>
                   </div>
+
                   <div className="space-y-2">
-                    <Label className="text-foreground">To Email(s)</Label>
+                    <Label className="text-sm font-medium text-foreground">To Email(s)</Label>
                     <Input
                       type="text"
                       value={emailTo}
                       onChange={(e) => setEmailTo(e.target.value)}
                       placeholder="you@email.com, team@email.com"
-                      className="bg-card"
-                      required
+                      className="bg-card border-border"
+                      required={!editingIntegration}
                     />
                     <p className="text-xs text-muted-foreground">
                       Comma-separated list of recipient emails
                     </p>
                   </div>
+
                   <div className="space-y-2">
-                    <Label className="text-foreground">Subject</Label>
+                    <Label className="text-sm font-medium text-foreground">Subject</Label>
                     <Input
                       type="text"
                       value={emailSubject}
                       onChange={(e) => setEmailSubject(e.target.value)}
                       placeholder="New Form Submission"
-                      className="bg-card"
-                      required
+                      className="bg-card border-border"
                     />
                   </div>
                 </>
               ) : (
-                <>
-                  <div className="space-y-2">
-                    <Label className="text-foreground">Integration Name</Label>
-                    <Input
-                      value={intName}
-                      onChange={(e) => setIntName(e.target.value)}
-                      placeholder="e.g. Team Notifications, Sales Alert"
-                      className="bg-card"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-foreground">Configuration (JSON)</Label>
-                    <Textarea
-                      value={intConfig}
-                      onChange={(e) => setIntConfig(e.target.value)}
-                      rows={10}
-                      className="font-mono text-xs bg-card"
-                      placeholder="Paste your config JSON here"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {intType === "WEBHOOK" &&
-                        "Include: url, method (POST/GET), optional secret for HMAC signing"}
-                      {intType === "GOOGLE_SHEETS" &&
-                        "Include: credentials (service account JSON), spreadsheetId, sheetName"}
-                    </p>
-                  </div>
-                </>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-foreground">Configuration (JSON)</Label>
+                  <Textarea
+                    value={intConfig}
+                    onChange={(e) => setIntConfig(e.target.value)}
+                    rows={8}
+                    className="font-mono text-xs bg-card border-border"
+                    placeholder="Paste your config JSON here"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {intType === "WEBHOOK" &&
+                      "Include: url, method (POST/GET), optional secret for HMAC signing"}
+                    {intType === "GOOGLE_SHEETS" &&
+                      "Include: credentials (service account JSON), spreadsheetId, sheetName"}
+                  </p>
+                </div>
               )}
+
+              <p className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/30 border border-border">
+                API keys and credentials are encrypted at rest and never exposed in the UI.
+              </p>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIntDialogOpen(false)}>
+
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              {editingIntegration && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeleteFromDialog}
+                  className="sm:mr-auto"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Remove
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIntDialogOpen(false)}
+                className="border-border"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={intCreating || !intName.trim()}>
-                {intCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {intCreating ? "Adding..." : "Add Integration"}
+              <Button type="submit" disabled={intSaving || !intName.trim()}>
+                {intSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {intSaving
+                  ? editingIntegration ? "Saving..." : "Adding..."
+                  : editingIntegration ? "Save Changes" : "Add Integration"}
               </Button>
             </DialogFooter>
           </form>
