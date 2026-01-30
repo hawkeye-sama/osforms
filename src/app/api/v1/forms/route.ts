@@ -15,9 +15,28 @@ export async function GET(req: NextRequest) {
 
   await connectDB();
 
-  const forms = await Form.find({ userId: user._id })
-    .sort({ createdAt: -1 })
-    .lean();
+  const forms = await Form.aggregate([
+    { $match: { userId: user._id } },
+    {
+      $lookup: {
+        from: 'submissions', // The name of your submissions collection in MongoDB
+        localField: '_id',
+        foreignField: 'formId',
+        as: 'submissions',
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        slug: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        active: 1,
+        submissionCount: { $size: '$submissions' }, // Counts the array length
+      },
+    },
+    { $sort: { createdAt: -1 } },
+  ]);
 
   // Check if we need to reset for a new month
   const currentMonth = new Date().toISOString().slice(0, 7);

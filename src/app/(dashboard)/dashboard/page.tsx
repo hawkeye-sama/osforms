@@ -29,6 +29,7 @@ interface Form {
   slug: string;
   active: boolean;
   createdAt: string;
+  submissionCount: number;
 }
 
 interface Usage {
@@ -168,7 +169,7 @@ export default function DashboardPage() {
       )}
 
       {/* Forms + Plan Info - Two Column Layout */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_500px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_600px]">
         {/* Forms Section */}
         <div>
           <div className="mb-4 flex items-center justify-between">
@@ -283,6 +284,22 @@ export default function DashboardPage() {
                             /api/v1/f/{form.slug}
                           </p>
                           <ArrowRight className="text-muted-foreground h-4 w-4" />
+                        </div>
+                        <div className="flex justify-between">
+                          <p className="text-muted-foreground mt-3 text-sm">
+                            Submissions:{' '}
+                            <span className="font-semibold text-white">
+                              {form.submissionCount ?? 0}
+                            </span>
+                          </p>
+                          <p className="text-muted-foreground mt-3 text-sm">
+                            Created At:{' '}
+                            {new Date(form.createdAt).toLocaleString('en-GB', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
