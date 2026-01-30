@@ -21,15 +21,13 @@ export async function GET(request: Request) {
 
   try {
     const stateData = JSON.parse(stateParam);
-    console.log(stateData);
+
     formId = stateData.formId;
     returnTo = stateData.returnTo;
   } catch {
     // Fallback for old format (just formId as string)
     formId = stateParam;
   }
-
-  console.log('Decoded State - formId:', formId, 'returnTo:', returnTo);
 
   if (!formId) {
     return NextResponse.json({ error: 'Invalid state' }, { status: 400 });
@@ -98,8 +96,6 @@ export async function GET(request: Request) {
       },
       enabled: true,
     });
-
-    console.log('hello', returnTo);
 
     // 6. Redirect back to your app's integration UI
     const redirectUrl = returnTo
