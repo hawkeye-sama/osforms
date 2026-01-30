@@ -20,6 +20,9 @@ import {
   Zap,
   Share2,
   Loader2,
+  FileText,
+  Puzzle,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -37,10 +40,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SubmissionsChart } from "@/components/dashboard/submissions-chart";
+import { CodeSnippets } from "@/components/forms/code-snippets";
 
 interface Form {
   _id: string;
@@ -70,6 +74,11 @@ interface Integration {
   createdAt: string;
 }
 
+interface ChartDataPoint {
+  date: string;
+  submissions: number;
+}
+
 export default function FormDetailPage({
   params,
 }: {
@@ -84,6 +93,11 @@ export default function FormDetailPage({
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState("");
 
+  // Chart state
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [chartPeriod, setChartPeriod] = useState("30d");
+  const [chartLoading, setChartLoading] = useState(true);
+
   // Integration dialog
   const [intDialogOpen, setIntDialogOpen] = useState(false);
   const [intType, setIntType] = useState("WEBHOOK");
@@ -95,6 +109,8 @@ export default function FormDetailPage({
   const [emailFrom, setEmailFrom] = useState("");
   const [emailTo, setEmailTo] = useState("");
   const [emailSubject, setEmailSubject] = useState("New Form Submission");
+  const [useAccountKey, setUseAccountKey] = useState(true);
+  const [customApiKey, setCustomApiKey] = useState("");
 
   // Settings dialog
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -148,11 +164,32 @@ export default function FormDetailPage({
     }
   }, [id]);
 
+  const fetchChartData = useCallback(async () => {
+    setChartLoading(true);
+    try {
+      const res = await fetch(`/api/v1/forms/${id}/stats/submissions?period=${chartPeriod}`);
+      if (res.ok) {
+        const data = await res.json();
+        setChartData(data.chartData || []);
+      }
+    } catch {
+      // non-critical
+    } finally {
+      setChartLoading(false);
+    }
+  }, [id, chartPeriod]);
+
   useEffect(() => {
     Promise.all([fetchForm(), fetchSubmissions(), fetchIntegrations()]).finally(
       () => setLoading(false)
     );
   }, [fetchForm, fetchSubmissions, fetchIntegrations]);
+
+  useEffect(() => {
+    if (!loading) {
+      fetchChartData();
+    }
+  }, [fetchChartData, loading]);
 
   function copyText(text: string, label: string) {
     navigator.clipboard.writeText(text);
@@ -221,6 +258,13 @@ export default function FormDetailPage({
           return;
         }
 
+        // Validate custom API key if not using account key
+        if (!useAccountKey && !customApiKey.trim()) {
+          toast.error("Please enter a custom API key or use your account key");
+          setIntCreating(false);
+          return;
+        }
+
         // Parse comma-separated emails for "to" field
         const toEmails = emailTo.split(",").map((e) => e.trim()).filter(Boolean);
         if (toEmails.length === 0) {
@@ -231,7 +275,7 @@ export default function FormDetailPage({
 
         config = {
           provider: "resend",
-          apiKey: "auto", // Will be replaced by user's saved key on backend
+          apiKey: useAccountKey ? "auto" : customApiKey.trim(),
           from: emailFrom.trim(),
           to: toEmails,
           subject: emailSubject.trim() || "New Form Submission",
@@ -264,19 +308,25 @@ export default function FormDetailPage({
         return;
       }
 
-      toast.success("Integration added!");
+      toast.success(`${intName} integration added successfully!`);
       setIntDialogOpen(false);
-      setIntName("");
-      setIntConfig("");
-      setEmailFrom("");
-      setEmailTo("");
-      setEmailSubject("New Form Submission");
+      resetIntegrationForm();
       fetchIntegrations();
     } catch {
       toast.error("Something went wrong");
     } finally {
       setIntCreating(false);
     }
+  }
+
+  function resetIntegrationForm() {
+    setIntName("");
+    setIntConfig("");
+    setEmailFrom("");
+    setEmailTo("");
+    setEmailSubject("New Form Submission");
+    setUseAccountKey(true);
+    setCustomApiKey("");
   }
 
   async function handleDeleteIntegration(integrationId: string) {
@@ -325,26 +375,10 @@ export default function FormDetailPage({
           <Skeleton className="h-9 w-24" />
         </div>
 
-        {/* Endpoint card skeleton */}
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-4 w-64 mt-2" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </CardContent>
-        </Card>
-
         {/* Tabs skeleton */}
         <div className="space-y-4">
-          <Skeleton className="h-10 w-64" />
-          <div className="grid gap-3">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </div>
+          <Skeleton className="h-10 w-80" />
+          <Skeleton className="h-[400px] w-full" />
         </div>
       </div>
     );
@@ -355,27 +389,9 @@ export default function FormDetailPage({
     (typeof window !== "undefined" ? window.location.origin : "");
   const endpointUrl = `${baseUrl}/api/v1/f/${form.slug}`;
 
-  const htmlSnippet = `<form action="${endpointUrl}" method="POST">
-  <input type="text" name="name" placeholder="Name" required />
-  <input type="email" name="email" placeholder="Email" required />
-  <textarea name="message" placeholder="Message"></textarea>
-  <button type="submit">Send</button>
-</form>`;
-
   const configTemplates: Record<string, string> = {
     WEBHOOK: JSON.stringify(
       { url: "https://your-app.com/webhook", method: "POST", secret: "optional-secret" },
-      null,
-      2
-    ),
-    EMAIL: JSON.stringify(
-      {
-        provider: "resend",
-        apiKey: "Your saved Resend key will be used automatically",
-        from: "noreply@yourdomain.com",
-        to: ["you@email.com"],
-        subject: "New Form Submission",
-      },
       null,
       2
     ),
@@ -392,221 +408,300 @@ export default function FormDetailPage({
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/dashboard">
-            <ArrowLeft className="h-4 w-4" />
+      {/* Breadcrumb & Header */}
+      <div className="mb-6">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+          <Link href="/dashboard" className="hover:text-foreground transition-colors">
+            Forms
           </Link>
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">{form.name}</h1>
-            <Badge variant={form.active ? "default" : "secondary"}>
-              {form.active ? "Active" : "Paused"}
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {form.submissionCount} / {form.submissionLimit} submissions
-          </p>
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-foreground">{form.name}</span>
         </div>
-        <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" asChild className="h-9 w-9">
+              <Link href="/dashboard">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">{form.name}</h1>
+                <Badge variant={form.active ? "default" : "secondary"}>
+                  {form.active ? "Active" : "Paused"}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {form.submissionCount} / {form.submissionLimit} submissions
+              </p>
+            </div>
+          </div>
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+            <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <form onSubmit={handleSaveSettings}>
-              <DialogHeader>
-                <DialogTitle>Form Settings</DialogTitle>
-                <DialogDescription>
-                  Configure your form endpoint
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Name</Label>
-                  <Input
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                  />
+            <DialogContent>
+              <form onSubmit={handleSaveSettings}>
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Form Settings</DialogTitle>
+                  <DialogDescription>
+                    Configure your form endpoint
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Name</Label>
+                    <Input
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                      className="bg-card"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-foreground">Active</Label>
+                    <Switch
+                      checked={formActive}
+                      onCheckedChange={setFormActive}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Redirect URL (after submission)</Label>
+                    <Input
+                      value={formRedirect}
+                      onChange={(e) => setFormRedirect(e.target.value)}
+                      placeholder="https://yoursite.com/thank-you"
+                      className="bg-card"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Honeypot Field Name</Label>
+                    <Input
+                      value={formHoneypot}
+                      onChange={(e) => setFormHoneypot(e.target.value)}
+                      placeholder="_gotcha"
+                      className="bg-card"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Allowed Origins (comma-separated)</Label>
+                    <Input
+                      value={formOrigins}
+                      onChange={(e) => setFormOrigins(e.target.value)}
+                      placeholder="https://yoursite.com, https://app.yoursite.com"
+                      className="bg-card"
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <Label>Active</Label>
-                  <Switch
-                    checked={formActive}
-                    onCheckedChange={setFormActive}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Redirect URL (after submission)</Label>
-                  <Input
-                    value={formRedirect}
-                    onChange={(e) => setFormRedirect(e.target.value)}
-                    placeholder="https://yoursite.com/thank-you"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Honeypot Field Name</Label>
-                  <Input
-                    value={formHoneypot}
-                    onChange={(e) => setFormHoneypot(e.target.value)}
-                    placeholder="_gotcha"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Allowed Origins (comma-separated)</Label>
-                  <Input
-                    value={formOrigins}
-                    onChange={(e) => setFormOrigins(e.target.value)}
-                    placeholder="https://yoursite.com, https://app.yoursite.com"
-                  />
-                </div>
-              </div>
-              <DialogFooter className="gap-2">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDeleteForm}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Form
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {saving ? "Saving..." : "Save Changes"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter className="gap-2">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDeleteForm}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Form
+                  </Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Endpoint & Snippet */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base">Endpoint URL</CardTitle>
-          <CardDescription>
-            Point your HTML form&apos;s action attribute to this URL
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input value={endpointUrl} readOnly className="font-mono text-sm" />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => copyText(endpointUrl, "url")}
-            >
-              {copied === "url" ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm text-muted-foreground">
-                HTML Snippet
-              </Label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => copyText(htmlSnippet, "html")}
-                className="h-7 text-xs"
-              >
-                {copied === "html" ? (
-                  <>
-                    <Check className="mr-1 h-3 w-3" /> Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="mr-1 h-3 w-3" /> Copy
-                  </>
-                )}
-              </Button>
-            </div>
-            <pre className="rounded-md border bg-muted/50 p-4 text-xs font-mono overflow-x-auto leading-relaxed">
-              {htmlSnippet}
-            </pre>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabs: Submissions + Integrations */}
-      <Tabs defaultValue="submissions">
-        <TabsList>
-          <TabsTrigger value="submissions">
-            Submissions ({form.submissionCount})
+      {/* Main Tabs */}
+      <Tabs defaultValue="submissions" className="space-y-6">
+        <TabsList className="bg-card border border-border">
+          <TabsTrigger value="submissions" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Submissions
           </TabsTrigger>
-          <TabsTrigger value="integrations">
-            Integrations ({integrations.length})
+          <TabsTrigger value="setup" className="gap-2">
+            <Settings className="h-4 w-4" />
+            Setup
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="gap-2">
+            <Puzzle className="h-4 w-4" />
+            Integrations
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="submissions" className="mt-4">
-          {submissions.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Inbox className="h-10 w-10 text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  No submissions yet. Submit your first form to see data here.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {submissions.map((sub) => (
-                <Card key={sub._id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1 flex-1 min-w-0">
-                        {Object.entries(sub.data).map(([key, value]) => (
-                          <div key={key} className="flex gap-2 text-sm">
-                            <span className="font-medium text-muted-foreground shrink-0 w-28 truncate">
-                              {key}:
-                            </span>
-                            <span className="truncate">
-                              {String(value ?? "")}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
-                        {new Date(sub.createdAt).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+        {/* ─── Submissions Tab ─────────────────────────────── */}
+        <TabsContent value="submissions" className="space-y-6">
+          {/* Chart Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Your form submissions</h2>
+              <div className="flex gap-1 bg-card rounded-lg p-1 border border-border">
+                {["7d", "30d", "90d"].map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setChartPeriod(period)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                      chartPeriod === period
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {period === "7d" ? "7 Days" : period === "30d" ? "30 Days" : "90 Days"}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
+
+            {chartLoading ? (
+              <Card>
+                <CardContent className="py-8">
+                  <Skeleton className="h-[300px] w-full" />
+                </CardContent>
+              </Card>
+            ) : (
+              <SubmissionsChart data={chartData} title={`Submissions (Last ${chartPeriod === "7d" ? "7" : chartPeriod === "30d" ? "30" : "90"} Days)`} />
+            )}
+          </div>
+
+          {/* Submissions List */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <button className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-foreground border-b-2 border-primary">
+                <Inbox className="h-4 w-4" />
+                Inbox ({submissions.length})
+              </button>
+            </div>
+
+            {submissions.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground">No submissions yet</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Submit your first form to see data here.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {submissions.map((sub) => {
+                  // Get the first email-like field or first field as primary
+                  const entries = Object.entries(sub.data);
+                  const emailField = entries.find(([key]) =>
+                    key.toLowerCase().includes("email")
+                  );
+                  const primaryField = emailField || entries[0];
+
+                  return (
+                    <Card key={sub._id} className="hover:border-border/80 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className="flex-1 min-w-0">
+                              {primaryField && (
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  {primaryField[0]}: {String(primaryField[1] ?? "")}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {new Date(sub.createdAt).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" className="text-muted-foreground">
+                            View Details
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
-        <TabsContent value="integrations" className="mt-4">
-          <div className="mb-6">
-            <h3 className="text-sm font-medium mb-1">Available Apps</h3>
+        {/* ─── Setup Tab ─────────────────────────────── */}
+        <TabsContent value="setup" className="space-y-6">
+          {/* Endpoint URL */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base text-foreground">Form Endpoint</CardTitle>
+              <CardDescription>
+                Place this URL in the action attribute of your form. Make sure your form uses method=&quot;POST&quot;.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                <Input
+                  value={endpointUrl}
+                  readOnly
+                  className="font-mono text-sm bg-card"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => copyText(endpointUrl, "url")}
+                  className="shrink-0"
+                >
+                  {copied === "url" ? (
+                    <>
+                      <Check className="mr-2 h-4 w-4" /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="mr-2 h-4 w-4" /> Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Code Snippets */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base text-foreground">Integrate with your usecase</CardTitle>
+              <CardDescription>
+                Check out the code snippets below for more examples:
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CodeSnippets endpointUrl={endpointUrl} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── Integrations Tab ─────────────────────────────── */}
+        <TabsContent value="integrations" className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Available Apps</h3>
             <p className="text-sm text-muted-foreground">
               Connect apps to automatically process form submissions
             </p>
           </div>
 
           {/* Apps Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Webhooks */}
-            <Card className="group card-hover cursor-pointer" onClick={() => {
-              setIntType("WEBHOOK");
-              setIntConfig(configTemplates["WEBHOOK"]);
-              setIntDialogOpen(true);
-            }}>
+            <Card
+              className="group cursor-pointer hover:border-primary/50 transition-colors"
+              onClick={() => {
+                setIntType("WEBHOOK");
+                setIntName("Webhook");
+                setIntConfig(configTemplates["WEBHOOK"]);
+                setIntDialogOpen(true);
+              }}
+            >
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
@@ -614,7 +709,7 @@ export default function FormDetailPage({
                   </div>
                   <Badge variant="outline" className="text-xs">Popular</Badge>
                 </div>
-                <h4 className="font-semibold text-sm mb-1">Webhooks</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-1">Webhooks</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Send form data to any URL via HTTP POST request
                 </p>
@@ -622,32 +717,34 @@ export default function FormDetailPage({
             </Card>
 
             {/* Resend Email */}
-            <Card className="group card-hover cursor-pointer" onClick={() => {
-              setIntType("EMAIL");
-              setIntName("Email Notifications");
-              setEmailFrom("");
-              setEmailTo("");
-              setEmailSubject("New Form Submission");
-              setIntDialogOpen(true);
-            }}>
+            <Card
+              className="group cursor-pointer hover:border-primary/50 transition-colors"
+              onClick={() => {
+                setIntType("EMAIL");
+                setIntName("Email Notifications");
+                resetIntegrationForm();
+                setIntName("Email Notifications");
+                setIntDialogOpen(true);
+              }}
+            >
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                     <Mail className="h-5 w-5 text-green-500" />
                   </div>
                   {integrations.some(i => i.type === "EMAIL") && (
-                    <Badge className="text-xs bg-green-500/10 text-green-700 hover:bg-green-500/20">Connected</Badge>
+                    <Badge className="text-xs bg-green-500/10 text-green-500 hover:bg-green-500/20">Connected</Badge>
                   )}
                 </div>
-                <h4 className="font-semibold text-sm mb-1">Email (Resend)</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-1">Email (Resend)</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Get email notifications for every submission
                 </p>
               </CardContent>
             </Card>
 
-            {/* Google Sheets */}
-            <Card className="group transition-colors cursor-not-allowed opacity-60">
+            {/* Google Sheets - Coming Soon */}
+            <Card className="opacity-60 cursor-not-allowed">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -655,7 +752,7 @@ export default function FormDetailPage({
                   </div>
                   <Badge variant="secondary" className="text-xs">Soon</Badge>
                 </div>
-                <h4 className="font-semibold text-sm mb-1">Google Sheets</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-1">Google Sheets</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Append submissions to a spreadsheet automatically
                 </p>
@@ -663,7 +760,7 @@ export default function FormDetailPage({
             </Card>
 
             {/* Slack */}
-            <Card className="group transition-colors cursor-not-allowed opacity-60">
+            <Card className="opacity-60 cursor-not-allowed">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
@@ -671,7 +768,7 @@ export default function FormDetailPage({
                   </div>
                   <Badge variant="secondary" className="text-xs">Soon</Badge>
                 </div>
-                <h4 className="font-semibold text-sm mb-1">Slack</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-1">Slack</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Post submission alerts to Slack channels
                 </p>
@@ -679,7 +776,7 @@ export default function FormDetailPage({
             </Card>
 
             {/* Telegram */}
-            <Card className="group transition-colors cursor-not-allowed opacity-60">
+            <Card className="opacity-60 cursor-not-allowed">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="h-10 w-10 rounded-lg bg-sky-500/10 flex items-center justify-center">
@@ -687,7 +784,7 @@ export default function FormDetailPage({
                   </div>
                   <Badge variant="secondary" className="text-xs">Soon</Badge>
                 </div>
-                <h4 className="font-semibold text-sm mb-1">Telegram</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-1">Telegram</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Receive submission notifications via Telegram bot
                 </p>
@@ -695,7 +792,7 @@ export default function FormDetailPage({
             </Card>
 
             {/* Discord */}
-            <Card className="group transition-colors cursor-not-allowed opacity-60">
+            <Card className="opacity-60 cursor-not-allowed">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="h-10 w-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
@@ -703,7 +800,7 @@ export default function FormDetailPage({
                   </div>
                   <Badge variant="secondary" className="text-xs">Soon</Badge>
                 </div>
-                <h4 className="font-semibold text-sm mb-1">Discord</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-1">Discord</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Send form submissions to Discord webhooks
                 </p>
@@ -711,7 +808,7 @@ export default function FormDetailPage({
             </Card>
 
             {/* Notion */}
-            <Card className="group transition-colors cursor-not-allowed opacity-60">
+            <Card className="opacity-60 cursor-not-allowed">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="h-10 w-10 rounded-lg bg-gray-500/10 flex items-center justify-center">
@@ -719,7 +816,7 @@ export default function FormDetailPage({
                   </div>
                   <Badge variant="secondary" className="text-xs">Soon</Badge>
                 </div>
-                <h4 className="font-semibold text-sm mb-1">Notion</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-1">Notion</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Add submissions as pages to your Notion database
                 </p>
@@ -727,7 +824,7 @@ export default function FormDetailPage({
             </Card>
 
             {/* Zapier */}
-            <Card className="group transition-colors cursor-not-allowed opacity-60">
+            <Card className="opacity-60 cursor-not-allowed">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
@@ -735,7 +832,7 @@ export default function FormDetailPage({
                   </div>
                   <Badge variant="secondary" className="text-xs">Soon</Badge>
                 </div>
-                <h4 className="font-semibold text-sm mb-1">Zapier</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-1">Zapier</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Connect to 5000+ apps via Zapier workflows
                 </p>
@@ -743,7 +840,7 @@ export default function FormDetailPage({
             </Card>
 
             {/* Make */}
-            <Card className="group transition-colors cursor-not-allowed opacity-60">
+            <Card className="opacity-60 cursor-not-allowed">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="h-10 w-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
@@ -751,7 +848,7 @@ export default function FormDetailPage({
                   </div>
                   <Badge variant="secondary" className="text-xs">Soon</Badge>
                 </div>
-                <h4 className="font-semibold text-sm mb-1">Make</h4>
+                <h4 className="font-semibold text-sm text-foreground mb-1">Make</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Automate workflows with Make (Integromat)
                 </p>
@@ -761,9 +858,9 @@ export default function FormDetailPage({
 
           {/* Active Integrations List */}
           {integrations.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium mb-3">Active Integrations</h3>
-              <div className="space-y-3">
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Active Integrations</h3>
+              <div className="space-y-2">
                 {integrations.map((int) => (
                   <Card key={int._id}>
                     <CardContent className="flex items-center justify-between p-4">
@@ -771,7 +868,7 @@ export default function FormDetailPage({
                         <Badge variant="outline" className="font-mono text-xs">
                           {int.type}
                         </Badge>
-                        <span className="font-medium text-sm">{int.name}</span>
+                        <span className="font-medium text-sm text-foreground">{int.name}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <Switch
@@ -796,117 +893,170 @@ export default function FormDetailPage({
               </div>
             </div>
           )}
-
-          {/* Integration Dialog */}
-          <Dialog open={intDialogOpen} onOpenChange={setIntDialogOpen}>
-            <DialogContent className="max-w-lg">
-              <form onSubmit={handleCreateIntegration}>
-                <DialogHeader>
-                  <DialogTitle>
-                    {intType === "EMAIL" && "Configure Email Notifications"}
-                    {intType === "WEBHOOK" && "Configure Webhook"}
-                    {intType === "GOOGLE_SHEETS" && "Configure Google Sheets"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {intType === "WEBHOOK" && "Send form data to any URL via HTTP POST"}
-                    {intType === "EMAIL" && "Get email notifications for each submission. Your saved Resend key will be used automatically."}
-                    {intType === "GOOGLE_SHEETS" && "Append submissions to a spreadsheet"}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  {intType === "EMAIL" ? (
-                    <>
-                      <div className="space-y-2">
-                        <Label>Integration Name</Label>
-                        <Input
-                          value={intName}
-                          onChange={(e) => setIntName(e.target.value)}
-                          placeholder="Email Notifications"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>From Email</Label>
-                        <Input
-                          type="email"
-                          value={emailFrom}
-                          onChange={(e) => setEmailFrom(e.target.value)}
-                          placeholder="noreply@yourdomain.com"
-                          required
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Must be a verified domain in your Resend account
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>To Email(s)</Label>
-                        <Input
-                          type="text"
-                          value={emailTo}
-                          onChange={(e) => setEmailTo(e.target.value)}
-                          placeholder="you@email.com, team@email.com"
-                          required
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Comma-separated list of recipient emails
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Subject</Label>
-                        <Input
-                          type="text"
-                          value={emailSubject}
-                          onChange={(e) => setEmailSubject(e.target.value)}
-                          placeholder="New Form Submission"
-                          required
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        <Label>Integration Name</Label>
-                        <Input
-                          value={intName}
-                          onChange={(e) => setIntName(e.target.value)}
-                          placeholder="e.g. Team Notifications, Sales Alert"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Configuration (JSON)</Label>
-                        <Textarea
-                          value={intConfig}
-                          onChange={(e) => setIntConfig(e.target.value)}
-                          rows={10}
-                          className="font-mono text-xs"
-                          placeholder="Paste your config JSON here"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          {intType === "WEBHOOK" && "Include: url, method (POST/GET), optional secret for HMAC signing"}
-                          {intType === "GOOGLE_SHEETS" && "Include: credentials (service account JSON), spreadsheetId, sheetName"}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIntDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={intCreating || !intName.trim()}
-                  >
-                    {intCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {intCreating ? "Adding..." : "Add Integration"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
         </TabsContent>
       </Tabs>
+
+      {/* Integration Dialog */}
+      <Dialog open={intDialogOpen} onOpenChange={setIntDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <form onSubmit={handleCreateIntegration}>
+            <DialogHeader>
+              <DialogTitle className="text-foreground">
+                {intType === "EMAIL" && "Configure Email Notifications"}
+                {intType === "WEBHOOK" && "Configure Webhook"}
+                {intType === "GOOGLE_SHEETS" && "Configure Google Sheets"}
+              </DialogTitle>
+              <DialogDescription>
+                {intType === "WEBHOOK" && "Send form data to any URL via HTTP POST"}
+                {intType === "EMAIL" && "Get email notifications for each submission"}
+                {intType === "GOOGLE_SHEETS" && "Append submissions to a spreadsheet"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {intType === "EMAIL" ? (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Integration Name</Label>
+                    <Input
+                      value={intName}
+                      onChange={(e) => setIntName(e.target.value)}
+                      placeholder="Email Notifications"
+                      className="bg-card"
+                      required
+                    />
+                  </div>
+
+                  {/* API Key Selection */}
+                  <div className="space-y-3">
+                    <Label className="text-foreground">Resend API Key</Label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50 cursor-pointer hover:bg-card transition-colors">
+                        <input
+                          type="radio"
+                          name="apiKeySource"
+                          checked={useAccountKey}
+                          onChange={() => setUseAccountKey(true)}
+                          className="h-4 w-4 accent-primary"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-foreground">Use account Resend key</p>
+                          <p className="text-xs text-muted-foreground">From your onboarding setup</p>
+                        </div>
+                      </label>
+                      <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50 cursor-pointer hover:bg-card transition-colors">
+                        <input
+                          type="radio"
+                          name="apiKeySource"
+                          checked={!useAccountKey}
+                          onChange={() => setUseAccountKey(false)}
+                          className="h-4 w-4 accent-primary"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-foreground">Use custom API key</p>
+                          <p className="text-xs text-muted-foreground">Enter a different Resend key</p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {!useAccountKey && (
+                      <Input
+                        type="password"
+                        value={customApiKey}
+                        onChange={(e) => setCustomApiKey(e.target.value)}
+                        placeholder="re_xxxx..."
+                        className="bg-card mt-2"
+                      />
+                    )}
+
+                    <p className="text-xs text-muted-foreground bg-secondary/50 p-2 rounded">
+                      API keys are encrypted at rest and never exposed in the UI.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-foreground">From Email</Label>
+                    <Input
+                      type="email"
+                      value={emailFrom}
+                      onChange={(e) => setEmailFrom(e.target.value)}
+                      placeholder="noreply@yourdomain.com"
+                      className="bg-card"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Must be a verified domain in your Resend account
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">To Email(s)</Label>
+                    <Input
+                      type="text"
+                      value={emailTo}
+                      onChange={(e) => setEmailTo(e.target.value)}
+                      placeholder="you@email.com, team@email.com"
+                      className="bg-card"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Comma-separated list of recipient emails
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Subject</Label>
+                    <Input
+                      type="text"
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      placeholder="New Form Submission"
+                      className="bg-card"
+                      required
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Integration Name</Label>
+                    <Input
+                      value={intName}
+                      onChange={(e) => setIntName(e.target.value)}
+                      placeholder="e.g. Team Notifications, Sales Alert"
+                      className="bg-card"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Configuration (JSON)</Label>
+                    <Textarea
+                      value={intConfig}
+                      onChange={(e) => setIntConfig(e.target.value)}
+                      rows={10}
+                      className="font-mono text-xs bg-card"
+                      placeholder="Paste your config JSON here"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {intType === "WEBHOOK" && "Include: url, method (POST/GET), optional secret for HMAC signing"}
+                      {intType === "GOOGLE_SHEETS" && "Include: credentials (service account JSON), spreadsheetId, sheetName"}
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIntDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={intCreating || !intName.trim()}
+              >
+                {intCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {intCreating ? "Adding..." : "Add Integration"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -24,7 +24,7 @@ export default function BillingPage() {
             </div>
             <h3 className="text-xl font-semibold text-foreground">Coming Soon</h3>
             <p className="text-sm text-muted-foreground mt-2 max-w-md">
-              FreeForms is currently free to use with 200 submissions per month.
+              FreeForms is currently free to use with 100 submissions per month.
               Billing features and paid plans will be available in the future.
             </p>
           </div>
@@ -44,7 +44,7 @@ export default function BillingPage() {
           <ul className="space-y-3">
             <li className="flex items-center gap-2 text-sm text-foreground">
               <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-              200 submissions per month
+              100 submissions per month
             </li>
             <li className="flex items-center gap-2 text-sm text-foreground">
               <Check className="h-4 w-4 text-green-500 flex-shrink-0" />

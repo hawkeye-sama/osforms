@@ -155,7 +155,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="mt-6 text-sm text-muted-foreground"
           >
-            200 free submissions/month • No credit card
+            100 free submissions/month • No credit card
           </motion.div>
         </div>
 
@@ -177,7 +177,7 @@ export default function LandingPage() {
           <div className="mx-auto max-w-[1000px] grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
               { value: "OSS", label: "Open Source" },
-              { value: "200/mo", label: "Free Tier" },
+              { value: "100/mo", label: "Free Tier" },
               { value: "0%", label: "Vendor Lock-In" },
               { value: "<5min", label: "Setup Time" },
             ].map((stat, i) => (
@@ -309,7 +309,7 @@ export default function LandingPage() {
               <div className="absolute inset-0 bg-gradient-radial-glow pointer-events-none" />
               <div className="relative">
                 <h2 className="text-4xl sm:text-5xl font-bold tracking-tight">
-                  200 submissions
+                  100 submissions
                 </h2>
                 <p className="mt-2 text-2xl font-medium text-muted-foreground">
                   Free forever
