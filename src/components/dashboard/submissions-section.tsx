@@ -143,7 +143,7 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
                 <button
                   key={period}
                   onClick={() => setChartPeriod(period)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                     chartPeriod === period
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'

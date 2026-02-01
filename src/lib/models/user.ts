@@ -6,6 +6,10 @@ export interface IUser extends Document {
   password: string;
   name: string;
 
+  // Email verification
+  isVerified: boolean;
+  verifiedAt: Date | null;
+
   // Onboarding profile
   onboardingComplete: boolean;
   fullName: string;
@@ -33,6 +37,10 @@ const userSchema = new Schema<IUser>(
     },
     password: { type: String, required: true },
     name: { type: String, required: true, trim: true },
+
+    // Email verification
+    isVerified: { type: Boolean, default: false },
+    verifiedAt: { type: Date, default: null },
 
     onboardingComplete: { type: Boolean, default: false },
     fullName: { type: String, default: '' },

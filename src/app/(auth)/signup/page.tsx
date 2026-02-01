@@ -182,7 +182,13 @@ export default function SignupPage() {
       }
 
       toast.success('Account created!');
-      router.push('/onboarding');
+
+      // Check if verification is required
+      if (data.requiresVerification) {
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+      } else {
+        router.push('/onboarding');
+      }
     } catch {
       toast.error('Something went wrong');
     } finally {

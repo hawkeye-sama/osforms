@@ -70,6 +70,13 @@ export default function LoginPage() {
         return;
       }
 
+      // Check if verification is required
+      if (data.requiresVerification) {
+        toast.error('Please verify your email first');
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
       toast.success('Welcome back!');
       router.push('/dashboard');
     } catch {
