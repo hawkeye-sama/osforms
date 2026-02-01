@@ -14,6 +14,8 @@ import {
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
+import { Footer } from '@/components/layout/footer';
+import { LandingNavbar } from '@/components/layout/landing-navbar';
 import { CodeTabs } from '@/components/landing/code-tabs';
 import { ScrollReveal } from '@/components/landing/scroll-reveal';
 import { Button } from '@/components/ui/button';
@@ -24,57 +26,7 @@ export default function LandingPage() {
       {/* Background Grid */}
       <div className="bg-grid-glow pointer-events-none fixed inset-0" />
 
-      {/* ─── 1. Sticky Navigation ────────────────────────── */}
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="border-border/40 bg-background/10 sticky top-0 z-50 w-full border-b backdrop-blur-xl"
-      >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-8">
-          <Link
-            href="/"
-            className="text-base font-semibold tracking-tight transition-opacity hover:opacity-80"
-          >
-            OSForms
-          </Link>
-          {/* <nav className="hidden items-center gap-6 text-sm md:flex">
-            <Link
-              href="/docs"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Docs
-            </Link>
-            <Link
-              href="/pricing"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              GitHub
-            </Link>
-          </nav> */}
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="hidden sm:inline-flex"
-            >
-              <Link href="/login">Sign In</Link>
-            </Button>
-            <Button size="sm" asChild className="button-glow">
-              <Link href="/signup">Get Started</Link>
-            </Button>
-          </div>
-        </div>
-      </motion.header>
+      <LandingNavbar />
 
       {/* ─── 2. Hero Section ─────────────────────────────── */}
       <section className="relative px-8 pt-32 pb-24">
@@ -361,99 +313,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── 8. Footer ───────────────────────────────────── */}
-      <footer className="border-border/40 bg-card/20 border-t px-8 py-16 backdrop-blur-sm">
-        <div className="mx-auto grid max-w-300 grid-cols-1 gap-12 sm:grid-cols-4">
-          <div>
-            <div className="text-base font-semibold">OSForms</div>
-            <p className="text-muted-foreground mt-3 text-sm">
-              Built by a dev,
-              <br />
-              for developers.
-            </p>
-          </div>
-
-          <div>
-            <div className="text-foreground mb-3 text-sm font-semibold">
-              Product
-            </div>
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="/pricing"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                Pricing
-              </Link>
-              <Link
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                GitHub
-              </Link>
-              <Link
-                href="/changelog"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                Changelog
-              </Link>
-            </nav>
-          </div>
-
-          <div>
-            <div className="text-foreground mb-3 text-sm font-semibold">
-              Resources
-            </div>
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="/docs"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                Docs
-              </Link>
-              <Link
-                href="/blog"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                Blog
-              </Link>
-              <Link
-                href="/support"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                Support
-              </Link>
-            </nav>
-          </div>
-
-          <div>
-            <div className="text-foreground mb-3 text-sm font-semibold">
-              Legal
-            </div>
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="/privacy"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                Privacy
-              </Link>
-              <Link
-                href="/terms"
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-              >
-                Terms
-              </Link>
-            </nav>
-          </div>
-        </div>
-
-        <div className="border-border/40 mx-auto mt-12 max-w-300 border-t pt-8 text-center">
-          <p className="text-muted-foreground text-xs">
-            © {new Date().getFullYear()} OSForms. Open source, MIT License.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

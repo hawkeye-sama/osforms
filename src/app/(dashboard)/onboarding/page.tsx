@@ -346,13 +346,15 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="bg-background flex min-h-screen flex-col items-center justify-center px-4 py-12">
+    <div className="flex flex-col items-center justify-center px-4 py-20">
       <div className="w-full max-w-lg">
         {/* Logo */}
-        <h1 className="text-foreground mb-8 text-center text-3xl font-bold tracking-tight">
+        <h1 className="text-foreground mb-2 text-center text-3xl font-bold tracking-tight">
           OSForms
         </h1>
-
+        <p className="text-muted-foreground text-center mb-8">
+          Let's get you onboarded with OSForms
+        </p>
         {/* Step indicator */}
         <div className="mb-8 flex items-center justify-center gap-2">
           {STEPS.map((label, i) => (

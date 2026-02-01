@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
+import { Footer } from '@/components/layout/footer';
 import { MobileNav } from '@/components/dashboard/mobile-nav';
 import { Navbar } from '@/components/dashboard/navbar';
 import { Sidebar } from '@/components/dashboard/sidebar';
@@ -52,6 +53,13 @@ export default function DashboardLayout({
         // Redirect to onboarding if not complete (unless already there)
         if (!data.user.onboardingComplete && pathname !== '/onboarding') {
           router.push('/onboarding');
+          return;
+        }
+
+        // Redirect to dashboard if onboarding is complete and they try to go back
+        if (data.user.onboardingComplete && pathname === '/onboarding') {
+          router.push('/dashboard');
+          return;
         }
       } catch {
         router.push('/login');
@@ -78,9 +86,15 @@ export default function DashboardLayout({
     return null;
   }
 
-  // Onboarding page gets a clean layout (no nav)
+  // Onboarding page gets a clean layout but with Nav/Footer
   if (pathname === '/onboarding') {
-    return <div className="dark">{children}</div>;
+    return (
+      <div className="dark bg-background flex min-h-screen flex-col">
+        <Navbar user={user} onMobileMenuToggle={() => {}} />
+        <main className="flex-1">{children}</main>
+        <Footer />
+      </div>
+    );
   }
 
   return (
