@@ -90,10 +90,11 @@ export async function POST(req: NextRequest, { params }: Params) {
     return success(form.redirectUrl, req);
   }
 
-  // ── reCAPTCHA ─────────────────────────────────────────────
+  // ── CAPTCHA ──────────────────────────────────────────────
   if (form.recaptchaSecret) {
     const token = (data['g-recaptcha-response'] ||
-      data['h-captcha-response']) as string | undefined;
+      data['h-captcha-response'] ||
+      data['cf-turnstile-response']) as string | undefined;
     if (!token) {
       return error('CAPTCHA verification required', 400, req);
     }
@@ -102,10 +103,12 @@ export async function POST(req: NextRequest, { params }: Params) {
     if (!valid) {
       return error('CAPTCHA verification failed', 400, req);
     }
-
-    delete data['g-recaptcha-response'];
-    delete data['h-captcha-response'];
   }
+
+  // Always remove CAPTCHA fields from stored data to keep records clean
+  delete data['g-recaptcha-response'];
+  delete data['h-captcha-response'];
+  delete data['cf-turnstile-response'];
 
   // Remove honeypot from stored data
   if (form.honeypotField) {
