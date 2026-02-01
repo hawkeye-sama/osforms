@@ -18,22 +18,21 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'OSForms - Open Source Form Backend',
+    default: 'OSForms | The Open-Source Form Backend for Modern Devs',
     template: '%s | OSForms',
   },
   description:
-    'The open-source form backend for developers. Bring your own API keys, get unlimited power. Email notifications, Google Sheets, webhooks — all free.',
+    'Free your forms from proprietary clouds. OSForms is the high-performance form backend where you bring your own API keys. Own your data, no lock-in.',
   keywords: [
     'form backend',
     'open source forms',
-    'form handling',
-    'form API',
-    'Resend integration',
-    'Google Sheets forms',
-    'webhook forms',
-    'BYOK',
+    'react form backend',
+    'nextjs forms',
+    'headless forms',
+    'form automation',
+    'BYOK forms',
+    'self-hostable forms',
     'developer tools',
-    'form submissions',
   ],
   authors: [{ name: 'OSForms' }],
   creator: 'OSForms',
@@ -49,7 +48,7 @@ export const metadata: Metadata = {
     url: baseUrl,
     title: 'OSForms - Open Source Form Backend',
     description:
-      'The open-source form backend for developers. Bring your own API keys, get unlimited power. Email notifications, Google Sheets, webhooks — all free.',
+      'The open-source form backend for developers. Bring your own API keys, stay in control. Integrated with Resend, Google Sheets, and Slack.',
     siteName: 'OSForms',
     images: [
       {
@@ -62,9 +61,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'OSForms - Open Source Form Backend',
+    title: 'OSForms | Own your form backend',
     description:
-      'The open-source form backend for developers. Bring your own API keys, get unlimited power. Email notifications, Google Sheets, webhooks — all free.',
+      'The open-source form backend for developers. Bring your own API keys, stay in control. Unlimited submissions, zero lock-in.',
     images: [`${baseUrl}/og-image.png`],
     creator: '@osforms',
   },
@@ -93,7 +92,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <head>
         <script
           type="application/ld+json"
