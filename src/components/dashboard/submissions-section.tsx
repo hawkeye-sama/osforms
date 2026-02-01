@@ -1,11 +1,19 @@
 'use client';
 
-import { Inbox, Loader2 } from 'lucide-react';
+import { Download, Inbox, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { SubmissionsChart } from '@/components/dashboard/submissions-chart';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Submission {
@@ -37,6 +45,12 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [chartPeriod, setChartPeriod] = useState('30d');
   const [chartLoading, setChartLoading] = useState(true);
+
+  // Detail view state
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<Submission | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const fetchSubmissions = useCallback(async () => {
     try {
@@ -110,8 +124,32 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
     if (!loading) {
       fetchChartData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chartPeriod]);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/v1/forms/${formId}/export`);
+      if (!res.ok) {
+        throw new Error('Failed to export');
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `submissions-${formId}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Submissions exported successfully');
+    } catch {
+      toast.error('Failed to export submissions');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -143,7 +181,7 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
                 <button
                   key={period}
                   onClick={() => setChartPeriod(period)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                  className={`cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                     chartPeriod === period
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -184,11 +222,27 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
 
       {/* Submissions List */}
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <button className="text-foreground border-primary flex items-center gap-2 border-b-2 px-3 py-1.5 text-sm font-medium">
-            <Inbox className="h-4 w-4" />
-            Inbox ({submissions.length})
-          </button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button className="text-foreground border-primary flex items-center gap-2 border-b-2 px-3 py-1.5 text-sm font-medium">
+              <Inbox className="h-4 w-4" />
+              Inbox ({submissions.length})
+            </button>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            onClick={handleExport}
+            disabled={exporting}
+          >
+            {exporting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            Export CSV
+          </Button>
         </div>
 
         {submissions.length === 0 ? (
@@ -244,6 +298,10 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
                         variant="ghost"
                         size="sm"
                         className="text-muted-foreground"
+                        onClick={() => {
+                          setSelectedSubmission(sub);
+                          setDetailsOpen(true);
+                        }}
                       >
                         View Details
                       </Button>
@@ -252,6 +310,45 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
                 </Card>
               );
             })}
+
+            {/* Details Dialog */}
+            <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Submission Details</DialogTitle>
+                  <DialogDescription>
+                    Full content of the submission from{' '}
+                    {selectedSubmission &&
+                      new Date(selectedSubmission.createdAt).toLocaleString()}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="mt-4 space-y-6">
+                  <div>
+                    <h4 className="text-foreground mb-2 text-sm font-semibold">
+                      Form Data
+                    </h4>
+                    <div className="bg-muted/50 max-h-[40vh] overflow-y-auto rounded-md border p-4">
+                      <div className="space-y-3">
+                        {selectedSubmission &&
+                          Object.entries(selectedSubmission.data).map(
+                            ([key, value]) => (
+                              <div key={key} className="space-y-1">
+                                <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                                  {key}
+                                </p>
+                                <p className="text-foreground text-sm break-words">
+                                  {String(value ?? '')}
+                                </p>
+                              </div>
+                            )
+                          )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Load More Button */}
             {hasMoreSubmissions && (

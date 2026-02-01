@@ -276,4 +276,3 @@ export async function forwardEmail(data: {
     console.error('Failed to forward email:', error);
   }
 }
-

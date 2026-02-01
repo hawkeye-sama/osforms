@@ -233,8 +233,9 @@ export default function FormDetailPage({
           </div>
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="text-muted-foreground"
               onClick={() => setSettingsOpen(true)}
             >
               <Settings className="mr-2 h-4 w-4" />

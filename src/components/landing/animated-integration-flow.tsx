@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { forwardRef, useRef } from "react";
+import React, { forwardRef, useRef } from 'react';
 import {
   FileText,
   Globe,
@@ -11,10 +11,10 @@ import {
   Slack,
   Table,
   Webhook as WebhookIcon,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { cn } from "@/lib/utils";
-import { AnimatedBeam } from "@/components/ui/animated-beam";
+import { cn } from '@/lib/utils';
+import { AnimatedBeam } from '@/components/ui/animated-beam';
 
 const Circle = forwardRef<
   HTMLDivElement,
@@ -24,8 +24,8 @@ const Circle = forwardRef<
     <div
       ref={ref}
       className={cn(
-        "z-10 flex size-16 items-center justify-center rounded-full border-2 border-border bg-white p-4 shadow-[0_0_20px_-12px_rgba(0,0,0,0.8)] dark:bg-zinc-900 md:size-24",
-        className,
+        'border-border z-10 flex size-16 items-center justify-center rounded-full border-2 bg-white p-4 shadow-[0_0_20px_-12px_rgba(0,0,0,0.8)] md:size-24 dark:bg-zinc-900',
+        className
       )}
     >
       {children}
@@ -33,7 +33,7 @@ const Circle = forwardRef<
   );
 });
 
-Circle.displayName = "Circle";
+Circle.displayName = 'Circle';
 
 export function AnimatedIntegrationFlow({ className }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,8 +50,8 @@ export function AnimatedIntegrationFlow({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative flex w-full items-center justify-center overflow-hidden p-10",
-        className,
+        'relative flex w-full items-center justify-center overflow-hidden p-10',
+        className
       )}
       ref={containerRef}
     >
@@ -68,8 +68,13 @@ export function AnimatedIntegrationFlow({ className }: { className?: string }) {
           </Circle>
         </div>
         <div className="flex flex-col justify-center">
-          <Circle ref={div4Ref} className="size-24 md:size-32 border-white/20 glow-pulse bg-zinc-950">
-            <span className="text-xl md:text-4xl font-black text-white tracking-tighter">OSF</span>
+          <Circle
+            ref={div4Ref}
+            className="glow-pulse size-24 border-white/20 bg-zinc-950 md:size-32"
+          >
+            <span className="text-xl font-black tracking-tighter text-white md:text-4xl">
+              OSF
+            </span>
           </Circle>
         </div>
         <div className="flex flex-col justify-center gap-6 md:gap-8">

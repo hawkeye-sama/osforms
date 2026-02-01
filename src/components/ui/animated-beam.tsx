@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useId, useState } from "react";
-import { motion } from "motion/react";
+import { useEffect, useId, useState } from 'react';
+import { motion } from 'motion/react';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 export interface AnimatedBeamProps {
   className?: string;
@@ -34,33 +34,33 @@ export const AnimatedBeam = ({
   reverse = false, // branch direction
   duration = Math.random() * 3 + 4,
   delay = 0,
-  pathColor = "gray",
+  pathColor = 'gray',
   pathWidth = 2,
   pathOpacity = 0.2,
-  gradientStartColor = "#ffaa40",
-  gradientStopColor = "#9c40ff",
+  gradientStartColor = '#ffaa40',
+  gradientStopColor = '#9c40ff',
   startXOffset = 0,
   startYOffset = 0,
   endXOffset = 0,
   endYOffset = 0,
 }: AnimatedBeamProps) => {
   const id = useId();
-  const [path, setPath] = useState("");
+  const [path, setPath] = useState('');
   const [svgDimensions, setSvgDimensions] = useState({ width: 0, height: 0 });
 
   // Calculate the gradient coordinates based on the connectivity direction
   const gradientCoordinates = reverse
     ? {
-        x1: "0%",
-        x2: "100%",
-        y1: "0%",
-        y2: "0%",
+        x1: '0%',
+        x2: '100%',
+        y1: '0%',
+        y2: '0%',
       }
     : {
-        x1: "100%",
-        x2: "0%",
-        y1: "0%",
-        y2: "0%",
+        x1: '100%',
+        x2: '0%',
+        y1: '0%',
+        y2: '0%',
       };
 
   useEffect(() => {
@@ -118,10 +118,10 @@ export const AnimatedBeam = ({
   // Create variants for the gradient animation to ensure a smooth flow that traverses the whole path
   const gradientVariants = {
     animate: {
-      x1: reverse ? ["100%", "-100%"] : ["-100%", "100%"],
-      x2: reverse ? ["200%", "0%"] : ["0%", "200%"],
-      y1: ["0%", "0%"],
-      y2: ["0%", "0%"],
+      x1: reverse ? ['100%', '-100%'] : ['-100%', '100%'],
+      x2: reverse ? ['200%', '0%'] : ['0%', '200%'],
+      y1: ['0%', '0%'],
+      y2: ['0%', '0%'],
     },
   };
 
@@ -132,8 +132,8 @@ export const AnimatedBeam = ({
       height={svgDimensions.height}
       xmlns="http://www.w3.org/2000/svg"
       className={cn(
-        "pointer-events-none absolute left-0 top-0 stroke-2",
-        className,
+        'pointer-events-none absolute top-0 left-0 stroke-2',
+        className
       )}
       viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`}
     >
@@ -161,7 +161,7 @@ export const AnimatedBeam = ({
             duration,
             delay,
             repeat: Infinity,
-            ease: "linear",
+            ease: 'linear',
           }}
         >
           <stop stopColor={gradientStartColor} stopOpacity="0" />

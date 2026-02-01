@@ -38,12 +38,17 @@ export function FlickeringGrid({
   }, [dimensions, squareSize, gridGap]);
 
   return (
-    <div className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}>
+    <div
+      className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
+    >
       <svg
         width="100%"
         height="100%"
         className="opacity-20"
-        style={{ maskImage: 'radial-gradient(circle at center, black, transparent 80%)' }}
+        style={{
+          maskImage:
+            'radial-gradient(circle at center, black, transparent 80%)',
+        }}
       >
         {Array.from({ length: Math.min(cols * rows, 500) }).map((_, i) => {
           const col = i % cols;

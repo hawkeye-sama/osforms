@@ -13,7 +13,12 @@ interface AccordionItemProps {
   onClick: () => void;
 }
 
-function AccordionItem({ question, answer, isOpen, onClick }: AccordionItemProps) {
+function AccordionItem({
+  question,
+  answer,
+  isOpen,
+  onClick,
+}: AccordionItemProps) {
   return (
     <div className="border-border/50 border-b last:border-0">
       <button
@@ -47,7 +52,11 @@ function AccordionItem({ question, answer, isOpen, onClick }: AccordionItemProps
   );
 }
 
-export function Accordion({ items }: { items: { question: string; answer: string }[] }) {
+export function Accordion({
+  items,
+}: {
+  items: { question: string; answer: string }[];
+}) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (

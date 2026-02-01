@@ -25,10 +25,7 @@ export async function POST(req: NextRequest) {
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Check if already verified
