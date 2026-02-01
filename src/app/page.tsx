@@ -38,7 +38,7 @@ export default function LandingPage() {
       {/* ─── Hero Section ─────────────────────────────── */}
       <section className="relative px-8 pt-32 pb-24 lg:pt-48">
         <div className="gradient-radial-glow pointer-events-none absolute inset-0" />
-        
+
         <div className="relative mx-auto max-w-5xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -54,12 +54,12 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="text-foreground text-5xl leading-[1.05] font-bold tracking-tight sm:text-7xl lg:text-8xl text-balance"
+            className="text-foreground text-5xl leading-[1.05] font-bold tracking-tight text-balance sm:text-7xl lg:text-8xl"
           >
             Forms for{' '}
-<span className="bg-gradient-to-r from-neutral-500 via-white to-neutral-500 bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer">
-  Developers.
-</span>
+            <span className="animate-shimmer bg-gradient-to-r from-neutral-500 via-white to-neutral-500 bg-[length:200%_auto] bg-clip-text text-transparent">
+              Developers.
+            </span>
           </motion.h1>
 
           <motion.p
@@ -78,7 +78,11 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
-            <Button size="lg" asChild className="button-glow h-14 rounded-full px-10 text-base">
+            <Button
+              size="lg"
+              asChild
+              className="button-glow h-14 rounded-full px-10 text-base"
+            >
               <Link href="/signup">
                 Start Building Now
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -88,7 +92,7 @@ export default function LandingPage() {
               variant="outline"
               size="lg"
               asChild
-              className="border-border/60 hover:bg-white/5 h-14 rounded-full px-8 text-base backdrop-blur-sm"
+              className="border-border/60 h-14 rounded-full px-8 text-base backdrop-blur-sm hover:bg-white/5"
             >
               <Link
                 href="https://github.com/osforms/osforms"
@@ -117,10 +121,10 @@ export default function LandingPage() {
       </section>
 
       {/* ─── How it Works ─────────────────────────────── */}
-      <section id="how-it-works" className="relative px-8 py-32 scroll-mt-20">
+      <section id="how-it-works" className="relative scroll-mt-20 px-8 py-32">
         <div className="mx-auto max-w-5xl">
           <ScrollReveal className="mb-20 text-center">
-            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl text-balance">
+            <h2 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
               Simple 3-step setup.
             </h2>
             <p className="text-muted-foreground mt-4 text-lg">
@@ -148,11 +152,13 @@ export default function LandingPage() {
             ].map((item, i) => (
               <ScrollReveal key={item.step} delay={i * 0.1}>
                 <div className="relative">
-                  <div className="text-white/10 absolute -top-10 -left-4 font-mono text-8xl font-black">
+                  <div className="absolute -top-10 -left-4 font-mono text-8xl font-black text-white/10">
                     {item.step}
                   </div>
                   <div className="relative pt-6">
-                    <h3 className="text-foreground text-xl font-bold">{item.title}</h3>
+                    <h3 className="text-foreground text-xl font-bold">
+                      {item.title}
+                    </h3>
                     <p className="text-muted-foreground mt-2">{item.desc}</p>
                   </div>
                 </div>
@@ -163,17 +169,21 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Integrated Flow ──────────────────────────── */}
-      <section id="integration" className="relative px-8 py-32 overflow-hidden border-t border-white/5 bg-black/20 scroll-mt-20">
-         <div className="mx-auto max-w-5xl">
+      <section
+        id="integration"
+        className="relative scroll-mt-20 overflow-hidden border-t border-white/5 bg-black/20 px-8 py-32"
+      >
+        <div className="mx-auto max-w-5xl">
           <ScrollReveal className="mb-20 text-center">
-            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl text-white text-balance">
+            <h2 className="text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl">
               One hub. Infinite flows.
             </h2>
             <p className="text-muted-foreground mt-4 text-lg">
-              Collect data from any source and forward it to your favorite tools.
+              Collect data from any source and forward it to your favorite
+              tools.
             </p>
           </ScrollReveal>
-          
+
           <div className="relative mt-20">
             <AnimatedIntegrationFlow />
           </div>
@@ -181,43 +191,52 @@ export default function LandingPage() {
       </section>
 
       {/* Section Separator */}
-      <div className="border-b border-white/5 mx-auto max-w-5xl" />
+      <div className="mx-auto max-w-5xl border-b border-white/5" />
 
       {/* ─── Bento Grid Features ───────────────────────── */}
-      <section id="features" className="relative px-8 py-32 overflow-hidden scroll-mt-20">
-        <FlickeringGrid 
+      <section
+        id="features"
+        className="relative scroll-mt-20 overflow-hidden px-8 py-32"
+      >
+        <FlickeringGrid
           squareSize={4}
           gridGap={8}
           flickerChance={0.2}
           maxOpacity={0.2}
-          className="opacity-40" 
+          className="opacity-40"
         />
-        
+
         <div className="relative z-10 mx-auto max-w-5xl">
           <ScrollReveal className="mb-16 text-center">
-            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl text-balance">
+            <h2 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
               Powerful features, zero bloat.
             </h2>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-6 md:grid-rows-2 gap-4 h-full">
+          <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-6 md:grid-rows-2">
             {/* Main Feature - Bento */}
             <ScrollReveal className="md:col-span-4 md:row-span-2" delay={0.1}>
-              <div className="bento-card h-full flex flex-col justify-between">
+              <div className="bento-card flex h-full flex-col justify-between">
                 <div>
                   <div className="bg-primary/10 mb-6 flex h-12 w-12 items-center justify-center rounded-xl">
                     <Unlock className="text-primary h-6 w-6" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">Full Privacy & Sovereignty</h3>
+                  <h3 className="text-2xl font-bold text-white">
+                    Full Privacy & Sovereignty
+                  </h3>
                   <p className="text-muted-foreground mt-4 max-w-md text-lg">
-                    OSForms is built on the principle of data ownership. 
-                    We don't lock you into a proprietary cloud. 
-                    Use your own Resend or Google Sheets keys for direct delivery.
+                    OSForms is built on the principle of data ownership. We
+                    don't lock you into a proprietary cloud. Use your own Resend
+                    or Google Sheets keys for direct delivery.
                   </p>
                 </div>
                 <div className="mt-12 flex gap-4">
-                   <div className="border-border/50 rounded-lg border bg-white/5 px-4 py-2 text-sm font-mono text-white">MIT Licensed</div>
-                   <div className="border-border/50 rounded-lg border bg-white/5 px-4 py-2 text-sm font-mono text-white">Self-Hostable</div>
+                  <div className="border-border/50 rounded-lg border bg-white/5 px-4 py-2 font-mono text-sm text-white">
+                    MIT Licensed
+                  </div>
+                  <div className="border-border/50 rounded-lg border bg-white/5 px-4 py-2 font-mono text-sm text-white">
+                    Self-Hostable
+                  </div>
                 </div>
               </div>
             </ScrollReveal>
@@ -226,9 +245,12 @@ export default function LandingPage() {
             <ScrollReveal className="md:col-span-2" delay={0.2}>
               <div className="bento-card h-full">
                 <Plug className="text-primary mb-4 h-6 w-6" />
-                <h3 className="text-xl font-bold text-white">Infinite Integrations</h3>
+                <h3 className="text-xl font-bold text-white">
+                  Infinite Integrations
+                </h3>
                 <p className="text-muted-foreground mt-2 text-sm">
-                  Connect any service via custom webhooks with HMAC signatures for security.
+                  Connect any service via custom webhooks with HMAC signatures
+                  for security.
                 </p>
               </div>
             </ScrollReveal>
@@ -237,37 +259,56 @@ export default function LandingPage() {
             <ScrollReveal className="md:col-span-2" delay={0.3}>
               <div className="bento-card h-full">
                 <Code2 className="text-primary mb-4 h-6 w-6" />
-                <h3 className="text-xl font-bold text-white">Developer First</h3>
+                <h3 className="text-xl font-bold text-white">
+                  Developer First
+                </h3>
                 <p className="text-muted-foreground mt-2 text-sm">
-                  Headless by design. Works with React, Vue, Svelte, or plain HTML.
+                  Headless by design. Works with React, Vue, Svelte, or plain
+                  HTML.
                 </p>
               </div>
             </ScrollReveal>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-             {[
-               { icon: Database, title: 'No Database Needed', desc: 'We handle the storage and validation so you don\'t have to.' },
-               { icon: Shield, title: 'Spam Protection', desc: 'Enterprise-grade honeypots and validation included for free.' },
-               { icon: Zap, title: 'Blazing Fast', desc: 'Globally distributed edge functions ensure sub-100ms response times.' },
-             ].map((feat, i) => (
-               <ScrollReveal key={feat.title} delay={0.4 + (i * 0.1)}>
-                 <div className="bento-card">
-                   <feat.icon className="text-primary/70 mb-4 h-5 w-5" />
-                   <h3 className="font-bold text-white">{feat.title}</h3>
-                   <p className="text-muted-foreground mt-2 text-sm">{feat.desc}</p>
-                 </div>
-               </ScrollReveal>
-             ))}
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+            {[
+              {
+                icon: Database,
+                title: 'No Database Needed',
+                desc: "We handle the storage and validation so you don't have to.",
+              },
+              {
+                icon: Shield,
+                title: 'Spam Protection',
+                desc: 'Enterprise-grade honeypots and validation included for free.',
+              },
+              {
+                icon: Zap,
+                title: 'Blazing Fast',
+                desc: 'Globally distributed edge functions ensure sub-100ms response times.',
+              },
+            ].map((feat, i) => (
+              <ScrollReveal key={feat.title} delay={0.4 + i * 0.1}>
+                <div className="bento-card">
+                  <feat.icon className="text-primary/70 mb-4 h-5 w-5" />
+                  <h3 className="font-bold text-white">{feat.title}</h3>
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    {feat.desc}
+                  </p>
+                </div>
+              </ScrollReveal>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ─── FAQ Section ──────────────────────────── */}
-      <section id="faq" className="relative px-8 py-32 scroll-mt-20">
+      <section id="faq" className="relative scroll-mt-20 px-8 py-32">
         <div className="mx-auto max-w-3xl">
           <ScrollReveal className="mb-16 text-center">
-            <h2 className="text-4xl font-bold tracking-tight text-white mb-2 sm:text-5xl text-balance">FAQ</h2>
+            <h2 className="mb-2 text-4xl font-bold tracking-tight text-balance text-white sm:text-5xl">
+              FAQ
+            </h2>
             <p className="text-muted-foreground mt-4">
               Everything you need to know about OSForms.
             </p>
@@ -278,19 +319,23 @@ export default function LandingPage() {
               items={[
                 {
                   question: 'Is it actually free?',
-                  answer: 'Yes! Our cloud version offers 100 submissions per month for free. If you need more, you can upgrade or self-host the entire platform for free.',
+                  answer:
+                    'Yes! Our cloud version offers 100 submissions per month for free. If you need more, you can upgrade or self-host the entire platform for free.',
                 },
                 {
                   question: 'How do I use my own Resend key?',
-                  answer: 'In your dashboard, go to Integrations and paste your Resend API key. All emails will then be sent directly through your account.',
+                  answer:
+                    'In your dashboard, go to Integrations and paste your Resend API key. All emails will then be sent directly through your account.',
                 },
                 {
                   question: 'Can I export my data?',
-                  answer: 'Absolutely. You can export all your submissions to CSV or JSON at any time. No vendor lock-in, ever.',
+                  answer:
+                    'Absolutely. You can export all your submissions to CSV or JSON at any time. No vendor lock-in, ever.',
                 },
                 {
                   question: 'Do you support file uploads?',
-                  answer: "Currently we're building it out, should be live soon.",
+                  answer:
+                    "Currently we're building it out, should be live soon.",
                 },
               ]}
             />
@@ -302,17 +347,22 @@ export default function LandingPage() {
       <section className="relative overflow-hidden px-8 py-32 text-center">
         <div className="bg-grid-subtle absolute inset-0 opacity-20" />
         <div className="gradient-radial-glow pointer-events-none absolute inset-0" />
-        
+
         <div className="relative mx-auto max-w-2xl">
           <ScrollReveal>
-            <h2 className="text-4xl font-bold tracking-tight sm:text-6xl text-white text-balance">
+            <h2 className="text-4xl font-bold tracking-tight text-balance text-white sm:text-6xl">
               Ready to own your form backend?
             </h2>
-            <p className="text-muted-foreground mt-8 text-xl max-w-xl mx-auto text-balance">
-              Join developers building forms without limits. Open source. No lock-in.
+            <p className="text-muted-foreground mx-auto mt-8 max-w-xl text-xl text-balance">
+              Join developers building forms without limits. Open source. No
+              lock-in.
             </p>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button size="lg" asChild className="button-glow h-14 rounded-full px-10 text-base">
+              <Button
+                size="lg"
+                asChild
+                className="button-glow h-14 rounded-full px-10 text-base"
+              >
                 <Link href="/signup">
                   Get Started Free
                   <ArrowRight className="ml-2 h-4 w-4" />

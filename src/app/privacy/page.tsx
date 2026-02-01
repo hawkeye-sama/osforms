@@ -63,81 +63,143 @@ export default function PrivacyPage() {
       <main className="relative px-8 py-24">
         <div className="mx-auto max-w-[720px]">
           <ScrollReveal>
-             <div className="flex flex-col items-start gap-4 mb-10">
-                <Badge variant="outline" className="border-border-strong text-muted-foreground">
-                  Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                </Badge>
-                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-                  Privacy Policy
-                </h1>
-             </div>
+            <div className="mb-10 flex flex-col items-start gap-4">
+              <Badge
+                variant="outline"
+                className="border-border-strong text-muted-foreground"
+              >
+                Last updated:{' '}
+                {new Date().toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </Badge>
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+                Privacy Policy
+              </h1>
+            </div>
           </ScrollReveal>
 
           <ScrollReveal delay={0.1}>
-            <div className="bg-card/50 border border-border-default rounded-xl p-8 backdrop-blur-sm shadow-sm ring-1 ring-white/5">
-                <div className="prose prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-p:text-muted-foreground prose-li:text-muted-foreground max-w-none">
-                  <p className="lead text-lg text-foreground/90">
-                    At OSForms, I take your privacy seriously. This Privacy Policy explains how I collect, use, and protect your information when you use my service.
-                  </p>
+            <div className="bg-card/50 border-border-default rounded-xl border p-8 shadow-sm ring-1 ring-white/5 backdrop-blur-sm">
+              <div className="prose prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-p:text-muted-foreground prose-li:text-muted-foreground max-w-none">
+                <p className="lead text-foreground/90 text-lg">
+                  At OSForms, I take your privacy seriously. This Privacy Policy
+                  explains how I collect, use, and protect your information when
+                  you use my service.
+                </p>
 
-                  <h2 className="text-2xl mt-8 mb-4">1. Information I Collect</h2>
-                  <p>
-                    I collect information you provide directly when you create an account, configure forms, or set up integrations. This includes:
-                  </p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li>Account information (email, password)</li>
-                    <li>Form configurations and submission data</li>
-                    <li>Integration credentials (encrypted API keys)</li>
-                  </ul>
+                <h2 className="mt-8 mb-4 text-2xl">1. Information I Collect</h2>
+                <p>
+                  I collect information you provide directly when you create an
+                  account, configure forms, or set up integrations. This
+                  includes:
+                </p>
+                <ul className="list-disc space-y-2 pl-5">
+                  <li>Account information (email, password)</li>
+                  <li>Form configurations and submission data</li>
+                  <li>Integration credentials (encrypted API keys)</li>
+                </ul>
 
-                  <h3 className="text-xl mt-6 mb-3">Google User Data</h3>
-                  <p>
-                    If you choose to connect your Google account for Google Sheets integration, OSForms accesses the following scopes:
-                  </p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li><strong>userinfo.email</strong>: To identify your account.</li>
-                    <li><strong>userinfo.profile</strong>: To display your name in the dashboard.</li>
-                    <li><strong>drive.file</strong>: To create and edit specific Google Sheets files that you designate for form submissions.</li>
-                  </ul>
+                <h3 className="mt-6 mb-3 text-xl">Google User Data</h3>
+                <p>
+                  If you choose to connect your Google account for Google Sheets
+                  integration, OSForms accesses the following scopes:
+                </p>
+                <ul className="list-disc space-y-2 pl-5">
+                  <li>
+                    <strong>userinfo.email</strong>: To identify your account.
+                  </li>
+                  <li>
+                    <strong>userinfo.profile</strong>: To display your name in
+                    the dashboard.
+                  </li>
+                  <li>
+                    <strong>drive.file</strong>: To create and edit specific
+                    Google Sheets files that you designate for form submissions.
+                  </li>
+                </ul>
 
-                  <h2 className="text-2xl mt-8 mb-4">2. How I Use Your Information</h2>
-                  <p>
-                    I use your information to operate and improve OSForms. Specifically:
-                  </p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li>To provide the form backend service and route submissions to your configured integrations.</li>
-                    <li>To maintain the security of your account and data.</li>
-                    <li>To communicate with you about your account and service updates.</li>
-                  </ul>
+                <h2 className="mt-8 mb-4 text-2xl">
+                  2. How I Use Your Information
+                </h2>
+                <p>
+                  I use your information to operate and improve OSForms.
+                  Specifically:
+                </p>
+                <ul className="list-disc space-y-2 pl-5">
+                  <li>
+                    To provide the form backend service and route submissions to
+                    your configured integrations.
+                  </li>
+                  <li>To maintain the security of your account and data.</li>
+                  <li>
+                    To communicate with you about your account and service
+                    updates.
+                  </li>
+                </ul>
 
-                  <div className="bg-background/50 border border-border-strong rounded-lg p-6 my-8 not-prose">
-                    <h4 className="text-foreground font-semibold mt-0 mb-2 flex items-center gap-2">
+                <div className="bg-background/50 border-border-strong not-prose my-8 rounded-lg border p-6">
+                  <h4 className="text-foreground mt-0 mb-2 flex items-center gap-2 font-semibold">
+                    Google API Services User Data Policy
+                  </h4>
+                  <p className="text-muted-foreground mb-0 text-sm leading-relaxed">
+                    OSForms' use and transfer to any other app of information
+                    received from Google APIs will adhere to{' '}
+                    <a
+                      href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground hover:text-foreground/80 underline underline-offset-4"
+                    >
                       Google API Services User Data Policy
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-0 leading-relaxed">
-                      OSForms' use and transfer to any other app of information received from Google APIs will adhere to <a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank" rel="noopener noreferrer" className="text-foreground underline underline-offset-4 hover:text-foreground/80">Google API Services User Data Policy</a>, including the Limited Use requirements. I do not use Google user data for advertisements or sell it to third parties.
-                    </p>
-                  </div>
-
-                  <h2 className="text-2xl mt-8 mb-4">3. Data Security</h2>
-                  <p>
-                    I implement robust security measures to protect your data. All integration credentials (API keys, tokens) are encrypted at rest using AES-256-GCM encryption. Your credentials are never stored in plain text.
-                  </p>
-
-                  <h2 className="text-2xl mt-8 mb-4">4. Data Sharing and Disclosure</h2>
-                  <p>
-                    I do not sell your personal data. I may share your information only in the following circumstances:
-                  </p>
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li>With your consent or at your direction (e.g., sending form data to your configured third-party integrations like Resend or Google Sheets).</li>
-                    <li>To comply with legal obligations or protect my rights.</li>
-                  </ul>
-
-                  <h2 className="text-2xl mt-8 mb-4">5. Contact</h2>
-                  <p>
-                    If you have any questions about this Privacy Policy, please contact me at <a href="mailto:jattali12@gmail.com" className="text-foreground hover:underline">jattali12@gmail.com</a>.
+                    </a>
+                    , including the Limited Use requirements. I do not use
+                    Google user data for advertisements or sell it to third
+                    parties.
                   </p>
                 </div>
+
+                <h2 className="mt-8 mb-4 text-2xl">3. Data Security</h2>
+                <p>
+                  I implement robust security measures to protect your data. All
+                  integration credentials (API keys, tokens) are encrypted at
+                  rest using AES-256-GCM encryption. Your credentials are never
+                  stored in plain text.
+                </p>
+
+                <h2 className="mt-8 mb-4 text-2xl">
+                  4. Data Sharing and Disclosure
+                </h2>
+                <p>
+                  I do not sell your personal data. I may share your information
+                  only in the following circumstances:
+                </p>
+                <ul className="list-disc space-y-2 pl-5">
+                  <li>
+                    With your consent or at your direction (e.g., sending form
+                    data to your configured third-party integrations like Resend
+                    or Google Sheets).
+                  </li>
+                  <li>
+                    To comply with legal obligations or protect my rights.
+                  </li>
+                </ul>
+
+                <h2 className="mt-8 mb-4 text-2xl">5. Contact</h2>
+                <p>
+                  If you have any questions about this Privacy Policy, please
+                  contact me at{' '}
+                  <a
+                    href="mailto:jattali12@gmail.com"
+                    className="text-foreground hover:underline"
+                  >
+                    jattali12@gmail.com
+                  </a>
+                  .
+                </p>
+              </div>
             </div>
           </ScrollReveal>
         </div>

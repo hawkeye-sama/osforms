@@ -292,7 +292,12 @@ export function GoogleSheetsConfig({
           <Trash2 className="mr-2 h-4 w-4" />
           Disconnect
         </Button>
-        <Button type="button" className='text-black' variant="outline" onClick={onClose}>
+        <Button
+          type="button"
+          className="text-black"
+          variant="outline"
+          onClick={onClose}
+        >
           Cancel
         </Button>
         <Button onClick={handleSave} disabled={saving || !name.trim()}>
