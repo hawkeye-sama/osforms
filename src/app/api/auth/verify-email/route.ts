@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { setAuthCookie, signToken } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
+import { sendWelcomeEmail } from '@/lib/email';
 import EmailVerification from '@/lib/models/email-verification';
 import User from '@/lib/models/user';
 import { verifyEmailSchema } from '@/lib/validations';
@@ -57,6 +58,11 @@ export async function POST(req: NextRequest) {
     // Generate JWT and set auth cookie
     const token = signToken({ userId: user._id.toString(), email: user.email });
     await setAuthCookie(token);
+
+    // Send welcome email (async, don't await so we don't delay the response)
+    sendWelcomeEmail(user.email, user.name).catch((err) =>
+      console.error('Failed to send welcome email:', err)
+    );
 
     return NextResponse.json({
       success: true,

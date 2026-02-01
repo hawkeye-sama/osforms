@@ -178,3 +178,102 @@ Questions? Contact us at support@osforms.com
     throw new Error('Failed to send verification email');
   }
 }
+
+/**
+ * Send personal welcome email after verification
+ */
+export async function sendWelcomeEmail(
+  email: string,
+  name: string
+): Promise<void> {
+  const firstName = name.split(' ')[0] || 'there';
+
+  const htmlContent = `
+<div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px;">
+  <p>Hey ${firstName},</p>
+
+  <p>I'm Bahroze — the developer behind OSForms.</p>
+
+  <p>I just wanted to personally reach out and say thank you for joining. I started building OSForms because I was tired of form backends that felt like they were designed to trap developers in "pro" tiers just to get basic features.</p>
+
+  <p>My goal is simple: a plug & play solution with no arbitrary caps, no vendor lock-in, and total control. Having you on board genuinely means a lot to me and helps keep the lights on for this project.</p>
+
+  <p>On a side note, I'm curious — what brought you to OSForms? Was there a specific pain point or a project you're working on right now?</p>
+
+  <p>I read every single email that comes my way, so feel free to hit "reply" even just to say hi. I'd love to hear your thoughts or any feedback you might have.</p>
+
+  <p>Cheers,<br>Bahroze</p>
+</div>
+  `.trim();
+
+  const textContent = `
+Hey ${firstName},
+
+I'm Bahroze — the developer behind OSForms.
+
+I just wanted to personally reach out and say thank you for joining. I started building OSForms because I was tired of form backends that felt like they were designed to trap developers in "pro" tiers just to get basic features.
+
+My goal is simple: a plug & play solution with no arbitrary caps, no vendor lock-in, and total control. Having you on board genuinely means a lot to me and helps keep the lights on for this project.
+
+On a side note, I'm curious — what brought you to OSForms? Was there a specific pain point or a project you're working on right now?
+
+I read every single email that comes my way, so feel free to hit "reply" even just to say hi. I'd love to hear your thoughts or any feedback you might have.
+
+Cheers,
+Bahroze
+  `.trim();
+
+  try {
+    await resend.emails.send({
+      from: 'Bahroze from OSForms <bahroze@osforms.com>',
+      to: email,
+      subject: 'Quick hello from the founder of OSForms',
+      html: htmlContent,
+      text: textContent,
+      replyTo: 'bahroze@osforms.com',
+    });
+  } catch (error) {
+    console.error('Failed to send welcome email:', error);
+    // We don't throw here to avoid failing the verification process
+    // if only the welcome email fails
+  }
+}
+
+/**
+ * Forward an incoming email to the project owner
+ */
+export async function forwardEmail(data: {
+  from: string;
+  to: string[];
+  subject: string;
+  text?: string;
+  html?: string;
+}): Promise<void> {
+  const forwardedHtml = `
+<div style="font-family: sans-serif; line-height: 1.6; color: #333;">
+  <div style="background: #f4f4f4; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #333;">
+    <strong>Forwarded Email</strong><br>
+    <strong>From:</strong> ${data.from}<br>
+    <strong>To:</strong> ${data.to.join(', ')}<br>
+    <strong>Subject:</strong> ${data.subject}
+  </div>
+  <div>
+    ${data.html || (data.text ? `<pre style="white-space: pre-wrap;">${data.text}</pre>` : '<em>No content</em>')}
+  </div>
+</div>
+  `.trim();
+
+  try {
+    await resend.emails.send({
+      from: 'OSForms Forwarder <forwarder@osforms.com>',
+      to: 'jattali12@gmail.com',
+      subject: `[FWD] ${data.subject}`,
+      html: forwardedHtml,
+      text: `Forwarded Email\nFrom: ${data.from}\nTo: ${data.to.join(', ')}\nSubject: ${data.subject}\n\n${data.text || 'No content'}`,
+      replyTo: data.from,
+    });
+  } catch (error) {
+    console.error('Failed to forward email:', error);
+  }
+}
+
