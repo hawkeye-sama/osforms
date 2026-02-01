@@ -218,6 +218,13 @@ body {
   }
 }
 
+@keyframes shimmer {
+  to { background-position: 200% center; }
+}
+.animate-shimmer {
+  animation: shimmer 3s linear infinite;
+}
+
 /* ── Background Effects ──────────────────────────────── */
 
 .bg-grid {

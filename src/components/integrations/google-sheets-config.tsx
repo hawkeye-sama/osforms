@@ -147,9 +147,9 @@ export function GoogleSheetsConfig({
   if (loading) {
     return (
       <div className="space-y-4 py-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" variant="light" />
+        <Skeleton className="h-10 w-full" variant="light" />
+        <Skeleton className="h-10 w-full" variant="light" />
       </div>
     );
   }
@@ -265,7 +265,7 @@ export function GoogleSheetsConfig({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-4 w-4 text-blue-500" />
                 </a>
               </Button>
             </div>
@@ -292,7 +292,7 @@ export function GoogleSheetsConfig({
           <Trash2 className="mr-2 h-4 w-4" />
           Disconnect
         </Button>
-        <Button type="button" variant="outline" onClick={onClose}>
+        <Button type="button" className='text-black' variant="outline" onClick={onClose}>
           Cancel
         </Button>
         <Button onClick={handleSave} disabled={saving || !name.trim()}>

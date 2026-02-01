@@ -56,9 +56,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-foreground text-5xl leading-[1.05] font-bold tracking-tight sm:text-7xl lg:text-8xl text-balance"
           >
-            Forms for the
-            <br />
-            <span className="text-white">modern stack.</span>
+            Forms for{' '}
+<span className="bg-gradient-to-r from-neutral-500 via-white to-neutral-500 bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer">
+  Developers.
+</span>
           </motion.h1>
 
           <motion.p
