@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { hashPassword, setAuthCookie, signToken } from '@/lib/auth';
+import { hashPassword } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
+import { generateOTP, sendVerificationEmail } from '@/lib/email';
+import EmailVerification from '@/lib/models/email-verification';
 import User from '@/lib/models/user';
 import { signUpSchema } from '@/lib/validations';
 
@@ -38,17 +40,24 @@ export async function POST(req: NextRequest) {
       password: hashed,
     });
 
-    const token = signToken({ userId: user._id.toString(), email: user.email });
-    await setAuthCookie(token);
+    // Generate OTP and save to database
+    const otpCode = generateOTP();
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+    await EmailVerification.create({
+      userId: user._id,
+      email: user.email,
+      code: otpCode,
+      expiresAt,
+    });
+
+    // Send verification email
+    await sendVerificationEmail(user.email, otpCode);
 
     return NextResponse.json(
       {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          onboardingComplete: user.onboardingComplete,
-        },
+        requiresVerification: true,
+        email: user.email,
       },
       { status: 201 }
     );

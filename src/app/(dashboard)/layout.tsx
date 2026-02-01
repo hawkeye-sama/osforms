@@ -11,6 +11,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
+  isVerified: boolean;
   onboardingComplete: boolean;
 }
 
@@ -35,6 +36,18 @@ export default function DashboardLayout({
         }
         const data = await res.json();
         setUser(data.user);
+
+        // Check if email is verified (unless on verify-email page)
+        if (
+          !data.user.isVerified &&
+          pathname !== '/verify-email' &&
+          !pathname.startsWith('/verify-email')
+        ) {
+          router.push(
+            `/verify-email?email=${encodeURIComponent(data.user.email)}`
+          );
+          return;
+        }
 
         // Redirect to onboarding if not complete (unless already there)
         if (!data.user.onboardingComplete && pathname !== '/onboarding') {

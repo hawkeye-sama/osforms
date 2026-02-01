@@ -13,6 +13,18 @@ export const signInSchema = z.object({
   password: z.string().min(1),
 });
 
+export const verifyEmailSchema = z.object({
+  email: z.string().email('Valid email required'),
+  code: z
+    .string()
+    .length(6, 'Code must be 6 digits')
+    .regex(/^\d{6}$/, 'Code must contain only digits'),
+});
+
+export const resendOtpSchema = z.object({
+  email: z.string().email('Valid email required'),
+});
+
 // ── Onboarding ──────────────────────────────────────────────
 
 export const onboardingSchema = z.object({
@@ -81,6 +93,8 @@ export const updateIntegrationSchema = z.object({
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+export type ResendOtpInput = z.infer<typeof resendOtpSchema>;
 export type OnboardingInput = z.infer<typeof onboardingSchema>;
 export type CreateFormInput = z.infer<typeof createFormSchema>;
 export type UpdateFormInput = z.infer<typeof updateFormSchema>;

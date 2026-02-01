@@ -37,6 +37,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check if email is verified
+    if (!user.isVerified) {
+      return NextResponse.json({
+        requiresVerification: true,
+        email: user.email,
+      });
+    }
+
     const token = signToken({ userId: user._id.toString(), email: user.email });
     await setAuthCookie(token);
 
@@ -46,6 +54,7 @@ export async function POST(req: NextRequest) {
         name: user.name,
         email: user.email,
         onboardingComplete: user.onboardingComplete,
+        isVerified: user.isVerified,
       },
     });
   } catch (error) {
