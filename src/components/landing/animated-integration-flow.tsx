@@ -1,20 +1,18 @@
 'use client';
 
-import React, { forwardRef, useRef } from 'react';
 import {
-  FileText,
   Globe,
   Layout,
   Mail,
   MessageSquare,
-  Send,
   Slack,
   Table,
   Webhook as WebhookIcon,
 } from 'lucide-react';
+import React, { forwardRef, useRef } from 'react';
 
-import { cn } from '@/lib/utils';
 import { AnimatedBeam } from '@/components/ui/animated-beam';
+import { cn } from '@/lib/utils';
 
 const Circle = forwardRef<
   HTMLDivElement,

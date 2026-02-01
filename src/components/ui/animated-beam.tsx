@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
 import { motion } from 'motion/react';
+import { useEffect, useId, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -38,7 +38,6 @@ export const AnimatedBeam = ({
   pathWidth = 2,
   pathOpacity = 0.2,
   gradientStartColor = '#ffaa40',
-  gradientStopColor = '#9c40ff',
   startXOffset = 0,
   startYOffset = 0,
   endXOffset = 0,
@@ -47,21 +46,6 @@ export const AnimatedBeam = ({
   const id = useId();
   const [path, setPath] = useState('');
   const [svgDimensions, setSvgDimensions] = useState({ width: 0, height: 0 });
-
-  // Calculate the gradient coordinates based on the connectivity direction
-  const gradientCoordinates = reverse
-    ? {
-        x1: '0%',
-        x2: '100%',
-        y1: '0%',
-        y2: '0%',
-      }
-    : {
-        x1: '100%',
-        x2: '0%',
-        y1: '0%',
-        y2: '0%',
-      };
 
   useEffect(() => {
     const updatePath = () => {
@@ -90,7 +74,7 @@ export const AnimatedBeam = ({
     };
 
     const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
+      for (const {} of entries) {
         updatePath();
       }
     });

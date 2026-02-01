@@ -85,6 +85,16 @@ function FlickeringSquare({
   maxOpacity: number;
   flickerChance: number;
 }) {
+  const [{ initialOpacity, animationOpacities, duration }] = useState(() => ({
+    initialOpacity: Math.random() * maxOpacity,
+    animationOpacities: [
+      Math.random() * maxOpacity,
+      Math.random() > flickerChance ? Math.random() * maxOpacity : 0,
+      Math.random() * maxOpacity,
+    ],
+    duration: 2 + Math.random() * 3,
+  }));
+
   return (
     <motion.rect
       x={x}
@@ -92,16 +102,12 @@ function FlickeringSquare({
       width={size}
       height={size}
       fill={color}
-      initial={{ opacity: Math.random() * maxOpacity }}
+      initial={{ opacity: initialOpacity }}
       animate={{
-        opacity: [
-          Math.random() * maxOpacity,
-          Math.random() > flickerChance ? Math.random() * maxOpacity : 0,
-          Math.random() * maxOpacity,
-        ],
+        opacity: animationOpacities,
       }}
       transition={{
-        duration: 2 + Math.random() * 3,
+        duration: duration,
         repeat: Infinity,
         ease: 'easeInOut',
       }}

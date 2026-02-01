@@ -3,10 +3,11 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-import { Footer } from '@/components/layout/footer';
 import { MobileNav } from '@/components/dashboard/mobile-nav';
 import { Navbar } from '@/components/dashboard/navbar';
 import { Sidebar } from '@/components/dashboard/sidebar';
+import { Footer } from '@/components/layout/footer';
+import { Spinner } from '@/components/ui/spinner';
 
 interface User {
   _id: string;
@@ -77,7 +78,10 @@ export default function DashboardLayout({
   if (loading) {
     return (
       <div className="dark bg-background flex min-h-screen items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground flex gap-2">
+          <Spinner />
+          Loading...
+        </div>
       </div>
     );
   }

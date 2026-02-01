@@ -3,6 +3,14 @@ import { Resend } from 'resend';
 
 import { forwardEmail } from '@/lib/email';
 
+interface ReceivedEmailData {
+  from: string;
+  to: string[];
+  subject: string;
+  text?: string;
+  html?: string;
+}
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 const SIGNING_SECRET = process.env.RESEND_EMAIl_SIGNING_SECRET;
 
@@ -46,7 +54,7 @@ export async function POST(req: NextRequest) {
     if (payload.type === 'email.received') {
       // The SDK types (ReceivedEmailEventData) are missing text and html fields
       // but they are present in the actual webhook payload.
-      const data = payload.data as any;
+      const data = payload.data as ReceivedEmailData;
       const { from, to, subject, text, html } = data;
 
       // Forward the email in the background

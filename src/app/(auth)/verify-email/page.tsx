@@ -22,6 +22,10 @@ function VerifyEmailPage() {
   const [countdown, setCountdown] = useState(0);
   const [success, setSuccess] = useState(false);
 
+  const getResendButtonText = (isResending: boolean) => {
+    return isResending ? 'Sending...' : 'Resend code';
+  };
+
   // Countdown timer for resend button
   useEffect(() => {
     if (countdown > 0) {
@@ -70,7 +74,9 @@ function VerifyEmailPage() {
   };
 
   const handleResend = async () => {
-    if (countdown > 0) return;
+    if (countdown > 0) {
+      return;
+    }
 
     setResendLoading(true);
 
@@ -156,9 +162,7 @@ function VerifyEmailPage() {
               >
                 {countdown > 0
                   ? `Resend in ${countdown}s`
-                  : resendLoading
-                    ? 'Sending...'
-                    : 'Resend code'}
+                  : getResendButtonText(resendLoading)}
               </button>
             </p>
           </motion.div>

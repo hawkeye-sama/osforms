@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import Form from '@/lib/models/form';
-import Submission from '@/lib/models/submission';
+import Submission, { ISubmission } from '@/lib/models/submission';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -34,15 +34,17 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   // Get all unique keys from submission data
   const keysSet = new Set<string>();
-  submissions.forEach((sub: any) => {
+  submissions.forEach((sub: ISubmission) => {
     Object.keys(sub.data || {}).forEach((key) => keysSet.add(key));
   });
   const dataKeys = Array.from(keysSet);
   const headers = ['ID', 'Date', ...dataKeys];
 
   // Helper to escape CSV values
-  const escapeCSV = (val: any) => {
-    if (val === null || val === undefined) return '';
+  const escapeCSV = (val: unknown) => {
+    if (val === null || val === undefined) {
+      return '';
+    }
     const str = String(val);
     if (str.includes(',') || str.includes('"') || str.includes('\n')) {
       return `"${str.replace(/"/g, '""')}"`;
@@ -50,7 +52,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     return str;
   };
 
-  const rows = submissions.map((sub: any) => {
+  const rows = submissions.map((sub: ISubmission) => {
     const row = [
       sub._id,
       new Date(sub.createdAt).toISOString(),

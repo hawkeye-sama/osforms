@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -19,21 +19,21 @@ export function OTPInput({
   error = false,
   length = 6,
 }: OTPInputProps) {
-  const [otp, setOtp] = useState<string[]>(Array(length).fill(''));
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  // Sync external value with internal state
-  useEffect(() => {
+  const getInitialOtp = () => {
     if (value.length === 0) {
-      setOtp(Array(length).fill(''));
+      return Array(length).fill('');
     } else if (value.length <= length) {
       const newOtp = value.split('');
       while (newOtp.length < length) {
         newOtp.push('');
       }
-      setOtp(newOtp);
+      return newOtp;
     }
-  }, [value, length]);
+    return Array(length).fill('');
+  };
+
+  const [otp, setOtp] = useState<string[]>(getInitialOtp());
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleChange = (index: number, digit: string) => {
     // Only allow single digits
