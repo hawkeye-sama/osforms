@@ -11,7 +11,7 @@ export function LandingNavbar() {
       transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="border-border/40 bg-background/10 sticky top-0 z-50 w-full border-b backdrop-blur-xl"
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-8">
+      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-8">
         <Link
           href="/"
           className="text-base font-semibold tracking-tight transition-opacity hover:opacity-80"

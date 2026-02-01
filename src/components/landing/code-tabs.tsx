@@ -6,117 +6,71 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 
 import { CopyButton } from './copy-button';
 
-// Monotone grayscale syntax highlighting theme
-const monotoneDark = {
+// Colorful syntax highlighting theme
+const colorfulDark = {
   'code[class*="language-"]': {
-    color: '#FAFAFA',
+    color: '#e2e8f0',
     background: 'transparent',
     fontFamily: 'var(--font-mono), monospace',
     fontSize: '0.875rem',
     lineHeight: '1.6',
   },
   'pre[class*="language-"]': {
-    color: '#FAFAFA',
+    color: '#e2e8f0',
     background: 'transparent',
     margin: 0,
     padding: 0,
   },
   comment: {
-    color: '#737373',
+    color: '#64748b',
     fontStyle: 'italic',
   },
-  prolog: {
-    color: '#737373',
-  },
-  doctype: {
-    color: '#737373',
-  },
-  cdata: {
-    color: '#737373',
-  },
   punctuation: {
-    color: '#B3B3B3',
+    color: '#94a3b8',
   },
   property: {
-    color: '#FAFAFA',
+    color: '#38bdf8', // cyan
   },
   tag: {
-    color: '#FAFAFA',
+    color: '#f472b6', // pink
     fontWeight: '600',
   },
   boolean: {
-    color: '#D4D4D4',
+    color: '#fbbf24', // amber
   },
   number: {
-    color: '#D4D4D4',
+    color: '#fbbf24',
   },
   constant: {
-    color: '#D4D4D4',
+    color: '#fbbf24',
   },
   symbol: {
-    color: '#D4D4D4',
-  },
-  selector: {
-    color: '#FAFAFA',
+    color: '#fbbf24',
   },
   'attr-name': {
-    color: '#B3B3B3',
+    color: '#a3e635', // lime
   },
   string: {
-    color: '#B3B3B3',
+    color: '#a3e635',
   },
   char: {
-    color: '#B3B3B3',
+    color: '#a3e635',
   },
   builtin: {
-    color: '#FAFAFA',
+    color: '#38bdf8',
   },
   operator: {
-    color: '#B3B3B3',
-  },
-  entity: {
-    color: '#FAFAFA',
-  },
-  url: {
-    color: '#B3B3B3',
-  },
-  '.language-css .token.string': {
-    color: '#B3B3B3',
-  },
-  '.style .token.string': {
-    color: '#B3B3B3',
-  },
-  variable: {
-    color: '#D4D4D4',
-  },
-  atrule: {
-    color: '#FAFAFA',
-  },
-  'attr-value': {
-    color: '#B3B3B3',
+    color: '#94a3b8',
   },
   keyword: {
-    color: '#FAFAFA',
+    color: '#818cf8', // indigo
     fontWeight: '600',
   },
   function: {
-    color: '#FAFAFA',
+    color: '#fb923c', // orange
   },
   'class-name': {
-    color: '#FAFAFA',
-  },
-  regex: {
-    color: '#B3B3B3',
-  },
-  important: {
-    color: '#FAFAFA',
-    fontWeight: 'bold',
-  },
-  bold: {
-    fontWeight: 'bold',
-  },
-  italic: {
-    fontStyle: 'italic',
+    color: '#22d3ee', // cyan
   },
 };
 
@@ -176,7 +130,7 @@ export function CodeTabs() {
               <button
                 key={t.label}
                 onClick={() => setActive(i)}
-                className={`border-b-2 px-4 py-3 font-mono text-xs transition-colors ${
+                className={`relative z-10 border-b-2 px-4 py-3 font-mono text-xs transition-colors ${
                   i === active
                     ? 'text-foreground border-foreground'
                     : 'text-muted-foreground hover:text-foreground/70 border-transparent'
@@ -202,7 +156,7 @@ export function CodeTabs() {
             >
               <SyntaxHighlighter
                 language={tab.lang}
-                style={monotoneDark}
+                style={colorfulDark}
                 customStyle={{
                   margin: 0,
                   padding: '1.25rem',
