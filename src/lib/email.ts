@@ -199,9 +199,9 @@ export async function sendWelcomeEmail(
 
   <p>My goal is simple: a plug & play solution with no arbitrary caps, no vendor lock-in, and total control. Having you on board genuinely means a lot to me and helps keep the lights on for this project.</p>
 
-  <p>On a side note, I'm curious — what brought you to OSForms? Was there a specific pain point or a project you're working on right now?</p>
+  <p><b>On a side note, I'm curious — what brought you to OSForms? Was there a specific pain point or a project you're working on right now?</b></p>
 
-  <p>I read every single email that comes my way, so feel free to hit "reply" even just to say hi. I'd love to hear your thoughts or any feedback you might have.</p>
+  <p>I read every single email that comes my way, so feel free to <b>hit "reply"</b> even just to say hi. I'd love to hear your thoughts or any feedback you might have.</p>
 
   <p>Cheers,<br>Bahroze</p>
 </div>
