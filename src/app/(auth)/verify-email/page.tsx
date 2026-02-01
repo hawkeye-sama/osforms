@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { AuthCard } from '@/components/auth/auth-card';
@@ -10,7 +10,7 @@ import { AuthLayout } from '@/components/auth/auth-layout';
 import { Button } from '@/components/ui/button';
 import { OTPInput } from '@/components/ui/otp-input';
 
-export default function VerifyEmailPage() {
+function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailParam = searchParams.get('email') || '';
@@ -165,5 +165,13 @@ export default function VerifyEmailPage() {
         </div>
       </AuthCard>
     </AuthLayout>
+  );
+}
+
+export default function VerifyEmailPageWithSuspense() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyEmailPage />
+    </Suspense>
   );
 }
