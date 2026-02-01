@@ -353,7 +353,7 @@ export default function OnboardingPage() {
           OSForms
         </h1>
         <p className="text-muted-foreground mb-8 text-center">
-          Let's get you onboarded with OSForms
+          Let&apos;s get you onboarded with OSForms
         </p>
         {/* Step indicator */}
         <div className="mb-8 flex items-center justify-center gap-2">

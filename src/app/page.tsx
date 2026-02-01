@@ -5,26 +5,24 @@ import {
   Code2,
   Database,
   Github,
-  Mail,
-  Zap,
   Plug,
   Shield,
   Sparkles,
   Unlock,
-  Webhook,
+  Zap,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
+import { AnimatedIntegrationFlow } from '@/components/landing/animated-integration-flow';
+import { CodeTabs } from '@/components/landing/code-tabs';
+import { FlickeringGrid } from '@/components/landing/flickering-grid';
+import { LogoCloud } from '@/components/landing/logo-cloud';
+import { ScrollReveal } from '@/components/landing/scroll-reveal';
 import { Footer } from '@/components/layout/footer';
 import { LandingNavbar } from '@/components/layout/landing-navbar';
-import { CodeTabs } from '@/components/landing/code-tabs';
-import { ScrollReveal } from '@/components/landing/scroll-reveal';
-import { LogoCloud } from '@/components/landing/logo-cloud';
-import { FlickeringGrid } from '@/components/landing/flickering-grid';
-import { AnimatedIntegrationFlow } from '@/components/landing/animated-integration-flow';
-import { Button } from '@/components/ui/button';
 import { Accordion } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
 
 export default function LandingPage() {
   return (
@@ -57,7 +55,7 @@ export default function LandingPage() {
             className="text-foreground text-5xl leading-[1.05] font-bold tracking-tight text-balance sm:text-7xl lg:text-8xl"
           >
             Forms for{' '}
-            <span className="animate-shimmer bg-gradient-to-r from-neutral-500 via-white to-neutral-500 bg-[length:200%_auto] bg-clip-text text-transparent">
+            <span className="animate-shimmer bg-linear-to-r from-neutral-500 via-white to-neutral-500 bg-size-[200%_auto] bg-clip-text text-transparent">
               Developers.
             </span>
           </motion.h1>
@@ -226,8 +224,8 @@ export default function LandingPage() {
                   </h3>
                   <p className="text-muted-foreground mt-4 max-w-md text-lg">
                     OSForms is built on the principle of data ownership. We
-                    don't lock you into a proprietary cloud. Use your own Resend
-                    or Google Sheets keys for direct delivery.
+                    don&apos;t lock you into a proprietary cloud. Use your own
+                    Resend or Google Sheets keys for direct delivery.
                   </p>
                 </div>
                 <div className="mt-12 flex gap-4">

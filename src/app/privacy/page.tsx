@@ -1,10 +1,10 @@
 'use client';
 
-import { ArrowRight, Github } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 import { ScrollReveal } from '@/components/landing/scroll-reveal';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export default function PrivacyPage() {
   return (
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
 
       {/* ─── Main Content ────────────────────────────────── */}
       <main className="relative px-8 py-24">
-        <div className="mx-auto max-w-[720px]">
+        <div className="mx-auto max-w-180">
           <ScrollReveal>
             <div className="mb-10 flex flex-col items-start gap-4">
               <Badge
@@ -145,8 +145,8 @@ export default function PrivacyPage() {
                     Google API Services User Data Policy
                   </h4>
                   <p className="text-muted-foreground mb-0 text-sm leading-relaxed">
-                    OSForms' use and transfer to any other app of information
-                    received from Google APIs will adhere to{' '}
+                    OSForms&apos; use and transfer to any other app of
+                    information received from Google APIs will adhere to{' '}
                     <a
                       href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes"
                       target="_blank"

@@ -130,7 +130,7 @@ export function LogoCloud() {
         Works with your favorite tools
       </motion.p>
       <div className="flex flex-wrap justify-center gap-10 opacity-40 grayscale transition-all duration-700 hover:opacity-100 hover:grayscale-0 md:gap-16">
-        {LOGOS.map((logo, i) => (
+        {LOGOS.map((logo) => (
           <motion.div
             key={logo.name}
             variants={{

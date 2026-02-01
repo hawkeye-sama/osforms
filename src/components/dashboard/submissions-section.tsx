@@ -124,7 +124,7 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
     if (!loading) {
       fetchChartData();
     }
-  }, [chartPeriod]);
+  }, [fetchChartData, loading]);
 
   const handleExport = async () => {
     setExporting(true);
@@ -337,7 +337,7 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
                                 <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                                   {key}
                                 </p>
-                                <p className="text-foreground text-sm break-words">
+                                <p className="text-foreground text-sm wrap-break-word">
                                   {String(value ?? '')}
                                 </p>
                               </div>

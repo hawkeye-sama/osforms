@@ -1,10 +1,10 @@
 'use client';
 
-import { ArrowRight, Github } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
 import { ScrollReveal } from '@/components/landing/scroll-reveal';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export default function TermsPage() {
   return (
@@ -61,7 +61,7 @@ export default function TermsPage() {
 
       {/* ─── Main Content ────────────────────────────────── */}
       <main className="relative px-8 py-24">
-        <div className="mx-auto max-w-[720px]">
+        <div className="mx-auto max-w-180">
           <ScrollReveal>
             <div className="mb-10 flex flex-col items-start gap-4">
               <Badge
@@ -142,9 +142,10 @@ export default function TermsPage() {
                   5. Disclaimer of Warranties
                 </h2>
                 <p>
-                  THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT
-                  WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. I DO NOT
-                  WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED OR ERROR-FREE.
+                  THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS
+                  AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS
+                  OR IMPLIED. I DO NOT WARRANT THAT THE SERVICE WILL BE
+                  UNINTERRUPTED OR ERROR-FREE.
                 </p>
 
                 <h2 className="mt-8 mb-4 text-2xl">
