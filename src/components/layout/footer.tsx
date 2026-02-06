@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 export function Footer() {
@@ -5,7 +6,15 @@ export function Footer() {
     <footer className="border-border/40 bg-card/20 border-t px-8 py-16 backdrop-blur-sm">
       <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 sm:grid-cols-4">
         <div>
-          <div className="text-base font-semibold text-white">OSForms</div>
+          <Link href="/">
+            <Image
+              src="/logo-full.svg"
+              alt="OSForms"
+              width={200}
+              height={200}
+              className="h-16 w-auto"
+            />
+          </Link>
           <p className="text-muted-foreground mt-3 text-sm">
             Built by a dev,
             <br />

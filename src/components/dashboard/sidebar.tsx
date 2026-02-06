@@ -1,6 +1,7 @@
 'use client';
 
 import { FileText, LayoutDashboard, Settings } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -39,12 +40,15 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center border-b px-6">
-        <Link
-          href="/dashboard"
-          className="text-foreground text-xl font-bold tracking-tight"
-        >
-          OSForms
+      <div className="flex h-fit w-full items-center border-b bg-black">
+        <Link href="/dashboard">
+          <Image
+            src="/logo-full.svg"
+            alt="OSForms"
+            width={200}
+            height={200}
+            className="h-20 w-auto"
+          />
         </Link>
       </div>
 

@@ -119,7 +119,9 @@ export async function sendVerificationEmail(
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">osforms</div>
+      <div class="logo">
+        <img src="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/logo-full.svg" alt="OSForms" style="height: 40px; width: auto; margin: 0 auto;" />
+      </div>
     </div>
     
     <div class="card">

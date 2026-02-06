@@ -9,6 +9,7 @@ import {
   Table,
   Webhook as WebhookIcon,
 } from 'lucide-react';
+import Image from 'next/image';
 import React, { forwardRef, useRef } from 'react';
 
 import { AnimatedBeam } from '@/components/ui/animated-beam';
@@ -70,9 +71,13 @@ export function AnimatedIntegrationFlow({ className }: { className?: string }) {
             ref={div4Ref}
             className="glow-pulse size-24 border-white/20 bg-zinc-950 md:size-32"
           >
-            <span className="text-xl font-black tracking-tighter text-white md:text-4xl">
-              OSF
-            </span>
+            <Image
+              src="/logo-no-bg.svg"
+              alt="OSForms"
+              width={200}
+              height={67}
+              className="h-20 w-auto"
+            />
           </Circle>
         </div>
         <div className="flex flex-col justify-center gap-6 md:gap-8">

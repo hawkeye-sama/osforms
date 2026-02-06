@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import * as React from 'react';
 
@@ -23,11 +24,14 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           transition={{ duration: 0.4 }}
           className="container mx-auto px-4 py-8"
         >
-          <Link
-            href="/"
-            className="inline-flex items-center space-x-2 text-xl font-bold transition-opacity hover:opacity-80"
-          >
-            <span>OSForms</span>
+          <Link href="/" className="transition-opacity hover:opacity-80">
+            <Image
+              src="/logo-full.svg"
+              alt="OSForms"
+              width={200}
+              height={200}
+              className="h-20 w-auto"
+            />
           </Link>
         </motion.header>
 
