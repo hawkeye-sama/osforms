@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { runInBackground } from '@/lib/background';
 import { connectDB } from '@/lib/db';
 import { executeIntegrations } from '@/lib/integrations';
 import Form from '@/lib/models/form';
 import Integration from '@/lib/models/integration';
+import Notification from '@/lib/models/notification';
 import Submission from '@/lib/models/submission';
 import User from '@/lib/models/user';
 import { checkRateLimit, getIP } from '@/lib/rate-limit';
@@ -133,18 +135,52 @@ export async function POST(req: NextRequest, { params }: Params) {
     { $inc: { monthlySubmissionCount: 1 } }
   );
 
-  // ── Execute integrations (fire-and-forget) ────────────────
-  const integrations = await Integration.find({
-    formId: form._id,
-    enabled: true,
-  });
-  if (integrations.length > 0) {
-    // Run async — don't block the response
-    executeIntegrations(integrations, submission, form).catch((err) =>
-      console.error('[Integrations] Error:', err)
-    );
-  }
+  // ── Background tasks (notifications + integrations) ───────
+  // Run in background - doesn't block the response
+  runInBackground(async () => {
+    // Ensure DB connection in background context
+    await connectDB();
 
+    // 1. Create submission notification
+    try {
+      await Notification.create({
+        userId: form.userId,
+        type: 'submission',
+        title: `New submission on "${form.name}"`,
+        message: `You received a new form submission.`,
+        read: false,
+        metadata: {
+          formId: form._id.toString(),
+          formName: form.name,
+          submissionId: submission._id.toString(),
+        },
+      });
+      console.info(
+        `[Background] Submission notification created for form ${form._id}`
+      );
+    } catch (err) {
+      console.error('[Background] Failed to create notification:', err);
+    }
+
+    // 2. Execute integrations
+    const integrations = await Integration.find({
+      formId: form._id,
+      enabled: true,
+    });
+
+    if (integrations.length > 0) {
+      try {
+        await executeIntegrations(integrations, submission, form);
+        console.info(
+          `[Background] Executed ${integrations.length} integration(s) for submission ${submission._id}`
+        );
+      } catch (err) {
+        console.error('[Background] Integration execution failed:', err);
+      }
+    }
+  });
+
+  // ── Return immediately (fast response) ────────────────────
   return success(form.redirectUrl, req);
 }
 
