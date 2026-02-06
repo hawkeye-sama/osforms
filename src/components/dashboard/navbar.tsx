@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { NotificationsDropdown } from '@/components/dashboard/notifications-dropdown';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -58,20 +59,10 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         {/* Center - Empty for clean look */}
         <div className="flex-1" />
 
-        {/* Right side - GitHub + Account dropdown */}
+        {/* Right side - Notifications + Account dropdown */}
         <div className="flex items-center gap-2">
-          {/* GitHub Link */}
-          {/* <Button
-            variant="ghost"
-            size="icon"
-            className="text-foreground hover:text-foreground"
-            asChild
-          >
-            <a href="#" target="_blank" rel="noopener noreferrer">
-              <Github className="h-5 w-5" />
-              <span className="sr-only">GitHub</span>
-            </a>
-          </Button> */}
+          {/* Notifications */}
+          <NotificationsDropdown />
 
           {/* Account Dropdown */}
           <DropdownMenu>
