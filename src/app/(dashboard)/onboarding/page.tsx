@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Loader2,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -217,6 +218,8 @@ export default function OnboardingPage() {
           website: website.trim(),
           company: company.trim(),
           role,
+          usecase: usecase.trim(),
+          refSource: source,
         }),
       });
       if (!res.ok) {
@@ -349,9 +352,15 @@ export default function OnboardingPage() {
     <div className="flex flex-col items-center justify-center px-4 py-20">
       <div className="w-full max-w-lg">
         {/* Logo */}
-        <h1 className="text-foreground mb-2 text-center text-3xl font-bold tracking-tight">
-          OSForms
-        </h1>
+        <div className="mb-2 flex justify-center">
+          <Image
+            src="/logo-full.svg"
+            alt="OSForms"
+            width={200}
+            height={200}
+            className="h-32 w-auto"
+          />
+        </div>
         <p className="text-muted-foreground mb-8 text-center">
           Let&apos;s get you onboarded with OSForms
         </p>
@@ -527,7 +536,10 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setStep((prev) => prev - 1)}
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
@@ -658,11 +670,17 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setStep((prev) => prev - 1)}
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
-                <Button className="flex-1" onClick={() => setStep(3)}>
+                <Button
+                  className="flex-1"
+                  onClick={() => setStep((prev) => prev + 1)}
+                >
                   {resendConnected ? 'Continue' : 'Skip for now'}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -744,11 +762,17 @@ export default function OnboardingPage() {
               )}
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(2)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setStep((prev) => prev - 1)}
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
-                <Button className="flex-1" onClick={() => setStep(4)}>
+                <Button
+                  className="flex-1"
+                  onClick={() => setStep((prev) => prev + 1)}
+                >
                   {sheetsConnected ? 'Continue' : 'Skip for now'}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -859,7 +883,10 @@ export default function OnboardingPage() {
 
               {/* Finish Button */}
               <div className="flex gap-3 pt-4">
-                <Button variant="outline" onClick={() => setStep(3)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setStep((prev) => prev - 1)}
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>

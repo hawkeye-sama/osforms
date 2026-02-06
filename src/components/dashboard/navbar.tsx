@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronDown, LogOut, Menu, Settings, User } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -43,11 +44,14 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle menu</span>
           </Button>
-          <Link
-            href="/dashboard"
-            className="text-foreground text-xl font-bold tracking-tight lg:hidden"
-          >
-            OSForms
+          <Link href="/dashboard" className="lg:hidden">
+            <Image
+              src="/logo-full.svg"
+              alt="OSForms"
+              width={200}
+              height={200}
+              className="h-20 w-auto"
+            />
           </Link>
         </div>
 

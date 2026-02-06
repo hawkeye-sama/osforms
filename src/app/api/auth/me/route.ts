@@ -43,6 +43,8 @@ export async function PATCH(req: NextRequest) {
       'company',
       'role',
       'onboardingComplete',
+      'usecase',
+      'refSource',
     ] as const;
 
     const update: Record<string, unknown> = {};
