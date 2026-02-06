@@ -1,8 +1,10 @@
+import { sendIntegrationFailureEmail } from '@/lib/email';
 import { decryptJSON } from '@/lib/encryption';
 import type { IForm } from '@/lib/models/form';
 import type { IIntegration } from '@/lib/models/integration';
 import IntegrationLog from '@/lib/models/integration-log';
 import type { ISubmission } from '@/lib/models/submission';
+import User from '@/lib/models/user';
 
 import type { IntegrationContext, IntegrationHandler } from './base';
 import { emailIntegration } from './email';
@@ -24,6 +26,7 @@ export function getHandler(type: string): IntegrationHandler | undefined {
 /**
  * Execute all integrations for a submission.
  * Runs each one independently — one failure doesn't block others.
+ * Sends email notification to user if any integration fails.
  */
 export async function executeIntegrations(
   integrations: IIntegration[],
@@ -38,6 +41,13 @@ export async function executeIntegrations(
     submittedAt:
       submission.createdAt?.toISOString() || new Date().toISOString(),
   };
+
+  // Track failed integrations for notification
+  const failedIntegrations: Array<{
+    name: string;
+    type: string;
+    error: string;
+  }> = [];
 
   const results = await Promise.allSettled(
     integrations.map(async (integration) => {
@@ -67,9 +77,40 @@ export async function executeIntegrations(
         console.error(
           `[Integrations] ${integration.type} failed: ${result.message}`
         );
+        failedIntegrations.push({
+          name: integration.name,
+          type: integration.type,
+          error: result.message || 'Unknown error',
+        });
       }
+
+      return result;
     })
   );
+
+  // Send failure notification email if any integrations failed
+  if (failedIntegrations.length > 0) {
+    try {
+      const user = await User.findById(form.userId)
+        .select('email name')
+        .lean();
+      if (user) {
+        await sendIntegrationFailureEmail({
+          userEmail: user.email,
+          userName: user.name,
+          formName: form.name,
+          formId: form._id.toString(),
+          failedIntegrations,
+        });
+        console.info(
+          `[Integrations] Failure notification sent to ${user.email}`
+        );
+      }
+    } catch (err) {
+      console.error('[Integrations] Failed to send notification email:', err);
+      // Don't throw - we don't want to fail the submission if notification fails
+    }
+  }
 
   return results;
 }
