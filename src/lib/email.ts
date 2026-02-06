@@ -279,3 +279,226 @@ export async function forwardEmail(data: {
     console.error('Failed to forward email:', error);
   }
 }
+
+/**
+ * Send integration failure notification to user
+ */
+export async function sendIntegrationFailureEmail(data: {
+  userEmail: string;
+  userName: string;
+  formName: string;
+  formId: string;
+  failedIntegrations: Array<{
+    name: string;
+    type: string;
+    error: string;
+  }>;
+}): Promise<void> {
+  const { userEmail, userName, formName, formId, failedIntegrations } = data;
+  const firstName = userName.split(' ')[0] || 'there';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const dashboardUrl = `${appUrl}/dashboard/forms/${formId}`;
+
+  const integrationsList = failedIntegrations
+    .map(
+      (integration) => `
+    <div style="background-color: #fff5f5; border: 1px solid #feb2b2; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="color: #c53030; font-weight: 600;">${integration.name}</span>
+        <span style="background-color: #fed7d7; color: #c53030; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${integration.type}</span>
+      </div>
+      <p style="color: #742a2a; margin: 0; font-size: 14px; line-height: 1.5;">
+        <strong>Error:</strong> ${integration.error}
+      </p>
+    </div>
+  `
+    )
+    .join('');
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integration Failure Alert</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background-color: #0a0a0a;
+      color: #fafafa;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fafafa;
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .card {
+      background-color: #1c1c1c;
+      border: 2px solid #333333;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .alert-badge {
+      background-color: #dc2626;
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fafafa;
+      margin: 0 0 16px 0;
+      letter-spacing: -0.02em;
+    }
+    .description {
+      font-size: 16px;
+      color: #a8a8a8;
+      line-height: 1.6;
+      margin: 0 0 24px 0;
+    }
+    .form-name {
+      background-color: #0a0a0a;
+      border: 1px solid #333333;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      color: #fafafa;
+      font-size: 14px;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #fafafa;
+      color: #0a0a0a;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      margin: 24px 0;
+    }
+    .cta-button:hover {
+      background-color: #e0e0e0;
+    }
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      color: #616161;
+      line-height: 1.6;
+    }
+    .footer a {
+      color: #a8a8a8;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <img src="${appUrl}/logo-full.svg" alt="OSForms" style="height: 40px; width: auto; margin: 0 auto;" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="alert-badge">⚠️ Integration Failed</div>
+      <h1 class="title">Form submission received, but integrations failed</h1>
+      <p class="description">
+        Hey ${firstName}, you just received a new form submission on <strong>${formName}</strong>, but we were unable to sync it to your integration(s).
+      </p>
+
+      <div class="form-name">
+        <strong>Form:</strong> ${formName}
+      </div>
+
+      <h3 style="color: #fafafa; font-size: 16px; margin: 24px 0 12px 0;">Failed Integrations:</h3>
+      ${integrationsList}
+
+      <p class="description">
+        <strong>Next steps:</strong><br>
+        Please log in to your dashboard and verify that your integration settings are correct. Common issues include expired API keys, incorrect credentials, or missing permissions.
+      </p>
+
+      <div style="text-align: center;">
+        <a href="${dashboardUrl}" class="cta-button">View Dashboard →</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        This is an automated alert from osforms<br>
+        Questions? Contact us at <a href="mailto:support@osforms.com">support@osforms.com</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const integrationsText = failedIntegrations
+    .map(
+      (integration) =>
+        `- ${integration.name} (${integration.type})\n  Error: ${integration.error}`
+    )
+    .join('\n\n');
+
+  const textContent = `
+⚠️ INTEGRATION FAILURE ALERT
+
+Hey ${firstName},
+
+You just received a new form submission on "${formName}", but we were unable to sync it to your integration(s).
+
+Form: ${formName}
+
+Failed Integrations:
+${integrationsText}
+
+Next Steps:
+Please log in to your dashboard and verify that your integration settings are correct. Common issues include expired API keys, incorrect credentials, or missing permissions.
+
+View Dashboard: ${dashboardUrl}
+
+---
+This is an automated alert from osforms
+Questions? Contact us at support@osforms.com
+  `.trim();
+
+  try {
+    await resend.emails.send({
+      from: 'osforms Alerts <alerts@osforms.com>',
+      to: userEmail,
+      subject: `⚠️ Integration failed for "${formName}"`,
+      html: htmlContent,
+      text: textContent,
+    });
+  } catch (error) {
+    console.error('Failed to send integration failure email:', error);
+    // Don't throw - we don't want to fail the submission if the notification email fails
+  }
+}
