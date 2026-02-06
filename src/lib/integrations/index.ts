@@ -3,6 +3,7 @@ import { decryptJSON } from '@/lib/encryption';
 import type { IForm } from '@/lib/models/form';
 import type { IIntegration } from '@/lib/models/integration';
 import IntegrationLog from '@/lib/models/integration-log';
+import Notification from '@/lib/models/notification';
 import type { ISubmission } from '@/lib/models/submission';
 import User from '@/lib/models/user';
 
@@ -88,26 +89,53 @@ export async function executeIntegrations(
     })
   );
 
-  // Send failure notification email if any integrations failed
+  // Send failure notification if any integrations failed
   if (failedIntegrations.length > 0) {
     try {
       const user = await User.findById(form.userId)
         .select('email name')
         .lean();
       if (user) {
-        await sendIntegrationFailureEmail({
-          userEmail: user.email,
-          userName: user.name,
-          formName: form.name,
-          formId: form._id.toString(),
-          failedIntegrations,
+        // 1. Create in-app notification (ALWAYS succeeds)
+        await Notification.create({
+          userId: user._id,
+          type: 'integration_failure',
+          title: `Integration failed for "${form.name}"`,
+          message: `${failedIntegrations.length} integration(s) failed to sync your form submission. Click to view details.`,
+          read: false,
+          metadata: {
+            formId: form._id.toString(),
+            formName: form.name,
+            submissionId: submission._id.toString(),
+            failedIntegrations,
+          },
         });
         console.info(
-          `[Integrations] Failure notification sent to ${user.email}`
+          `[Integrations] In-app notification created for user ${user._id}`
         );
+
+        // 2. Try to send email (best effort)
+        try {
+          await sendIntegrationFailureEmail({
+            userEmail: user.email,
+            userName: user.name,
+            formName: form.name,
+            formId: form._id.toString(),
+            failedIntegrations,
+          });
+          console.info(
+            `[Integrations] Email notification sent to ${user.email}`
+          );
+        } catch (emailErr) {
+          console.error(
+            '[Integrations] Failed to send email notification:',
+            emailErr
+          );
+          // Don't throw - in-app notification is already created
+        }
       }
     } catch (err) {
-      console.error('[Integrations] Failed to send notification email:', err);
+      console.error('[Integrations] Failed to create notification:', err);
       // Don't throw - we don't want to fail the submission if notification fails
     }
   }
