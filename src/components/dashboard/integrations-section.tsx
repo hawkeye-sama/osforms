@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface Integration {
   _id: string;
@@ -48,6 +49,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
   const [dialogType, setDialogType] = useState<
     'EMAIL' | 'GOOGLE_SHEETS' | 'WEBHOOK' | null
   >(null);
+  const [emailAutoReplyEnabled, setEmailAutoReplyEnabled] = useState(false);
 
   const fetchIntegrations = useCallback(async () => {
     try {
@@ -79,6 +81,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
   function closeDialog() {
     setDialogOpen(false);
     setDialogType(null);
+    setEmailAutoReplyEnabled(false);
   }
 
   function handleSaveOrDelete() {
@@ -335,7 +338,14 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
           }
         }}
       >
-        <DialogContent className="bg-background border-border max-w-lg">
+        <DialogContent
+          className={cn(
+            'bg-background border-border transition-all duration-300 ease-in-out',
+            dialogType === 'EMAIL' && emailAutoReplyEnabled
+              ? 'max-w-7xl'
+              : 'max-w-lg'
+          )}
+        >
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-foreground text-xl font-semibold">
               {dialogType === 'EMAIL' &&
@@ -366,6 +376,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
               onSave={handleSaveOrDelete}
               onDelete={handleSaveOrDelete}
               onClose={closeDialog}
+              onAutoReplyChange={setEmailAutoReplyEnabled}
             />
           )}
 
