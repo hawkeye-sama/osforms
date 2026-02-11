@@ -10,6 +10,67 @@ import { updateIntegrationSchema } from '@/lib/validations';
 
 type Params = { params: Promise<{ id: string }> };
 
+/** GET /api/v1/integrations/:id - Returns integration with config (secrets masked) */
+export async function GET(req: NextRequest, { params }: Params) {
+  const { user, error } = await requireAuth(req);
+  if (error) {
+    return error;
+  }
+
+  const { id } = await params;
+
+  try {
+    await connectDB();
+
+    const integration = await Integration.findById(id);
+    if (!integration) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    // Verify ownership through form
+    const form = await Form.findOne({
+      _id: integration.formId,
+      userId: user._id,
+    });
+    if (!form) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    // Decrypt config and mask sensitive fields
+    const config = decryptJSON(integration.configEncrypted);
+
+    // Mask sensitive fields based on integration type
+    const maskedConfig = { ...config };
+    if (integration.type === 'EMAIL' && maskedConfig.apiKey) {
+      maskedConfig.apiKey = '••••••••';
+    }
+    if (integration.type === 'WEBHOOK' && maskedConfig.secret) {
+      maskedConfig.secret = '••••••••';
+    }
+    if (integration.type === 'GOOGLE_SHEETS' && maskedConfig.refreshToken) {
+      maskedConfig.refreshToken = '••••••••';
+    }
+
+    return NextResponse.json({
+      integration: {
+        _id: integration._id,
+        type: integration.type,
+        name: integration.name,
+        enabled: integration.enabled,
+        config: maskedConfig,
+        createdAt: integration.createdAt,
+        updatedAt: integration.updatedAt,
+      },
+    });
+  } catch (err) {
+    console.error('Get integration error:', err);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 /** PATCH /api/v1/integrations/:id */
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { user, error } = await requireAuth(req);
@@ -66,22 +127,35 @@ export async function PATCH(req: NextRequest, { params }: Params) {
           );
         }
 
-        // use existing resned form key
+        // use existing resend form key
         if (
           handler.type === 'EMAIL' &&
           parsed.data.config['apiKey'] === 'auto'
         ) {
-          const existingIntegration = await Integration.findOne({
+          const existingEmailIntegration = await Integration.findOne({
             formId: integration.formId,
             type: 'EMAIL',
           }).select('configEncrypted');
 
-          if (existingIntegration) {
+          if (existingEmailIntegration) {
             const decryptedFormConfig = decryptJSON(
-              existingIntegration.configEncrypted
+              existingEmailIntegration.configEncrypted
             );
 
             parsed.data.config['apiKey'] = decryptedFormConfig['apiKey'];
+          }
+        }
+
+        // Preserve existing webhook secret if requested
+        if (
+          handler.type === 'WEBHOOK' &&
+          parsed.data.config['secret'] === '__KEEP_EXISTING__'
+        ) {
+          const existingConfig = decryptJSON(integration.configEncrypted);
+          if (existingConfig.secret) {
+            parsed.data.config['secret'] = existingConfig.secret;
+          } else {
+            delete parsed.data.config['secret'];
           }
         }
       }
