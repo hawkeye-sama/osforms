@@ -8,6 +8,86 @@ import type {
   IntegrationResult,
 } from './base';
 
+// ── Email Field Detection ──────────────────────────────────────
+
+const EMAIL_FIELD_CANDIDATES = [
+  'email',
+  'Email',
+  'EMAIL',
+  'e-mail',
+  'E-mail',
+  'user_email',
+  'userEmail',
+  'contact_email',
+  'contactEmail',
+  'mail',
+  'Mail',
+];
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function detectEmailField(
+  data: Record<string, unknown>,
+  specifiedField?: string
+): string | null {
+  // If user specified a field, try that first
+  if (specifiedField?.trim()) {
+    const value = data[specifiedField.trim()];
+    if (typeof value === 'string' && isValidEmail(value)) {
+      return specifiedField.trim();
+    }
+    return null;
+  }
+
+  // Smart detection
+  for (const candidate of EMAIL_FIELD_CANDIDATES) {
+    const value = data[candidate];
+    if (typeof value === 'string' && isValidEmail(value)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+// ── Template Interpolation ─────────────────────────────────────
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function interpolateTemplate(
+  template: string,
+  ctx: IntegrationContext
+): string {
+  let result = template;
+
+  // Metadata variables
+  result = result.replace(/\{\{formName\}\}/g, esc(ctx.formName));
+  result = result.replace(/\{\{submittedAt\}\}/g, esc(ctx.submittedAt));
+  result = result.replace(/\{\{submissionId\}\}/g, esc(ctx.submissionId));
+
+  // Data field variables
+  for (const [key, value] of Object.entries(ctx.data)) {
+    const regex = new RegExp(`\\{\\{${escapeRegex(key)}\\}\\}`, 'g');
+    result = result.replace(regex, esc(String(value ?? '')));
+  }
+
+  // Simple conditionals: {{#if fieldName}}...{{/if}}
+  result = result.replace(
+    /\{\{#if (\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
+    (_, field, content) => {
+      return ctx.data[field] ? content : '';
+    }
+  );
+
+  // Clean unmatched variables
+  result = result.replace(/\{\{[^}]+\}\}/g, '');
+
+  return result;
+}
+
 function formatHTML(ctx: IntegrationContext): string {
   const rows = Object.entries(ctx.data)
     .map(
@@ -49,6 +129,42 @@ async function sendViaResend(
   return { success: true, message: 'Email sent via Resend' };
 }
 
+// ── Auto-Reply Sender ──────────────────────────────────────────
+
+async function sendAutoReply(
+  config: EmailConfig,
+  ctx: IntegrationContext
+): Promise<IntegrationResult> {
+  if (!config.autoReply?.enabled) {
+    return { success: true, message: 'Auto-reply disabled' };
+  }
+
+  const emailField = detectEmailField(ctx.data, config.autoReply.emailField);
+  if (!emailField) {
+    return {
+      success: true,
+      message: 'Auto-reply skipped: no valid email field found in submission',
+    };
+  }
+
+  const recipientEmail = ctx.data[emailField] as string;
+  const subject = interpolateTemplate(config.autoReply.subject, ctx);
+  const html = interpolateTemplate(config.autoReply.htmlTemplate, ctx);
+
+  const resend = new Resend(config.apiKey);
+  const { error } = await resend.emails.send({
+    from: config.from,
+    to: [recipientEmail],
+    subject,
+    html,
+  });
+
+  if (error) {
+    return { success: false, message: `Auto-reply error: ${error.message}` };
+  }
+  return { success: true, message: `Auto-reply sent to ${recipientEmail}` };
+}
+
 export const emailIntegration: IntegrationHandler = {
   type: 'EMAIL',
 
@@ -62,9 +178,31 @@ export const emailIntegration: IntegrationHandler = {
 
   async execute(ctx, config) {
     const c = emailConfigSchema.parse(config);
+    const results: IntegrationResult[] = [];
+
+    // 1. Notification email (existing behavior)
     if (c.provider === 'resend') {
-      return sendViaResend(c, ctx);
+      results.push(await sendViaResend(c, ctx));
+    } else {
+      results.push({ success: false, message: 'SMTP not yet supported in MVP' });
     }
-    return { success: false, message: `SMTP not yet supported in MVP` };
+
+    // 2. Auto-reply (new)
+    if (c.autoReply?.enabled) {
+      results.push(await sendAutoReply(c, ctx));
+    }
+
+    // Combine results
+    const failed = results.filter((r) => !r.success);
+    if (failed.length > 0) {
+      return {
+        success: false,
+        message: failed.map((r) => r.message).join('; '),
+      };
+    }
+    return {
+      success: true,
+      message: results.map((r) => r.message).join('; '),
+    };
   },
 };
