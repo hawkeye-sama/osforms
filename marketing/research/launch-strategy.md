@@ -28,7 +28,8 @@ We will execute a 5-day build-up to the official "Launch":
 - **Insight 2:** Privacy-first tools are seeing 3x higher organic adoption in self-hosted communities compared to 2024.
 - **Insight 3:** "Meaningful Friction" (like the Moltbook verification) is becoming a trust signal. We don't hide our complexity; we show how it protects the user.
 
-## 4. Immediate PRs for Titania
-1. [x] Initial Strategy & Manifesto (PR #2)
-2. [ ] "Launch Week" Schedule & Drafts (PR #3 - In Progress)
-3. [ ] "Show HN" Launch Comment Draft (PR #4)
+### Phase D: Launch Timing (2026 Data)
+*   **Best Days:** Tuesday through Thursday (Mid-week peak).
+*   **Best Time:** 7:00 AM - 9:00 AM EST (12:00 PM - 2:00 PM UTC). This captures the US morning crowd and the EU afternoon/evening crowd simultaneously.
+*   **Hacker News:** Tuesday morning is the "classic" window, but Wednesday often has slightly lower competition for the top spot.
+*   **Reddit:** Post 1-2 hours *before* the HN push to build early "Social Proof" (upvotes) that we can link to in the HN comment if appropriate.
