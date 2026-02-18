@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { TemplateEditor } from '@/components/integrations/template-editor';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { DEFAULT_AUTO_REPLY_TEMPLATE } from '@/lib/validations';
@@ -38,6 +39,7 @@ export function EmailConfig({
   onClose,
   onAutoReplyChange,
 }: EmailConfigProps) {
+  const [loading, setLoading] = useState(!!existingIntegration);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState(
     existingIntegration?.name || 'Email Notifications'
@@ -60,6 +62,62 @@ export function EmailConfig({
   const [autoReplyTemplate, setAutoReplyTemplate] = useState(
     DEFAULT_AUTO_REPLY_TEMPLATE
   );
+
+  // Fetch existing config on mount
+  const integrationId = existingIntegration?._id;
+
+  useEffect(() => {
+    if (!integrationId) {
+      return;
+    }
+
+    async function fetchConfig() {
+      try {
+        const res = await fetch(`/api/v1/integrations/${integrationId}`);
+        if (!res.ok) {
+          return;
+        }
+
+        const data = await res.json();
+        const config = data.integration?.config;
+        if (!config) {
+          return;
+        }
+
+        if (config.from) {
+          setEmailFrom(config.from);
+        }
+        if (config.to) {
+          setEmailTo(
+            Array.isArray(config.to) ? config.to.join(', ') : config.to
+          );
+        }
+        if (config.subject) {
+          setEmailSubject(config.subject);
+        }
+
+        if (config.autoReply) {
+          setAutoReplyEnabled(!!config.autoReply.enabled);
+          onAutoReplyChange?.(!!config.autoReply.enabled);
+          if (config.autoReply.emailField) {
+            setAutoReplyEmailField(config.autoReply.emailField);
+          }
+          if (config.autoReply.subject) {
+            setAutoReplySubject(config.autoReply.subject);
+          }
+          if (config.autoReply.htmlTemplate) {
+            setAutoReplyTemplate(config.autoReply.htmlTemplate);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch integration config:', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchConfig();
+  }, [integrationId, onAutoReplyChange]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -209,6 +267,17 @@ export function EmailConfig({
     buttonText = existingIntegration ? 'Saving...' : 'Adding...';
   } else if (existingIntegration) {
     buttonText = 'Save Changes';
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-4 py-4">
+        <Skeleton className="h-10 w-full" variant="light" />
+        <Skeleton className="h-10 w-full" variant="light" />
+        <Skeleton className="h-10 w-full" variant="light" />
+        <Skeleton className="h-10 w-2/3" variant="light" />
+      </div>
+    );
   }
 
   return (

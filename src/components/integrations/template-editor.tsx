@@ -63,7 +63,7 @@ export function TemplateEditor({
       <div className="flex-1 overflow-hidden">
         {activeTab === 'html' && (
           <Editor
-            height="350px"
+            height="100%"
             defaultLanguage="html"
             value={template}
             onChange={(value) => onTemplateChange(value || '')}
