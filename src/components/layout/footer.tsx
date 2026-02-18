@@ -4,7 +4,7 @@ import Link from 'next/link';
 export function Footer() {
   return (
     <footer className="border-border/40 bg-card/20 border-t px-8 py-16 backdrop-blur-sm">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 sm:grid-cols-4">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 sm:grid-cols-3">
         <div>
           <Link href="/">
             <Image
@@ -28,50 +28,12 @@ export function Footer() {
           </div>
           <nav className="flex flex-col gap-2">
             <Link
-              href="/pricing"
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link
               href="https://github.com/hawkeye-sama/osforms"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground text-sm transition-colors"
             >
               GitHub
-            </Link>
-            <Link
-              href="/changelog"
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-            >
-              Changelog
-            </Link>
-          </nav>
-        </div>
-
-        <div>
-          <div className="text-foreground mb-3 text-sm font-semibold">
-            Resources
-          </div>
-          <nav className="flex flex-col gap-2">
-            <Link
-              href="/docs"
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-            >
-              Docs
-            </Link>
-            <Link
-              href="/blog"
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-            >
-              Blog
-            </Link>
-            <Link
-              href="/support"
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-            >
-              Support
             </Link>
           </nav>
         </div>
