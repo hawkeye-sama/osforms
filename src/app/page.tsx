@@ -93,7 +93,7 @@ export default function LandingPage() {
               className="border-border/60 h-14 rounded-full px-8 text-base backdrop-blur-sm hover:bg-white/5"
             >
               <Link
-                href="https://github.com/osforms/osforms"
+                href="https://github.com/hawkeye-sama/osforms"
                 target="_blank"
                 rel="noopener noreferrer"
               >

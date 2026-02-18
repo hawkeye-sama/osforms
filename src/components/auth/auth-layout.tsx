@@ -73,7 +73,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                 Terms
               </Link>
               <Link
-                href="https://github.com/yourusername/osforms"
+                href="https://github.com/hawkeye-sama/osforms"
                 className="hover:text-foreground transition-colors"
               >
                 GitHub
