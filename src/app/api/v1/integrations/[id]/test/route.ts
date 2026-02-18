@@ -53,7 +53,8 @@ export async function POST(req: NextRequest, { params }: Params) {
       data: {
         name: 'Test User',
         email: 'test@example.com',
-        message: 'This is a test submission from osforms to verify your integration is working correctly.',
+        message:
+          'This is a test submission from osforms to verify your integration is working correctly.',
         phone: '+1234567890',
         company: 'Test Company',
       },

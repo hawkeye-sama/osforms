@@ -69,7 +69,10 @@ export async function PATCH(req: NextRequest) {
         { userId: user._id, read: false },
         { $set: { read: true } }
       );
-      return NextResponse.json({ success: true, message: 'All marked as read' });
+      return NextResponse.json({
+        success: true,
+        message: 'All marked as read',
+      });
     }
 
     if (!notificationIds || !Array.isArray(notificationIds)) {

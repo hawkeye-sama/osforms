@@ -135,7 +135,8 @@ export const googleSheetsIntegration: IntegrationHandler = {
       if (!appendRes.data.updates?.updatedRows) {
         return {
           success: false,
-          message: 'Row append succeeded but no rows were updated. Check sheet permissions.',
+          message:
+            'Row append succeeded but no rows were updated. Check sheet permissions.',
         };
       }
 
