@@ -92,9 +92,7 @@ export async function executeIntegrations(
   // Send failure notification if any integrations failed
   if (failedIntegrations.length > 0) {
     try {
-      const user = await User.findById(form.userId)
-        .select('email name')
-        .lean();
+      const user = await User.findById(form.userId).select('email name').lean();
       if (user) {
         // 1. Create in-app notification (ALWAYS succeeds)
         await Notification.create({

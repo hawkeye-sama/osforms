@@ -113,7 +113,7 @@ export function NotificationsDropdown() {
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -128,7 +128,7 @@ export function NotificationsDropdown() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground h-auto p-0 text-xs hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground h-auto p-0 text-xs"
               onClick={markAllAsRead}
             >
               Mark all read
@@ -141,7 +141,9 @@ export function NotificationsDropdown() {
             if (loading) {
               return (
                 <div className="flex items-center justify-center py-8">
-                  <div className="text-muted-foreground text-sm">Loading...</div>
+                  <div className="text-muted-foreground text-sm">
+                    Loading...
+                  </div>
                 </div>
               );
             }
@@ -167,7 +169,7 @@ export function NotificationsDropdown() {
                       key={notification._id}
                       href={link}
                       onClick={() => handleNotificationClick(notification)}
-                      className={`block px-4 py-3 transition-colors hover:bg-secondary ${
+                      className={`hover:bg-secondary block px-4 py-3 transition-colors ${
                         !notification.read ? 'bg-secondary/50' : ''
                       }`}
                     >

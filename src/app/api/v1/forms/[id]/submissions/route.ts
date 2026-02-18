@@ -50,7 +50,10 @@ export async function GET(req: NextRequest, { params }: Params) {
     .lean();
 
   // Group logs by submission
-  const logsBySubmission = new Map<string, { success: number; failed: number }>();
+  const logsBySubmission = new Map<
+    string,
+    { success: number; failed: number }
+  >();
   for (const log of logs) {
     const key = log.submissionId.toString();
     if (!logsBySubmission.has(key)) {

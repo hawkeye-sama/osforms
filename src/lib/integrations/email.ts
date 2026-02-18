@@ -184,7 +184,10 @@ export const emailIntegration: IntegrationHandler = {
     if (c.provider === 'resend') {
       results.push(await sendViaResend(c, ctx));
     } else {
-      results.push({ success: false, message: 'SMTP not yet supported in MVP' });
+      results.push({
+        success: false,
+        message: 'SMTP not yet supported in MVP',
+      });
     }
 
     // 2. Auto-reply (new)
