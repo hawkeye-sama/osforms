@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { EmailConfig } from '@/components/integrations/email-config';
 import { GoogleSheetsConfig } from '@/components/integrations/google-sheets-config';
+import { WebhookConfig } from '@/components/integrations/webhook-config';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -25,6 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface Integration {
   _id: string;
@@ -45,8 +47,9 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<
-    'EMAIL' | 'GOOGLE_SHEETS' | null
+    'EMAIL' | 'GOOGLE_SHEETS' | 'WEBHOOK' | null
   >(null);
+  const [emailAutoReplyEnabled, setEmailAutoReplyEnabled] = useState(false);
 
   const fetchIntegrations = useCallback(async () => {
     try {
@@ -70,7 +73,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
     return integrations.find((i) => i.type === type);
   }
 
-  function openDialog(type: 'EMAIL' | 'GOOGLE_SHEETS') {
+  function openDialog(type: 'EMAIL' | 'GOOGLE_SHEETS' | 'WEBHOOK') {
     setDialogType(type);
     setDialogOpen(true);
   }
@@ -78,6 +81,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
   function closeDialog() {
     setDialogOpen(false);
     setDialogType(null);
+    setEmailAutoReplyEnabled(false);
   }
 
   function handleSaveOrDelete() {
@@ -100,6 +104,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
 
   const existingEmail = getExistingIntegration('EMAIL');
   const existingSheets = getExistingIntegration('GOOGLE_SHEETS');
+  const existingWebhook = getExistingIntegration('WEBHOOK');
 
   return (
     <>
@@ -173,16 +178,25 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
             </CardContent>
           </Card>
 
-          {/* Webhooks - Coming Soon */}
-          <Card className="cursor-not-allowed opacity-60">
+          {/* Webhooks */}
+          <Card
+            className="group hover:border-primary/50 cursor-pointer transition-colors"
+            onClick={() => openDialog('WEBHOOK')}
+          >
             <CardContent className="p-5">
               <div className="mb-3 flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
-                  <Webhook className="h-5 w-5 text-gray-500" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
+                  <Webhook className="h-5 w-5 text-orange-500" />
                 </div>
-                <Badge variant="secondary" className="text-xs">
-                  Soon
-                </Badge>
+                {existingWebhook ? (
+                  <Badge className="bg-green-500/10 text-xs text-green-500 hover:bg-green-500/20">
+                    Connected
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs">
+                    Popular
+                  </Badge>
+                )}
               </div>
               <h4 className="text-foreground mb-1 text-sm font-semibold">
                 Webhook
@@ -324,7 +338,14 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
           }
         }}
       >
-        <DialogContent className="bg-background border-border max-w-lg">
+        <DialogContent
+          className={cn(
+            'bg-background border-border transition-all duration-300 ease-in-out',
+            dialogType === 'EMAIL' && emailAutoReplyEnabled
+              ? 'max-w-7xl'
+              : 'max-w-lg'
+          )}
+        >
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-foreground text-xl font-semibold">
               {dialogType === 'EMAIL' &&
@@ -335,12 +356,16 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
                 (existingSheets
                   ? 'Edit Google Sheets'
                   : 'Configure Google Sheets')}
+              {dialogType === 'WEBHOOK' &&
+                (existingWebhook ? 'Edit Webhook' : 'Configure Webhook')}
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm">
               {dialogType === 'EMAIL' &&
                 'Get email notifications for each submission'}
               {dialogType === 'GOOGLE_SHEETS' &&
                 'Append submissions to a spreadsheet'}
+              {dialogType === 'WEBHOOK' &&
+                'Send form submissions to your endpoint'}
             </DialogDescription>
           </DialogHeader>
 
@@ -351,6 +376,7 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
               onSave={handleSaveOrDelete}
               onDelete={handleSaveOrDelete}
               onClose={closeDialog}
+              onAutoReplyChange={setEmailAutoReplyEnabled}
             />
           )}
 
@@ -358,6 +384,16 @@ export function IntegrationsSection({ formId }: IntegrationsSectionProps) {
             <GoogleSheetsConfig
               formId={formId}
               existingIntegration={existingSheets || null}
+              onSave={handleSaveOrDelete}
+              onDelete={handleSaveOrDelete}
+              onClose={closeDialog}
+            />
+          )}
+
+          {dialogType === 'WEBHOOK' && (
+            <WebhookConfig
+              formId={formId}
+              existingIntegration={existingWebhook || null}
               onSave={handleSaveOrDelete}
               onDelete={handleSaveOrDelete}
               onClose={closeDialog}

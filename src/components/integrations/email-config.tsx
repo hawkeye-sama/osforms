@@ -1,14 +1,18 @@
 'use client';
 
 import { Loader2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { TemplateEditor } from '@/components/integrations/template-editor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
+import { cn } from '@/lib/utils';
+import { DEFAULT_AUTO_REPLY_TEMPLATE } from '@/lib/validations';
 
 interface Integration {
   _id: string;
@@ -24,6 +28,7 @@ interface EmailConfigProps {
   onSave: () => void;
   onDelete: () => void;
   onClose: () => void;
+  onAutoReplyChange?: (enabled: boolean) => void;
 }
 
 export function EmailConfig({
@@ -32,7 +37,9 @@ export function EmailConfig({
   onSave,
   onDelete,
   onClose,
+  onAutoReplyChange,
 }: EmailConfigProps) {
+  const [loading, setLoading] = useState(!!existingIntegration);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState(
     existingIntegration?.name || 'Email Notifications'
@@ -45,6 +52,72 @@ export function EmailConfig({
   const [emailSubject, setEmailSubject] = useState('New Form Submission');
   const [useAccountKey, setUseAccountKey] = useState(!!existingIntegration);
   const [customApiKey, setCustomApiKey] = useState('');
+
+  // Auto-reply state
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+  const [autoReplyEmailField, setAutoReplyEmailField] = useState('');
+  const [autoReplySubject, setAutoReplySubject] = useState(
+    'Thank you for your submission'
+  );
+  const [autoReplyTemplate, setAutoReplyTemplate] = useState(
+    DEFAULT_AUTO_REPLY_TEMPLATE
+  );
+
+  // Fetch existing config on mount
+  const integrationId = existingIntegration?._id;
+
+  useEffect(() => {
+    if (!integrationId) {
+      return;
+    }
+
+    async function fetchConfig() {
+      try {
+        const res = await fetch(`/api/v1/integrations/${integrationId}`);
+        if (!res.ok) {
+          return;
+        }
+
+        const data = await res.json();
+        const config = data.integration?.config;
+        if (!config) {
+          return;
+        }
+
+        if (config.from) {
+          setEmailFrom(config.from);
+        }
+        if (config.to) {
+          setEmailTo(
+            Array.isArray(config.to) ? config.to.join(', ') : config.to
+          );
+        }
+        if (config.subject) {
+          setEmailSubject(config.subject);
+        }
+
+        if (config.autoReply) {
+          setAutoReplyEnabled(!!config.autoReply.enabled);
+          onAutoReplyChange?.(!!config.autoReply.enabled);
+          if (config.autoReply.emailField) {
+            setAutoReplyEmailField(config.autoReply.emailField);
+          }
+          if (config.autoReply.subject) {
+            setAutoReplySubject(config.autoReply.subject);
+          }
+          if (config.autoReply.htmlTemplate) {
+            setAutoReplyTemplate(config.autoReply.htmlTemplate);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch integration config:', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchConfig();
+  }, [integrationId, onAutoReplyChange]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -89,6 +162,15 @@ export function EmailConfig({
           from: emailFrom.trim(),
           to: toEmails,
           subject: emailSubject.trim() || 'New Form Submission',
+          autoReply: autoReplyEnabled
+            ? {
+                enabled: true,
+                emailField: autoReplyEmailField.trim() || undefined,
+                subject:
+                  autoReplySubject.trim() || 'Thank you for your submission',
+                htmlTemplate: autoReplyTemplate,
+              }
+            : undefined,
         };
 
         if (existingIntegration) {
@@ -187,155 +269,275 @@ export function EmailConfig({
     buttonText = 'Save Changes';
   }
 
-  return (
-    <form onSubmit={handleSave} className="space-y-5 py-4">
-      {/* Edit mode: Show enabled toggle */}
-      {existingIntegration && (
-        <div className="border-border bg-card/50 flex items-center justify-between rounded-lg border p-4">
-          <div className="space-y-0.5">
-            <Label className="text-foreground text-sm font-medium">
-              Status
-            </Label>
-            <p className="text-muted-foreground text-xs">
-              {enabled ? 'Integration is active' : 'Integration is paused'}
-            </p>
-          </div>
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <Label className="text-foreground text-sm font-medium">
-          Integration Name
-        </Label>
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Email Notifications"
-          className="bg-card border-border"
-          required
-        />
+  if (loading) {
+    return (
+      <div className="space-y-4 py-4">
+        <Skeleton className="h-10 w-full" variant="light" />
+        <Skeleton className="h-10 w-full" variant="light" />
+        <Skeleton className="h-10 w-full" variant="light" />
+        <Skeleton className="h-10 w-2/3" variant="light" />
       </div>
+    );
+  }
 
-      {/* Edit mode notice */}
-      {existingIntegration && (
-        <div className="bg-muted/50 border-border rounded-lg border p-3">
-          <p className="text-muted-foreground text-xs">
-            Leave email fields empty to keep existing configuration, or fill
-            them all to update.
-          </p>
-        </div>
-      )}
-
-      {/* API Key Selection */}
-      <div className="space-y-3">
-        <Label className="text-foreground text-sm font-medium">
-          Resend API Key
-        </Label>
-        <div className="space-y-2">
+  return (
+    <form onSubmit={handleSave} className="py-4">
+      <div
+        className={cn(
+          'grid gap-6',
+          autoReplyEnabled ? 'grid-cols-[1fr_1fr_1.5fr]' : 'grid-cols-1'
+        )}
+      >
+        {/* Left Column: Notification Config */}
+        <div className="space-y-5">
+          {/* Edit mode: Show enabled toggle */}
           {existingIntegration && (
-            <label className="border-border bg-card hover:bg-card/80 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors">
-              <input
-                type="radio"
-                name="apiKeySource"
-                checked={useAccountKey}
-                onChange={() => setUseAccountKey(true)}
-                className="accent-primary h-4 w-4"
-              />
-              <div className="flex-1">
-                <p className="text-foreground text-sm font-medium">
-                  Use existing Resend key
-                </p>
+            <div className="border-border bg-card/50 flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <Label className="text-foreground text-sm font-medium">
+                  Status
+                </Label>
                 <p className="text-muted-foreground text-xs">
-                  Existing API Key
+                  {enabled ? 'Integration is active' : 'Integration is paused'}
                 </p>
               </div>
-            </label>
+              <Switch checked={enabled} onCheckedChange={setEnabled} />
+            </div>
           )}
-          <label className="border-border bg-card hover:bg-card/80 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors">
-            <input
-              type="radio"
-              name="apiKeySource"
-              checked={!useAccountKey}
-              onChange={() => setUseAccountKey(false)}
-              className="accent-primary h-4 w-4"
+
+          <div className="space-y-2">
+            <Label className="text-foreground text-sm font-medium">
+              Integration Name
+            </Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Email Notifications"
+              className="bg-card border-border"
+              required
             />
-            <div className="flex-1">
-              <p className="text-foreground text-sm font-medium">
-                Use custom API key
-              </p>
+          </div>
+
+          {/* Edit mode notice */}
+          {existingIntegration && (
+            <div className="bg-muted/50 border-border rounded-lg border p-3">
               <p className="text-muted-foreground text-xs">
-                Enter a different Resend key
+                Leave email fields empty to keep existing configuration, or fill
+                them all to update.
               </p>
             </div>
-          </label>
+          )}
+
+          {/* API Key Selection */}
+          <div className="space-y-3">
+            <Label className="text-foreground text-sm font-medium">
+              Resend API Key
+            </Label>
+            <div className="space-y-2">
+              {existingIntegration && (
+                <label className="border-border bg-card hover:bg-card/80 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors">
+                  <input
+                    type="radio"
+                    name="apiKeySource"
+                    checked={useAccountKey}
+                    onChange={() => setUseAccountKey(true)}
+                    className="accent-primary h-4 w-4"
+                  />
+                  <div className="flex-1">
+                    <p className="text-foreground text-sm font-medium">
+                      Use existing Resend key
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      Existing API Key
+                    </p>
+                  </div>
+                </label>
+              )}
+              <label className="border-border bg-card hover:bg-card/80 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors">
+                <input
+                  type="radio"
+                  name="apiKeySource"
+                  checked={!useAccountKey}
+                  onChange={() => setUseAccountKey(false)}
+                  className="accent-primary h-4 w-4"
+                />
+                <div className="flex-1">
+                  <p className="text-foreground text-sm font-medium">
+                    Use custom API key
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    Enter a different Resend key
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {!useAccountKey && (
+              <Input
+                type="password"
+                value={customApiKey}
+                onChange={(e) => setCustomApiKey(e.target.value)}
+                placeholder="re_xxxx..."
+                className="bg-card border-border"
+              />
+            )}
+          </div>
+
+          <Separator className="bg-border" />
+
+          <div className="space-y-2">
+            <Label className="text-foreground text-sm font-medium">
+              From Email
+            </Label>
+            <Input
+              type="email"
+              value={emailFrom}
+              onChange={(e) => setEmailFrom(e.target.value)}
+              placeholder="noreply@yourdomain.com"
+              className="bg-card border-border"
+              required={!existingIntegration}
+            />
+            <p className="text-muted-foreground text-xs">
+              Must be a verified domain in your Resend account
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-foreground text-sm font-medium">
+              To Email(s)
+            </Label>
+            <Input
+              type="text"
+              value={emailTo}
+              onChange={(e) => setEmailTo(e.target.value)}
+              placeholder="you@email.com, team@email.com"
+              className="bg-card border-border"
+              required={!existingIntegration}
+            />
+            <p className="text-muted-foreground text-xs">
+              Comma-separated list of recipient emails
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-foreground text-sm font-medium">
+              Subject
+            </Label>
+            <Input
+              type="text"
+              value={emailSubject}
+              onChange={(e) => setEmailSubject(e.target.value)}
+              placeholder="New Form Submission"
+              className="bg-card border-border"
+            />
+          </div>
+
+          <Separator className="bg-border" />
+
+          {/* Auto-Reply Toggle */}
+          <div className="border-border bg-card/50 flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label className="text-foreground text-sm font-medium">
+                Auto-Reply
+              </Label>
+              <p className="text-muted-foreground text-xs">
+                Send confirmation email to form submitters
+              </p>
+            </div>
+            <Switch
+              checked={autoReplyEnabled}
+              onCheckedChange={(checked) => {
+                setAutoReplyEnabled(checked);
+                onAutoReplyChange?.(checked);
+              }}
+            />
+          </div>
+
+          <p className="text-muted-foreground bg-muted/30 border-border rounded-lg border p-3 text-xs">
+            API keys and credentials are encrypted at rest and never exposed in
+            the UI.
+          </p>
         </div>
 
-        {!useAccountKey && (
-          <Input
-            type="password"
-            value={customApiKey}
-            onChange={(e) => setCustomApiKey(e.target.value)}
-            placeholder="re_xxxx..."
-            className="bg-card border-border"
-          />
+        {/* Middle Column: Auto-Reply Settings (only when enabled) */}
+        {autoReplyEnabled && (
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <h3 className="text-foreground text-sm font-semibold">
+                Auto-Reply Settings
+              </h3>
+              <p className="text-muted-foreground text-xs">
+                Configure the confirmation email
+              </p>
+            </div>
+
+            {/* Email Field Name */}
+            <div className="space-y-2">
+              <Label className="text-foreground text-sm font-medium">
+                Email Field{' '}
+                <span className="text-muted-foreground font-normal">
+                  (optional)
+                </span>
+              </Label>
+              <Input
+                value={autoReplyEmailField}
+                onChange={(e) => setAutoReplyEmailField(e.target.value)}
+                placeholder="Auto-detect"
+                className="bg-card border-border"
+              />
+              <p className="text-muted-foreground text-xs">
+                Detects: email, Email, user_email, etc.
+              </p>
+            </div>
+
+            {/* Reply Subject */}
+            <div className="space-y-2">
+              <Label className="text-foreground text-sm font-medium">
+                Reply Subject
+              </Label>
+              <Input
+                value={autoReplySubject}
+                onChange={(e) => setAutoReplySubject(e.target.value)}
+                placeholder="Thank you for your submission"
+                className="bg-card border-border"
+              />
+            </div>
+
+            {/* Variable Reference */}
+            <div className="bg-muted/30 border-border space-y-2 rounded-lg border p-3">
+              <p className="text-muted-foreground text-xs font-medium">
+                Available Variables:
+              </p>
+              <div className="text-muted-foreground grid grid-cols-2 gap-x-2 gap-y-1 font-mono text-xs">
+                <span>{'{{name}}'}</span>
+                <span>{'{{email}}'}</span>
+                <span>{'{{formName}}'}</span>
+                <span>{'{{submittedAt}}'}</span>
+              </div>
+              <p className="text-muted-foreground mt-1 font-mono text-xs">
+                {'{{#if field}}...{{/if}}'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Right Column: Template Editor (only when enabled) */}
+        {autoReplyEnabled && (
+          <div className="flex flex-col">
+            <Label className="text-foreground mb-2 text-sm font-medium">
+              Email Template
+            </Label>
+            <TemplateEditor
+              template={autoReplyTemplate}
+              subject={autoReplySubject}
+              onTemplateChange={setAutoReplyTemplate}
+            />
+          </div>
         )}
       </div>
 
-      <Separator className="bg-border" />
-
-      <div className="space-y-2">
-        <Label className="text-foreground text-sm font-medium">
-          From Email
-        </Label>
-        <Input
-          type="email"
-          value={emailFrom}
-          onChange={(e) => setEmailFrom(e.target.value)}
-          placeholder="noreply@yourdomain.com"
-          className="bg-card border-border"
-          required={!existingIntegration}
-        />
-        <p className="text-muted-foreground text-xs">
-          Must be a verified domain in your Resend account
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-foreground text-sm font-medium">
-          To Email(s)
-        </Label>
-        <Input
-          type="text"
-          value={emailTo}
-          onChange={(e) => setEmailTo(e.target.value)}
-          placeholder="you@email.com, team@email.com"
-          className="bg-card border-border"
-          required={!existingIntegration}
-        />
-        <p className="text-muted-foreground text-xs">
-          Comma-separated list of recipient emails
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-foreground text-sm font-medium">Subject</Label>
-        <Input
-          type="text"
-          value={emailSubject}
-          onChange={(e) => setEmailSubject(e.target.value)}
-          placeholder="New Form Submission"
-          className="bg-card border-border"
-        />
-      </div>
-
-      <p className="text-muted-foreground bg-muted/30 border-border rounded-lg border p-3 text-xs">
-        API keys and credentials are encrypted at rest and never exposed in the
-        UI.
-      </p>
-
       {/* Actions */}
-      <div className="flex gap-2 pt-2">
+      <div className="border-border mt-6 flex gap-2 border-t pt-4">
         {existingIntegration && (
           <Button
             type="button"

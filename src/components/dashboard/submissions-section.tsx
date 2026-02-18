@@ -1,6 +1,12 @@
 'use client';
 
-import { Download, Inbox, Loader2 } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Download,
+  Inbox,
+  Loader2,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -21,6 +27,22 @@ interface Submission {
   data: Record<string, unknown>;
   metadata: { ip: string; userAgent: string; origin: string };
   createdAt: string;
+  integrationStats?: {
+    success: number;
+    failed: number;
+  };
+}
+
+interface IntegrationLog {
+  _id: string;
+  status: 'success' | 'failed';
+  message: string;
+  createdAt: string;
+  integration: {
+    id: string;
+    name: string;
+    type: string;
+  } | null;
 }
 
 interface ChartDataPoint {
@@ -51,6 +73,8 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
     useState<Submission | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [integrationLogs, setIntegrationLogs] = useState<IntegrationLog[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   const fetchSubmissions = useCallback(async () => {
     try {
@@ -150,6 +174,32 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
       setExporting(false);
     }
   };
+
+  const fetchIntegrationLogs = useCallback(async (submissionId: string) => {
+    setLogsLoading(true);
+    try {
+      const res = await fetch(`/api/v1/submissions/${submissionId}/logs`);
+      if (res.ok) {
+        const data = await res.json();
+        setIntegrationLogs(data.logs || []);
+      } else {
+        setIntegrationLogs([]);
+      }
+    } catch {
+      setIntegrationLogs([]);
+    } finally {
+      setLogsLoading(false);
+    }
+  }, []);
+
+  const handleViewDetails = useCallback(
+    (submission: Submission) => {
+      setSelectedSubmission(submission);
+      setDetailsOpen(true);
+      fetchIntegrationLogs(submission._id);
+    },
+    [fetchIntegrationLogs]
+  );
 
   if (loading) {
     return (
@@ -280,28 +330,49 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
                               {primaryField[0]}: {String(primaryField[1] ?? '')}
                             </p>
                           )}
-                          <p className="text-muted-foreground mt-0.5 text-xs">
-                            {new Date(sub.createdAt).toLocaleDateString(
-                              'en-US',
-                              {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              }
-                            )}
-                          </p>
+                          <div className="mt-0.5 flex items-center gap-3">
+                            <p className="text-muted-foreground text-xs">
+                              {new Date(sub.createdAt).toLocaleDateString(
+                                'en-US',
+                                {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                }
+                              )}
+                            </p>
+                            {sub.integrationStats &&
+                              (sub.integrationStats.success > 0 ||
+                                sub.integrationStats.failed > 0) && (
+                                <div className="flex items-center gap-2">
+                                  {sub.integrationStats.success > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <CheckCircle2 className="h-3 w-3 text-green-500" />
+                                      <span className="text-xs text-green-500">
+                                        {sub.integrationStats.success}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {sub.integrationStats.failed > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <AlertCircle className="h-3 w-3 text-red-500" />
+                                      <span className="text-xs text-red-500">
+                                        {sub.integrationStats.failed}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                          </div>
                         </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="text-muted-foreground"
-                        onClick={() => {
-                          setSelectedSubmission(sub);
-                          setDetailsOpen(true);
-                        }}
+                        onClick={() => handleViewDetails(sub)}
                       >
                         View Details
                       </Button>
@@ -324,6 +395,7 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
                 </DialogHeader>
 
                 <div className="mt-4 space-y-6">
+                  {/* Form Data */}
                   <div>
                     <h4 className="text-foreground mb-2 text-sm font-semibold">
                       Form Data
@@ -345,6 +417,81 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
                           )}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Integration Logs */}
+                  <div>
+                    <h4 className="text-foreground mb-2 text-sm font-semibold">
+                      Integration Logs
+                    </h4>
+                    {logsLoading && (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+                      </div>
+                    )}
+                    {!logsLoading && integrationLogs.length === 0 && (
+                      <div className="bg-muted/50 rounded-md border p-4">
+                        <p className="text-muted-foreground text-sm">
+                          No integrations were executed for this submission.
+                        </p>
+                      </div>
+                    )}
+                    {!logsLoading && integrationLogs.length > 0 && (
+                      <div className="space-y-2">
+                        {integrationLogs.map((log) => (
+                          <div
+                            key={log._id}
+                            className={`rounded-md border p-3 ${
+                              log.status === 'success'
+                                ? 'border-green-500/20 bg-green-500/5'
+                                : 'border-red-500/20 bg-red-500/5'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              {log.status === 'success' ? (
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
+                              ) : (
+                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p
+                                    className={`text-sm font-medium ${
+                                      log.status === 'success'
+                                        ? 'text-green-700 dark:text-green-400'
+                                        : 'text-red-700 dark:text-red-400'
+                                    }`}
+                                  >
+                                    {log.integration?.name || 'Unknown'} (
+                                    {log.integration?.type || 'N/A'})
+                                  </p>
+                                  <span className="text-muted-foreground text-xs">
+                                    {new Date(log.createdAt).toLocaleTimeString(
+                                      'en-US',
+                                      {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      }
+                                    )}
+                                  </span>
+                                </div>
+                                {log.message && (
+                                  <p
+                                    className={`mt-1 text-xs ${
+                                      log.status === 'success'
+                                        ? 'text-green-600 dark:text-green-500'
+                                        : 'text-red-600 dark:text-red-500'
+                                    }`}
+                                  >
+                                    {log.message}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </DialogContent>

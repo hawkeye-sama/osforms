@@ -52,6 +52,25 @@ export const updateFormSchema = z.object({
 
 // ── Integrations ────────────────────────────────────────────
 
+export const DEFAULT_AUTO_REPLY_TEMPLATE = `<!DOCTYPE html>
+<html>
+<body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+  <h2 style="color:#1e293b;margin-bottom:16px;">Thank you for your submission!</h2>
+  <p style="color:#334155;">Hi{{#if name}} {{name}}{{/if}},</p>
+  <p style="color:#334155;">We received your message and will get back to you soon.</p>
+  <p style="color:#64748b;font-size:12px;margin-top:32px;">
+    This is an automated message from {{formName}}.
+  </p>
+</body>
+</html>`;
+
+export const autoReplyConfigSchema = z.object({
+  enabled: z.boolean(),
+  emailField: z.string().optional(), // Empty = smart detection
+  subject: z.string().default('Thank you for your submission'),
+  htmlTemplate: z.string().default(DEFAULT_AUTO_REPLY_TEMPLATE),
+});
+
 export const emailConfigSchema = z.object({
   provider: z.enum(['resend', 'sendgrid', 'smtp']),
   apiKey: z.string().optional(),
@@ -59,6 +78,8 @@ export const emailConfigSchema = z.object({
   from: z.string().email('Valid from email required'),
   to: z.array(z.string().email()).min(1, 'At least one recipient required'),
   subject: z.string().default('New Form Submission'),
+  // Auto-Reply
+  autoReply: autoReplyConfigSchema.optional(),
 });
 
 export const webhookConfigSchema = z.object({
@@ -98,6 +119,7 @@ export type ResendOtpInput = z.infer<typeof resendOtpSchema>;
 export type OnboardingInput = z.infer<typeof onboardingSchema>;
 export type CreateFormInput = z.infer<typeof createFormSchema>;
 export type UpdateFormInput = z.infer<typeof updateFormSchema>;
+export type AutoReplyConfig = z.infer<typeof autoReplyConfigSchema>;
 export type EmailConfig = z.infer<typeof emailConfigSchema>;
 export type WebhookConfig = z.infer<typeof webhookConfigSchema>;
 export type GoogleSheetsConfig = z.infer<typeof googleSheetsConfigSchema>;
