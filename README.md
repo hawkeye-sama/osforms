@@ -8,7 +8,7 @@ Open-source form backend with BYOK (Bring Your Own Keys) integrations. Point you
 
 ## Why osforms?
 
-Every form backend (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5-15+/month — even though your own API keys power them. osforms flips that: **100 free submissions/month with all integrations included**, because you bring your own keys.
+Every form backend (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5-15+/month — for basic features that you can get for free if you bring your own keys. osforms flips that: **100 free submissions/month with all integrations included**, because you bring your own keys or if you have more demand, you can self host it without any limits.
 
 ## Features
 
@@ -83,16 +83,16 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Tech Stack
 
-| Layer           | Technology                                    |
-| --------------- | --------------------------------------------- |
-| Framework       | Next.js 15 (App Router)                       |
-| Database        | MongoDB + Mongoose                            |
-| Auth            | Email/password + OTP verification + JWT       |
-| Encryption      | AES-256-GCM (Node crypto)                     |
-| Styling         | Tailwind CSS + shadcn/ui                      |
-| Integrations    | Resend, Google Sheets (googleapis), Webhooks  |
-| Background Jobs | `@vercel/functions` waitUntil                 |
-| Charts          | Recharts                                      |
+| Layer           | Technology                                   |
+| --------------- | -------------------------------------------- |
+| Framework       | Next.js 15 (App Router)                      |
+| Database        | MongoDB + Mongoose                           |
+| Auth            | Email/password + OTP verification + JWT      |
+| Encryption      | AES-256-GCM (Node crypto)                    |
+| Styling         | Tailwind CSS + shadcn/ui                     |
+| Integrations    | Resend, Google Sheets (googleapis), Webhooks |
+| Background Jobs | `@vercel/functions` waitUntil                |
+| Charts          | Recharts                                     |
 
 ## Project Structure
 
@@ -121,16 +121,16 @@ src/
 
 ## Environment Variables
 
-| Variable                       | Description                         | Required |
-| ------------------------------ | ----------------------------------- | -------- |
-| `MONGODB_URI`                  | MongoDB connection string           | Yes      |
-| `JWT_SECRET`                   | Secret for signing JWT tokens       | Yes      |
-| `ENCRYPTION_KEY`               | 64-char hex string for AES-256-GCM  | Yes      |
-| `NEXT_PUBLIC_APP_URL`          | Public app URL                      | Yes      |
-| `GOOGLE_CLIENT_ID`             | Google OAuth client ID (for Sheets) | Optional |
-| `GOOGLE_CLIENT_SECRET`         | Google OAuth client secret          | Optional |
-| `RESEND_API_KEY`               | Resend API key (for system emails)  | Optional |
-| `RESEND_EMAIL_SIGNING_SECRET`  | Resend webhook signing secret       | Optional |
+| Variable                      | Description                         | Required |
+| ----------------------------- | ----------------------------------- | -------- |
+| `MONGODB_URI`                 | MongoDB connection string           | Yes      |
+| `JWT_SECRET`                  | Secret for signing JWT tokens       | Yes      |
+| `ENCRYPTION_KEY`              | 64-char hex string for AES-256-GCM  | Yes      |
+| `NEXT_PUBLIC_APP_URL`         | Public app URL                      | Yes      |
+| `GOOGLE_CLIENT_ID`            | Google OAuth client ID (for Sheets) | Optional |
+| `GOOGLE_CLIENT_SECRET`        | Google OAuth client secret          | Optional |
+| `RESEND_API_KEY`              | Resend API key (for system emails)  | Optional |
+| `RESEND_EMAIL_SIGNING_SECRET` | Resend webhook signing secret       | Optional |
 
 See [.env.example](.env.example) for a template.
 
