@@ -41,6 +41,8 @@ CLAUDE.md
 
 marketing/
 
+.plans/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
