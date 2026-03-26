@@ -1,48 +1,46 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
+# Dependencies (all levels — no leading slash so it matches nested dirs too)
+node_modules
+.pnp
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
 
-# testing
-/coverage
+# Testing
+coverage
 
-# next.js
-/.next/
-/out/
+# Next.js
+.next/
+out/
 
-# production
-/build
+# Build outputs
+build
+dist
 
-# misc
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Env files
 .env
+.env.local
+.env.*.local
 
-# vercel
+# Vercel
 .vercel
 
-.claude/
-CLAUDE.md
-
-marketing/
-
-.plans/
-
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# osforms — not tracked in git
+.claude/
+CLAUDE.md
+marketing/
+.plans/
+
+# Local dev playground — not committed
+apps/playground/
