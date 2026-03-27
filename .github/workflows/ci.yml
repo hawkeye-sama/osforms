@@ -182,6 +182,11 @@ jobs:
         if: steps.version_check.outputs.changed == 'true'
         run: pnpm --filter @osforms/react build
 
+      - name: Upgrade npm (v11+ required for OIDC)
+        if: steps.version_check.outputs.changed == 'true'
+        run: npm install -g npm@latest
+
       - name: Publish to npm
         if: steps.version_check.outputs.changed == 'true'
-        run: pnpm --filter @osforms/react publish --access public --no-git-checks --provenance
+        working-directory: packages/react
+        run: npm publish --access public --provenance
