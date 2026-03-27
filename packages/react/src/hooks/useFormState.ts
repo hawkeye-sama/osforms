@@ -10,7 +10,6 @@ export interface FormState {
   errors: Record<string, string>;
   isSubmitting: boolean;
   isComplete: boolean;
-  submissionId?: string;
   showWelcome: boolean;
 }
 
@@ -27,7 +26,8 @@ export interface FormStateActions {
 export function useFormState(
   schema: FormSchema | null,
   endpoint: string,
-  onComplete?: (submissionId?: string) => void
+  onComplete?: () => void,
+  onError?: (error: Error) => void
 ): [FormState, FormStateActions] {
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -35,7 +35,6 @@ export function useFormState(
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const [submissionId, setSubmissionId] = useState<string | undefined>();
   const [showWelcome, setShowWelcome] = useState(
     () => schema?.welcomeScreen?.enabled ?? false
   );
@@ -145,23 +144,19 @@ export function useFormState(
         );
       }
 
-      const data = await res.json().catch(() => ({}));
-      const sid = (data as { submissionId?: string }).submissionId;
-
-      setSubmissionId(sid);
       setIsComplete(true);
-      onComplete?.(sid);
+      onComplete?.();
     } catch (err) {
-      setErrors({
-        _form:
-          err instanceof Error
-            ? err.message
-            : 'Something went wrong. Please try again.',
-      });
+      const error =
+        err instanceof Error
+          ? err
+          : new Error('Something went wrong. Please try again.');
+      setErrors({ _form: error.message });
+      onError?.(error);
     } finally {
       setIsSubmitting(false);
     }
-  }, [schema, isSubmitting, visibleFields, answers, endpoint, onComplete]);
+  }, [schema, isSubmitting, visibleFields, answers, endpoint, onComplete, onError]);
 
   const state: FormState = {
     answers,
@@ -170,7 +165,6 @@ export function useFormState(
     errors,
     isSubmitting,
     isComplete,
-    submissionId,
     showWelcome,
   };
 

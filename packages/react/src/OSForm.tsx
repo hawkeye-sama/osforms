@@ -46,7 +46,7 @@ export interface OSFormProps {
   /**
    * Called when the form is successfully submitted.
    */
-  onComplete?: (submissionId?: string) => void;
+  onComplete?: () => void;
 
   /**
    * Called when a submission error occurs.
@@ -78,6 +78,7 @@ export function OSForm({
   mode: modeProp,
   theme: themeProp,
   onComplete,
+  onError,
   loadingComponent,
   errorComponent,
   fullScreen,
@@ -178,6 +179,7 @@ export function OSForm({
     redirectUrl,
     theme: resolvedTheme,
     onComplete,
+    onError,
     fullScreen,
   };
 

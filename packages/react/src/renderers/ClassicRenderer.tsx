@@ -11,7 +11,8 @@ interface ClassicRendererProps {
   endpoint: string;
   redirectUrl?: string | null;
   theme: ResolvedTheme;
-  onComplete?: (submissionId?: string) => void;
+  onComplete?: () => void;
+  onError?: (error: Error) => void;
   fullScreen?: boolean;
 }
 
@@ -21,10 +22,11 @@ export function ClassicRenderer({
   redirectUrl,
   theme,
   onComplete,
+  onError,
   fullScreen,
 }: ClassicRendererProps) {
-  const [state, actions] = useFormState(schema, endpoint, onComplete);
-  const { errors, isSubmitting, isComplete, submissionId, showWelcome } = state;
+  const [state, actions] = useFormState(schema, endpoint, onComplete, onError);
+  const { errors, isSubmitting, isComplete, showWelcome } = state;
   const { setAnswer, submit, startForm, visibleFields } = actions;
 
   const settings = schema.settings ?? {};
@@ -66,7 +68,7 @@ export function ClassicRenderer({
         {schema.thankYouScreen?.enabled ? (
           <ThankYouScreen
             config={schema.thankYouScreen}
-            submissionId={submissionId}
+
             redirectUrl={redirectUrl}
             theme={theme}
           />

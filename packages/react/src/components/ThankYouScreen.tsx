@@ -4,14 +4,12 @@ import type { ResolvedTheme } from '../utils/theme';
 
 interface ThankYouScreenProps {
   config: ThankYouScreenConfig;
-  submissionId?: string;
   redirectUrl?: string | null;
   theme: ResolvedTheme;
 }
 
 export function ThankYouScreen({
   config,
-  submissionId,
   redirectUrl,
   theme,
 }: ThankYouScreenProps) {
@@ -92,23 +90,6 @@ export function ThankYouScreen({
           </p>
         )}
 
-        {config.showSubmissionId && submissionId && (
-          <p
-            style={{
-              marginTop: '24px',
-              padding: '10px 14px',
-              background: theme.colors.surface,
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '6px',
-              fontSize: '12px',
-              color: theme.colors.textSecondary,
-              fontFamily: 'monospace',
-              display: 'inline-block',
-            }}
-          >
-            ID: {submissionId}
-          </p>
-        )}
 
         {finalRedirect && (
           <p

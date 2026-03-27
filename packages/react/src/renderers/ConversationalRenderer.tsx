@@ -32,7 +32,8 @@ interface ConversationalRendererProps {
   endpoint: string;
   redirectUrl?: string | null;
   theme: ResolvedTheme;
-  onComplete?: (submissionId?: string) => void;
+  onComplete?: () => void;
+  onError?: (error: Error) => void;
   fullScreen?: boolean;
 }
 
@@ -42,16 +43,16 @@ export function ConversationalRenderer({
   redirectUrl,
   theme,
   onComplete,
+  onError,
   fullScreen,
 }: ConversationalRendererProps) {
-  const [state, actions] = useFormState(schema, endpoint, onComplete);
+  const [state, actions] = useFormState(schema, endpoint, onComplete, onError);
   const {
     currentIndex,
     direction,
     errors,
     isSubmitting,
     isComplete,
-    submissionId,
     showWelcome,
   } = state;
   const {
@@ -138,7 +139,7 @@ export function ConversationalRenderer({
         {schema.thankYouScreen?.enabled ? (
           <ThankYouScreen
             config={schema.thankYouScreen}
-            submissionId={submissionId}
+
             redirectUrl={redirectUrl}
             theme={theme}
           />
@@ -429,7 +430,7 @@ export function ConversationalRenderer({
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: 'transparent',
-                border: `1px solid ${disabled ? theme.colors.border : theme.colors.border}`,
+                border: `1px solid ${theme.colors.border}`,
                 borderRadius: '4px',
                 color: disabled
                   ? theme.colors.border
