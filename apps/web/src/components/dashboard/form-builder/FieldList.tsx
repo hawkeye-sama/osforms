@@ -1,8 +1,8 @@
 'use client';
 
 import {
-  DndContext,
   closestCenter,
+  DndContext,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -10,10 +10,10 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import {
+  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-  arrayMove,
 } from '@dnd-kit/sortable';
 import type { FormField } from '@osforms/types';
 import { Plus } from 'lucide-react';
@@ -65,7 +65,7 @@ export function FieldList({
             Click a field type on the left to add your first question.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={onAddFirst}>
+        <Button variant="secondary" size="sm" onClick={onAddFirst}>
           <Plus className="mr-2 h-4 w-4" />
           Add first field
         </Button>
