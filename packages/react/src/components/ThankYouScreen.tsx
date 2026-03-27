@@ -90,7 +90,6 @@ export function ThankYouScreen({
           </p>
         )}
 
-
         {finalRedirect && (
           <p
             style={{

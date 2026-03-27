@@ -68,7 +68,6 @@ export function ClassicRenderer({
         {schema.thankYouScreen?.enabled ? (
           <ThankYouScreen
             config={schema.thankYouScreen}
-
             redirectUrl={redirectUrl}
             theme={theme}
           />

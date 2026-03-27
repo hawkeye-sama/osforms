@@ -139,7 +139,6 @@ export function ConversationalRenderer({
         {schema.thankYouScreen?.enabled ? (
           <ThankYouScreen
             config={schema.thankYouScreen}
-
             redirectUrl={redirectUrl}
             theme={theme}
           />

@@ -156,7 +156,15 @@ export function useFormState(
     } finally {
       setIsSubmitting(false);
     }
-  }, [schema, isSubmitting, visibleFields, answers, endpoint, onComplete, onError]);
+  }, [
+    schema,
+    isSubmitting,
+    visibleFields,
+    answers,
+    endpoint,
+    onComplete,
+    onError,
+  ]);
 
   const state: FormState = {
     answers,
