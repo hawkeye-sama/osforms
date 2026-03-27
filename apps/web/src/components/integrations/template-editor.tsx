@@ -60,7 +60,7 @@ export function TemplateEditor({
         </Button>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="max-h-[60vh] flex-1 overflow-hidden">
         {activeTab === 'html' && (
           <Editor
             height="100%"
