@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: '10.21.0'
+  NODE_VERSION: '22'
+
+jobs:
+  # ── 1. Format check ──────────────────────────────────────────────────────────
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
+
+  # ── 2. Lint ──────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint all packages
+        run: pnpm lint
+
+  # ── 3. TypeScript build check ────────────────────────────────────────────────
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build @osforms/types (needed by dependents)
+        run: pnpm --filter @osforms/types build || true
+
+      - name: Build @osforms/react (needed by web)
+        run: pnpm --filter @osforms/react build
+
+      - name: Typecheck web app
+        run: pnpm --filter @osforms/web lint:check
+
+  # ── 4. Next.js build ─────────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [format, lint, typecheck]
+    env:
+      # Provide dummy values so Next.js build doesn't fail on missing env
+      MONGODB_URI: mongodb://localhost:27017/osforms
+      JWT_SECRET: ci-jwt-secret-placeholder
+      ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NODE_ENV: production
+      GOOGLE_CLIENT_ID: dummy-google-client-id
+      GOOGLE_CLIENT_SECRET: dummy-google-client-secret
+      RESEND_API_KEY: re_dummy_resend_api_key
+      RESEND_EMAIl_SIGNING_SECRET: dummy_resend_email_signing_secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build @osforms/react package
+        run: pnpm --filter @osforms/react build
+
+      - name: Build web app
+        run: pnpm --filter @osforms/web build
