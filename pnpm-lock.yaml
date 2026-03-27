@@ -238,9 +238,6 @@ importers:
 
   packages/react:
     dependencies:
-      '@osforms/types':
-        specifier: workspace:*
-        version: link:../types
       framer-motion:
         specifier: ^12.29.2
         version: 12.38.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -251,6 +248,9 @@ importers:
         specifier: '>=18'
         version: 19.2.3(react@19.2.3)
     devDependencies:
+      '@osforms/types':
+        specifier: workspace:*
+        version: link:../types
       '@types/react':
         specifier: ^19
         version: 19.2.14

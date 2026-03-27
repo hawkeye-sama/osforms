@@ -8,5 +8,6 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   external: ['react', 'react-dom'],
+  noExternal: ['@osforms/types'],
   treeshake: true,
 });

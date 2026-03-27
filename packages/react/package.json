@@ -1,10 +1,10 @@
 {
   "name": "@osforms/react",
   "version": "0.0.1",
-  "private": true,
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "files": ["dist"],
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
@@ -25,10 +25,10 @@
     "react-dom": ">=18"
   },
   "dependencies": {
-    "@osforms/types": "workspace:*",
     "framer-motion": "^12.29.2"
   },
   "devDependencies": {
+    "@osforms/types": "workspace:*",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.0.0",
