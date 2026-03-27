@@ -1,0 +1,61 @@
+---
+title: "Introduction"
+description: "Embed forms directly in your React app with @osforms/react"
+---
+
+`@osforms/react` is the official React SDK for osforms. It renders forms in two modes:
+
+- **Conversational** — Typeform-style, one field at a time with animated transitions
+- **Classic** — all fields on one page, standard form layout
+
+## Installation
+
+```bash
+npm install @osforms/react framer-motion
+```
+
+`framer-motion` is required for animations in conversational mode.
+
+## Basic usage
+
+```tsx
+import { OSForm } from '@osforms/react';
+
+export default function ContactPage() {
+  return (
+    <OSForm
+      formId="your-form-slug"
+      mode="conversational"
+      fullScreen
+    />
+  );
+}
+```
+
+The component fetches the form schema from the osforms API automatically using `formId`.
+
+## Headless usage
+
+Pass a schema directly without an API fetch:
+
+```tsx
+import { OSForm } from '@osforms/react';
+import type { FormSchema } from '@osforms/react';
+
+const schema: FormSchema = {
+  mode: 'classic',
+  fields: [
+    { id: 'email', type: 'email', label: 'Email', required: true },
+    { id: 'message', type: 'textarea', label: 'Message', required: true },
+  ],
+};
+
+export default function ContactPage() {
+  return (
+    <OSForm
+      schema={schema}
+      endpoint="https://osforms.com/api/v1/f/your-slug"
+    />
+  );
+}
+```

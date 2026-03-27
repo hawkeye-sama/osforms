@@ -1,0 +1,32 @@
+---
+title: "Resend"
+description: "Forward form submissions to email using your Resend API key"
+---
+
+## Prerequisites
+
+A [Resend](https://resend.com) account with a verified sending domain and an API key.
+
+## Setup
+
+1. Go to **Integrations** in your osforms dashboard
+2. Click **Connect** next to Resend
+3. Paste your Resend API key (`re_xxxxxxxxxxxx`)
+4. Enter the **From** address (must be on your verified Resend domain)
+5. Enter the **To** address where submissions should be delivered
+6. Save
+
+## What you receive
+
+Each submission triggers an email with:
+- All form fields as a formatted table
+- Submission timestamp
+- Submission ID for reference
+
+## Testing
+
+Click **Send Test** in the integration settings to send a sample email and verify your configuration before going live.
+
+<Note>
+  Resend's free tier includes 100 emails/month and 3,000/month on paid plans. You are billed by Resend directly — osforms never charges for integrations.
+</Note>

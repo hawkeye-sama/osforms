@@ -1,0 +1,54 @@
+---
+title: "Submit a Form"
+description: "POST /api/v1/f/{slug}"
+---
+
+The public submission endpoint. No authentication required.
+
+## Endpoint
+
+```
+POST https://osforms.com/api/v1/f/{slug}
+```
+
+Accepts `application/json`, `application/x-www-form-urlencoded`, and `multipart/form-data`.
+
+## HTML form usage
+
+```html
+<form action="https://osforms.com/api/v1/f/{slug}" method="POST">
+  <input type="text" name="name" />
+  <input type="email" name="email" />
+  <button type="submit">Send</button>
+</form>
+```
+
+Returns a `303` redirect to your form's redirect URL on success.
+
+## API / JSON usage
+
+```bash
+curl -X POST https://osforms.com/api/v1/f/{slug} \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Jane", "email": "jane@example.com"}'
+```
+
+```json
+{ "success": true, "message": "Submission received" }
+```
+
+## Response codes
+
+| Status | Meaning |
+|---|---|
+| `200` | Submission stored successfully (JSON clients) |
+| `303` | Submission stored, redirect to redirect URL (HTML forms) |
+| `403` | Monthly submission limit reached |
+| `422` | CAPTCHA verification failed |
+| `429` | Rate limit exceeded |
+
+## Rate limiting
+
+Default: **10 requests/minute** per IP per form. Configurable per form in settings.
+
+When rate limited, the response includes a `Retry-After` header with seconds until reset.

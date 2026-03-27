@@ -1,0 +1,32 @@
+---
+title: "Google Sheets"
+description: "Append each form submission as a row in a Google Sheet"
+---
+
+## Setup
+
+1. Go to **Integrations** in your osforms dashboard
+2. Click **Connect** next to Google Sheets
+3. Sign in with your Google account and grant access
+4. Paste your Google Sheet URL or ID
+5. Optionally specify a sheet name (defaults to the first sheet)
+6. Save
+
+## How columns work
+
+osforms automatically detects your sheet's header row and maps submission fields to the correct columns. If a field doesn't have a matching column, it's added to the end of the header row automatically.
+
+Two system columns are always added:
+
+| Column | Value |
+|---|---|
+| `Submission ID` | MongoDB ObjectId of the submission |
+| `Submitted At` | ISO 8601 timestamp |
+
+## Field key mapping
+
+Column headers match the **field key** set in your form builder (e.g. `full_name`, `email`, `message`). You can customize field keys in the form builder under each field's settings.
+
+<Note>
+  The Google account you connect must have edit access to the spreadsheet.
+</Note>

@@ -1,0 +1,43 @@
+---
+title: "Introduction"
+description: "Open-source form backend. Bring your own API keys."
+---
+
+osforms is a form backend SaaS that stores submissions and routes them to your own integrations — Resend, Google Sheets, and webhooks. Free because you bring your own API keys.
+
+## Why osforms
+
+Every competitor (Formspree, FormBold, Basin) paywalls integrations behind \$5–15/month even though your own API keys power them. osforms flips that — 100 free submissions/month with all integrations included.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/docs/quickstart">
+    Get your first form running in 2 minutes
+  </Card>
+  <Card title="Resend Integration" icon="envelope" href="/docs/integrations/resend">
+    Forward submissions to email via Resend
+  </Card>
+  <Card title="Google Sheets" icon="table" href="/docs/integrations/google-sheets">
+    Append submissions to a spreadsheet automatically
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/docs/integrations/webhooks">
+    POST submissions to any endpoint with HMAC signing
+  </Card>
+</CardGroup>
+
+## How it works
+
+1. Create a form in your dashboard — get a unique endpoint URL
+2. Point your HTML form at the endpoint
+3. Configure integrations with your own API keys
+4. Submissions are stored and routed instantly
+
+```html
+<form action="https://osforms.com/api/v1/f/your-form-slug" method="POST">
+  <input type="text" name="name" placeholder="Your name" />
+  <input type="email" name="email" placeholder="Your email" />
+  <textarea name="message" placeholder="Your message"></textarea>
+  <button type="submit">Send</button>
+</form>
+```
+
+No JavaScript required. Works with any HTML form.

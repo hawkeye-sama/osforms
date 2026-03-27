@@ -1,0 +1,64 @@
+---
+title: "Webhooks"
+description: "POST submissions to any URL with HMAC-SHA256 request signing"
+---
+
+## Setup
+
+1. Go to **Integrations** in your osforms dashboard
+2. Click **Connect** next to Webhook
+3. Enter your endpoint URL
+4. Copy the **signing secret** — store it securely
+5. Save
+
+## Request format
+
+osforms sends a `POST` request with `Content-Type: application/json`:
+
+```json
+{
+  "submissionId": "64f1a2b3c4d5e6f7a8b9c0d1",
+  "formId": "64f1a2b3c4d5e6f7a8b9c0d2",
+  "formName": "Contact Form",
+  "submittedAt": "2026-03-27T12:00:00.000Z",
+  "data": {
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "message": "Hello!"
+  }
+}
+```
+
+## Verifying signatures
+
+Every request includes an `X-osforms-Signature-256` header:
+
+```
+X-osforms-Signature-256: sha256=<hex>
+```
+
+Verify it in your endpoint:
+
+```ts
+import crypto from 'crypto';
+
+function verifySignature(body: string, signature: string, secret: string): boolean {
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(body)
+    .digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expected)
+  );
+}
+```
+
+<Warning>
+  Always verify the signature before processing a webhook. Use `timingSafeEqual` to prevent timing attacks.
+</Warning>
+
+## Timeout
+
+Webhook requests time out after **30 seconds**. If your endpoint doesn't respond in time, the delivery is marked as failed and you'll receive an in-app notification.
