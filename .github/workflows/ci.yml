@@ -12,7 +12,7 @@ concurrency:
 
 env:
   PNPM_VERSION: '10.21.0'
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   # ── 1. Format check ──────────────────────────────────────────────────────────
