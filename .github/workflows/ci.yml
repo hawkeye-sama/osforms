@@ -142,8 +142,8 @@ jobs:
     # Only on pushes to main (not PRs)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
-      id-token: write  # Required for npm OIDC trusted publishing
-      contents: read   # Required for provenance attestation
+      id-token: write # Required for npm OIDC trusted publishing
+      contents: read # Required for provenance attestation
     steps:
       - uses: actions/checkout@v4
         with:
