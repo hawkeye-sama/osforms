@@ -1,4 +1,4 @@
-import type { FormTheme } from '@osforms/types'
+import type { FormTheme } from '@osforms/types';
 
 // osforms dark theme defaults (matches the dashboard design system)
 const defaultTheme: Required<FormTheme> = {
@@ -16,28 +16,34 @@ const defaultTheme: Required<FormTheme> = {
   fontSize: 'md',
   borderRadius: 'md',
   buttonVariant: 'solid',
-}
+};
 
-const fontSizeMap = { sm: '14px', md: '16px', lg: '18px' }
-const borderRadiusMap = { none: '0px', sm: '4px', md: '8px', lg: '12px', full: '9999px' }
+const fontSizeMap = { sm: '14px', md: '16px', lg: '18px' };
+const borderRadiusMap = {
+  none: '0px',
+  sm: '4px',
+  md: '8px',
+  lg: '12px',
+  full: '9999px',
+};
 
 export interface ResolvedTheme {
-  colors: Required<NonNullable<FormTheme['colors']>>
-  fontFamily: string
-  fontSize: string
-  borderRadius: string
-  buttonVariant: 'solid' | 'outline' | 'ghost'
+  colors: Required<NonNullable<FormTheme['colors']>>;
+  fontFamily: string;
+  fontSize: string;
+  borderRadius: string;
+  buttonVariant: 'solid' | 'outline' | 'ghost';
 }
 
 export function resolveTheme(override?: FormTheme): ResolvedTheme {
   const colors = {
     ...defaultTheme.colors,
     ...override?.colors,
-  } as Required<NonNullable<FormTheme['colors']>>
+  } as Required<NonNullable<FormTheme['colors']>>;
 
-  const fontSize = fontSizeMap[override?.fontSize ?? defaultTheme.fontSize]
+  const fontSize = fontSizeMap[override?.fontSize ?? defaultTheme.fontSize];
   const borderRadius =
-    borderRadiusMap[override?.borderRadius ?? defaultTheme.borderRadius]
+    borderRadiusMap[override?.borderRadius ?? defaultTheme.borderRadius];
 
   return {
     colors,
@@ -45,5 +51,5 @@ export function resolveTheme(override?: FormTheme): ResolvedTheme {
     fontSize,
     borderRadius,
     buttonVariant: override?.buttonVariant ?? defaultTheme.buttonVariant,
-  }
+  };
 }

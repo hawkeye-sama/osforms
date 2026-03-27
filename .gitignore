@@ -42,5 +42,8 @@ CLAUDE.md
 marketing/
 .plans/
 
+# Turborepo cache — not committed
+.turbo/
+
 # Local dev playground — not committed
 apps/playground/

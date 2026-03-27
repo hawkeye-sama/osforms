@@ -44,7 +44,9 @@ export function FieldList({
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    if (!over || active.id === over.id) {return;}
+    if (!over || active.id === over.id) {
+      return;
+    }
 
     const oldIndex = fields.findIndex((f) => f.id === active.id);
     const newIndex = fields.findIndex((f) => f.id === over.id);

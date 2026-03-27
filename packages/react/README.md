@@ -32,10 +32,10 @@ yarn add @osforms/react
 Design your form visually in the osforms dashboard Builder tab, then drop in one component:
 
 ```tsx
-import { OSForm } from '@osforms/react'
+import { OSForm } from '@osforms/react';
 
 export default function ContactPage() {
-  return <OSForm formId="your-form-slug" />
+  return <OSForm formId="your-form-slug" />;
 }
 ```
 
@@ -46,8 +46,8 @@ The component fetches your schema from osforms and renders it. That's it.
 No dashboard needed. Pass the schema as a prop:
 
 ```tsx
-import { OSForm } from '@osforms/react'
-import type { FormSchema } from '@osforms/react'
+import { OSForm } from '@osforms/react';
+import type { FormSchema } from '@osforms/react';
 
 const schema: FormSchema = {
   mode: 'conversational',
@@ -87,15 +87,16 @@ const schema: FormSchema = {
   welcomeScreen: {
     enabled: true,
     title: "Let's talk",
-    description: "Fill in your details and we'll get back to you within 24 hours.",
+    description:
+      "Fill in your details and we'll get back to you within 24 hours.",
     buttonLabel: 'Get started',
   },
   thankYouScreen: {
     enabled: true,
-    title: "We got your message!",
+    title: 'We got your message!',
     description: "We'll be in touch within 24 hours.",
   },
-}
+};
 
 export default function ContactPage() {
   return (
@@ -103,7 +104,7 @@ export default function ContactPage() {
       schema={schema}
       endpoint="https://osforms.com/api/v1/f/your-form-slug"
     />
-  )
+  );
 }
 ```
 
@@ -113,18 +114,18 @@ export default function ContactPage() {
 
 ### `<OSForm />`
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `formId` | `string` | — | Form slug from your osforms dashboard. Fetches schema automatically. Either `formId` or `schema` is required. |
-| `schema` | `FormSchema` | — | Define schema in code. Requires `endpoint` when used without `formId`. |
-| `endpoint` | `string` | auto | Submission URL. Auto-derived from `formId` when omitted. |
-| `baseUrl` | `string` | `'https://osforms.com'` | Override for self-hosted instances. |
-| `mode` | `'conversational' \| 'classic'` | schema default | Override the form's mode. |
-| `theme` | `Partial<FormTheme>` | — | Theme overrides — merged with schema theme and osforms defaults. |
-| `onComplete` | `(submissionId?: string) => void` | — | Called after a successful submission. |
-| `onError` | `(error: Error) => void` | — | Called when a submission fails. |
-| `loadingComponent` | `ReactNode` | built-in | Custom loading state while schema fetches. |
-| `errorComponent` | `ReactNode` | built-in | Custom error state on fetch failure. |
+| Prop               | Type                              | Default                 | Description                                                                                                   |
+| ------------------ | --------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `formId`           | `string`                          | —                       | Form slug from your osforms dashboard. Fetches schema automatically. Either `formId` or `schema` is required. |
+| `schema`           | `FormSchema`                      | —                       | Define schema in code. Requires `endpoint` when used without `formId`.                                        |
+| `endpoint`         | `string`                          | auto                    | Submission URL. Auto-derived from `formId` when omitted.                                                      |
+| `baseUrl`          | `string`                          | `'https://osforms.com'` | Override for self-hosted instances.                                                                           |
+| `mode`             | `'conversational' \| 'classic'`   | schema default          | Override the form's mode.                                                                                     |
+| `theme`            | `Partial<FormTheme>`              | —                       | Theme overrides — merged with schema theme and osforms defaults.                                              |
+| `onComplete`       | `(submissionId?: string) => void` | —                       | Called after a successful submission.                                                                         |
+| `onError`          | `(error: Error) => void`          | —                       | Called when a submission fails.                                                                               |
+| `loadingComponent` | `ReactNode`                       | built-in                | Custom loading state while schema fetches.                                                                    |
+| `errorComponent`   | `ReactNode`                       | built-in                | Custom error state on fetch failure.                                                                          |
 
 ---
 
@@ -177,18 +178,18 @@ Override any part of the default dark theme:
 ```ts
 interface FormTheme {
   colors?: {
-    background?: string      // page/form background
-    surface?: string         // input/card background
-    primary?: string         // buttons, progress bar, accents
-    text?: string            // primary text
-    textSecondary?: string   // labels, descriptions
-    border?: string          // input borders
-    error?: string           // validation errors
-  }
-  fontFamily?: string
-  fontSize?: 'sm' | 'md' | 'lg'
-  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full'
-  buttonVariant?: 'solid' | 'outline' | 'ghost'
+    background?: string; // page/form background
+    surface?: string; // input/card background
+    primary?: string; // buttons, progress bar, accents
+    text?: string; // primary text
+    textSecondary?: string; // labels, descriptions
+    border?: string; // input borders
+    error?: string; // validation errors
+  };
+  fontFamily?: string;
+  fontSize?: 'sm' | 'md' | 'lg';
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
+  buttonVariant?: 'solid' | 'outline' | 'ghost';
 }
 ```
 
@@ -196,20 +197,20 @@ interface FormTheme {
 
 ## Field Types
 
-| Type | Description |
-|------|-------------|
-| `text` | Single-line text |
-| `email` | Email with format validation |
-| `textarea` | Multi-line text |
-| `number` | Numeric input |
-| `tel` | Phone number |
-| `url` | URL with format validation |
-| `select` | Dropdown single-select |
-| `radio` | Single choice (visible option list) — auto-advances by default |
-| `checkbox` | Multiple choice (multi-select) |
-| `rating` | Star rating (1–5 by default) — auto-advances by default |
-| `scale` | NPS-style numeric scale (1–10 by default) — auto-advances by default |
-| `statement` | Display-only text block, no input |
+| Type        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `text`      | Single-line text                                                     |
+| `email`     | Email with format validation                                         |
+| `textarea`  | Multi-line text                                                      |
+| `number`    | Numeric input                                                        |
+| `tel`       | Phone number                                                         |
+| `url`       | URL with format validation                                           |
+| `select`    | Dropdown single-select                                               |
+| `radio`     | Single choice (visible option list) — auto-advances by default       |
+| `checkbox`  | Multiple choice (multi-select)                                       |
+| `rating`    | Star rating (1–5 by default) — auto-advances by default              |
+| `scale`     | NPS-style numeric scale (1–10 by default) — auto-advances by default |
+| `statement` | Display-only text block, no input                                    |
 
 ---
 
@@ -273,24 +274,24 @@ const schema: FormSchema = {
 For fully custom rendering:
 
 ```tsx
-import { useFormSchema, useFormState } from '@osforms/react'
+import { useFormSchema, useFormState } from '@osforms/react';
 
 function MyCustomForm({ slug }: { slug: string }) {
-  const { schema, loading, error } = useFormSchema(slug)
+  const { schema, loading, error } = useFormSchema(slug);
 
   const [state, actions] = useFormState(
     schema,
     `https://osforms.com/api/v1/f/${slug}`,
     (submissionId) => console.log('submitted:', submissionId)
-  )
+  );
 
-  if (loading) return <p>Loading...</p>
-  if (error) return <p>Error: {error}</p>
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
-  const { currentField, visibleFields, currentIndex } = actions
-  const { answers, errors, isComplete } = state
+  const { currentField, visibleFields, currentIndex } = actions;
+  const { answers, errors, isComplete } = state;
 
-  if (isComplete) return <p>Thanks!</p>
+  if (isComplete) return <p>Thanks!</p>;
 
   return (
     <div>
@@ -298,7 +299,7 @@ function MyCustomForm({ slug }: { slug: string }) {
       {/* render your own field input */}
       <button onClick={() => actions.advance()}>Next</button>
     </div>
-  )
+  );
 }
 ```
 
@@ -313,9 +314,9 @@ Track which platform submitted the form (shows as a badge in your osforms dashbo
 const schema: FormSchema = {
   // ...
   settings: {
-    source: 'webflow',  // 'react' | 'webflow' | 'wordpress' | 'embed' | 'api' | any string
+    source: 'webflow', // 'react' | 'webflow' | 'wordpress' | 'embed' | 'api' | any string
   },
-}
+};
 ```
 
 ---
@@ -325,10 +326,7 @@ const schema: FormSchema = {
 Point the component at your own osforms instance:
 
 ```tsx
-<OSForm
-  formId="abc123"
-  baseUrl="https://forms.yourcompany.com"
-/>
+<OSForm formId="abc123" baseUrl="https://forms.yourcompany.com" />
 ```
 
 ---

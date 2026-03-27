@@ -8,7 +8,10 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint:check": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "lint:check": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
   },
   "devDependencies": {
     "typescript": "^5"

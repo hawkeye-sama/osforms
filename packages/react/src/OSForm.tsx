@@ -101,18 +101,37 @@ export function OSForm({
   const resolvedThemeEarly = resolveTheme(themeProp);
 
   const shellStyle: React.CSSProperties = fullScreen
-    ? { position: 'fixed', inset: 0, zIndex: 9999, background: resolvedThemeEarly.colors.background,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: resolvedThemeEarly.fontFamily }
-    : { display: 'flex', alignItems: 'center', justifyContent: 'center',
-        minHeight: '200px', background: resolvedThemeEarly.colors.background,
-        fontFamily: resolvedThemeEarly.fontFamily };
+    ? {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        background: resolvedThemeEarly.colors.background,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: resolvedThemeEarly.fontFamily,
+      }
+    : {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '200px',
+        background: resolvedThemeEarly.colors.background,
+        fontFamily: resolvedThemeEarly.fontFamily,
+      };
 
   // ── Loading state ───────────────────────────────────────────────────────────
   if (!schemaProp && loading) {
-    return loadingComponent ? <>{loadingComponent}</> : (
+    return loadingComponent ? (
+      <>{loadingComponent}</>
+    ) : (
       <div style={shellStyle}>
-        <span style={{ fontSize: '14px', color: resolvedThemeEarly.colors.textSecondary }}>
+        <span
+          style={{
+            fontSize: '14px',
+            color: resolvedThemeEarly.colors.textSecondary,
+          }}
+        >
           Loading form...
         </span>
       </div>
@@ -121,9 +140,15 @@ export function OSForm({
 
   // ── Error state ─────────────────────────────────────────────────────────────
   if (!schemaProp && error) {
-    return errorComponent ? <>{errorComponent}</> : (
+    return errorComponent ? (
+      <>{errorComponent}</>
+    ) : (
       <div style={shellStyle}>
-        <span style={{ fontSize: '14px', color: resolvedThemeEarly.colors.error }}>{error}</span>
+        <span
+          style={{ fontSize: '14px', color: resolvedThemeEarly.colors.error }}
+        >
+          {error}
+        </span>
       </div>
     );
   }

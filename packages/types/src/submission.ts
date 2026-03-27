@@ -6,11 +6,11 @@ export type SubmissionSource =
   | 'embed'
   | 'webflow'
   | 'wordpress'
-  | 'custom'
+  | 'custom';
 
 export interface SubmissionMetadata {
-  ip: string
-  userAgent: string
-  origin: string
-  source?: SubmissionSource | string  // string to allow custom values
+  ip: string;
+  userAgent: string;
+  origin: string;
+  source?: SubmissionSource | string; // string to allow custom values
 }

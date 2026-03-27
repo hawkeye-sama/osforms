@@ -15,7 +15,10 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "lint:check": "tsc --noEmit"
+    "lint": "eslint src --fix && tsc --noEmit",
+    "lint:check": "eslint src && tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\""
   },
   "peerDependencies": {
     "react": ">=18",
@@ -28,7 +31,10 @@
   "devDependencies": {
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "tsup": "^8.0.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "typescript-eslint": "^8.0.0"
   }
 }
