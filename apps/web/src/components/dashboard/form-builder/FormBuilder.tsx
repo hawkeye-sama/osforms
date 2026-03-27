@@ -212,7 +212,7 @@ export function FormBuilder({ formId, initialSchema }: FormBuilderProps) {
         {/* Preview toggle */}
         <Button
           size="sm"
-          variant={previewing ? 'default' : 'outline'}
+          variant={'secondary'}
           onClick={() => {
             setPreviewing((v) => !v);
             setPreviewKey((k) => k + 1);
