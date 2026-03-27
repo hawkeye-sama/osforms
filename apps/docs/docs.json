@@ -1,0 +1,103 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "osforms",
+  "colors": {
+    "primary": "#ffffff",
+    "light": "#ffffff",
+    "dark": "#ffffff",
+    "background": {
+      "light": "#ffffff",
+      "dark": "#0a0a0a"
+    }
+  },
+  "appearance": {
+    "default": "dark"
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://osforms.com"
+  },
+  "favicon": "/logo/favicon.svg",
+  "canonicalUrl": "https://osforms.com/docs",
+  "navbar": {
+    "links": [
+      {
+        "name": "GitHub",
+        "href": "https://github.com/hawkeye-sama/osforms"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "name": "Get Started Free",
+      "href": "https://osforms.com/signup"
+    }
+  },
+  "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "name": "GitHub",
+          "icon": "github",
+          "href": "https://github.com/hawkeye-sama/osforms"
+        },
+        {
+          "name": "npm",
+          "icon": "npm",
+          "href": "https://www.npmjs.com/package/@osforms/react"
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/resend",
+              "integrations/google-sheets",
+              "integrations/webhooks"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Submission",
+            "pages": ["api-reference/submit-form"]
+          },
+          {
+            "group": "Forms",
+            "pages": ["api-reference/forms"]
+          }
+        ]
+      },
+      {
+        "tab": "@osforms/react",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["sdk/introduction", "sdk/installation"]
+          },
+          {
+            "group": "Components",
+            "pages": ["sdk/osform", "sdk/hooks"]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/hawkeye-sama/osforms"
+    }
+  }
+}

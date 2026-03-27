@@ -1,0 +1,66 @@
+---
+title: "Quick Start"
+description: "Get your form backend running in 2 minutes"
+---
+
+## 1. Create an account
+
+Sign up at [osforms.com](https://osforms.com/signup). Verify your email with the OTP sent to your inbox.
+
+## 2. Create a form
+
+From your dashboard, click **New Form**. Give it a name — you'll get a unique endpoint URL like:
+
+```
+https://osforms.com/api/v1/f/abc123def456
+```
+
+## 3. Point your HTML form at the endpoint
+
+```html
+<form action="https://osforms.com/api/v1/f/abc123def456" method="POST">
+  <input type="text" name="name" placeholder="Name" required />
+  <input type="email" name="email" placeholder="Email" required />
+  <textarea name="message" placeholder="Message"></textarea>
+  <button type="submit">Send</button>
+</form>
+```
+
+On success, the user is redirected to your form's redirect URL (configurable in settings).
+
+## 4. Configure integrations
+
+Go to **Integrations** in your dashboard and connect:
+
+- **Resend** — paste your Resend API key to receive submissions by email
+- **Google Sheets** — connect via OAuth to append each submission as a row
+- **Webhook** — enter any URL to receive a signed POST on every submission
+
+All integrations run in parallel in the background — your users get an instant response regardless.
+
+## 5. (Optional) Use the React SDK
+
+For conversational or classic embedded forms, install the SDK:
+
+```bash
+npm install @osforms/react
+```
+
+```tsx
+import { OSForm } from '@osforms/react';
+
+export default function ContactPage() {
+  return (
+    <OSForm
+      formId="abc123def456"
+      mode="conversational"
+      fullScreen
+      onComplete={() => console.log('submitted!')}
+    />
+  );
+}
+```
+
+<Note>
+  `framer-motion` is required as a peer dependency: `npm install framer-motion`
+</Note>

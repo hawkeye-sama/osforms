@@ -1,0 +1,39 @@
+---
+title: "Installation"
+description: "Install and configure @osforms/react"
+---
+
+## Requirements
+
+- React 18 or later
+- framer-motion 11 or later
+
+## Install
+
+```bash
+npm install @osforms/react framer-motion
+```
+
+```bash
+pnpm add @osforms/react framer-motion
+```
+
+```bash
+yarn add @osforms/react framer-motion
+```
+
+## TypeScript
+
+Types are included — no separate `@types` package needed.
+
+## Next.js
+
+Works out of the box with Next.js App Router. No special configuration required.
+
+If you're using the Pages Router, mark the component as a client component:
+
+```tsx
+'use client'; // not needed in Pages Router, already client-side
+
+import { OSForm } from '@osforms/react';
+```

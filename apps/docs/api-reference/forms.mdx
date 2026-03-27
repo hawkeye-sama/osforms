@@ -1,0 +1,60 @@
+---
+title: "Forms"
+description: "Manage forms via the REST API"
+---
+
+All endpoints require authentication via JWT cookie or `Authorization: Bearer <token>` header.
+
+## List forms
+
+```
+GET /api/v1/forms
+```
+
+Returns all forms for the authenticated user.
+
+## Create a form
+
+```
+POST /api/v1/forms
+```
+
+```json
+{
+  "name": "Contact Form"
+}
+```
+
+## Get a form
+
+```
+GET /api/v1/forms/{id}
+```
+
+## Update a form
+
+```
+PATCH /api/v1/forms/{id}
+```
+
+Updateable fields: `name`, `redirectUrl`, `allowedOrigins`, `rateLimit`, `honeypotField`, `recaptchaSecret`.
+
+## Delete a form
+
+```
+DELETE /api/v1/forms/{id}
+```
+
+## List submissions
+
+```
+GET /api/v1/forms/{id}/submissions?page=1&limit=20
+```
+
+## Export submissions
+
+```
+GET /api/v1/forms/{id}/export?format=csv
+```
+
+Supported formats: `csv`, `json`.
