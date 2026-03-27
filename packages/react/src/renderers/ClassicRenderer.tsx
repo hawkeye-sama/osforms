@@ -12,6 +12,7 @@ interface ClassicRendererProps {
   redirectUrl?: string | null
   theme: ResolvedTheme
   onComplete?: (submissionId?: string) => void
+  fullScreen?: boolean
 }
 
 export function ClassicRenderer({
@@ -20,6 +21,7 @@ export function ClassicRenderer({
   redirectUrl,
   theme,
   onComplete,
+  fullScreen,
 }: ClassicRendererProps) {
   const [state, actions] = useFormState(schema, endpoint, onComplete)
   const { errors, isSubmitting, isComplete, submissionId, showWelcome } = state
@@ -27,12 +29,24 @@ export function ClassicRenderer({
 
   const settings = schema.settings ?? {}
 
-  const containerStyle: React.CSSProperties = {
-    background: theme.colors.background,
-    fontFamily: theme.fontFamily,
-    borderRadius: theme.borderRadius,
-    padding: '40px',
-  }
+  const containerStyle: React.CSSProperties = fullScreen
+    ? {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        background: theme.colors.background,
+        fontFamily: theme.fontFamily,
+        display: 'flex',
+        flexDirection: 'column',
+        overflowY: 'auto',
+      }
+    : {
+        background: theme.colors.background,
+        fontFamily: theme.fontFamily,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100%',
+      }
 
   if (showWelcome && schema.welcomeScreen?.enabled) {
     return (
@@ -53,9 +67,12 @@ export function ClassicRenderer({
             theme={theme}
           />
         ) : (
-          <p style={{ color: theme.colors.text, fontSize: '20px', fontWeight: 600 }}>
-            Thanks for your response!
-          </p>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            minHeight: '320px', padding: '48px 40px', color: theme.colors.text,
+          }}>
+            <p style={{ margin: 0, fontSize: '24px', fontWeight: 700 }}>Thanks for your response!</p>
+          </div>
         )}
       </div>
     )
@@ -63,96 +80,117 @@ export function ClassicRenderer({
 
   return (
     <div style={containerStyle}>
-      <form
-        onSubmit={(e) => { e.preventDefault(); submit() }}
-        style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}
-        noValidate
-      >
-        {visibleFields.map((field) => {
-          if (field.type === 'divider') {
-            return (
-              <hr
-                key={field.id}
-                style={{ border: 'none', borderTop: `1px solid ${theme.colors.border}` }}
-              />
-            )
-          }
-
-          const error = errors[field.id]
-
-          return (
-            <div key={field.id}>
-              {field.type !== 'statement' && (
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: theme.colors.text,
-                }}>
-                  {field.required && (
-                    <span style={{ color: theme.colors.error, marginRight: '4px' }}>*</span>
-                  )}
-                  {field.label}
-                </label>
-              )}
-              {field.description && field.type !== 'statement' && (
-                <p style={{
-                  margin: '0 0 8px',
-                  fontSize: '13px',
-                  color: theme.colors.textSecondary,
-                  lineHeight: 1.5,
-                }}>
-                  {field.description}
-                </p>
-              )}
-              <FieldRenderer
-                field={field}
-                value={state.answers[field.id]}
-                onChange={(val) => setAnswer(field.id, val)}
-                onSubmit={() => {}}   // no auto-advance in classic mode
-                error={error}
-                theme={theme}
-              />
-              {error && (
-                <p style={{
-                  margin: '6px 0 0',
-                  fontSize: '13px',
-                  color: theme.colors.error,
-                }}>
-                  {error}
-                </p>
-              )}
-            </div>
-          )
-        })}
-
-        {errors['_form'] && (
-          <p style={{ color: theme.colors.error, fontSize: '14px', margin: 0 }}>
-            {errors['_form']}
-          </p>
+      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '48px 32px' }}>
+        {/* Form title */}
+        {schema.settings?.source && (
+          <div style={{ marginBottom: '36px' }}>
+            <div style={{ width: '32px', height: '3px', background: theme.colors.primary, borderRadius: '9999px' }} />
+          </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          style={{
-            padding: '12px 28px',
-            background: isSubmitting ? theme.colors.border : theme.colors.primary,
-            color: theme.colors.background,
-            border: 'none',
-            borderRadius: theme.borderRadius,
-            fontSize: theme.fontSize,
-            fontFamily: theme.fontFamily,
-            fontWeight: 600,
-            cursor: isSubmitting ? 'wait' : 'pointer',
-            alignSelf: 'flex-start',
-            transition: 'background 150ms ease',
-          }}
+        <form
+          onSubmit={(e) => { e.preventDefault(); submit() }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}
+          noValidate
         >
-          {isSubmitting ? 'Submitting...' : (settings.submitLabel ?? 'Submit')}
-        </button>
-      </form>
+          {visibleFields.map((field) => {
+            if (field.type === 'divider') {
+              return (
+                <hr
+                  key={field.id}
+                  style={{ border: 'none', borderTop: `1px solid ${theme.colors.border}`, margin: 0 }}
+                />
+              )
+            }
+
+            const error = errors[field.id]
+
+            return (
+              <div key={field.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {field.type !== 'statement' && (
+                  <label style={{
+                    display: 'block',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    color: theme.colors.text,
+                    lineHeight: 1.3,
+                  }}>
+                    {field.required && (
+                      <span style={{ color: theme.colors.error, marginRight: '4px' }}>*</span>
+                    )}
+                    {field.label}
+                  </label>
+                )}
+                {field.description && field.type !== 'statement' && (
+                  <p style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: theme.colors.textSecondary,
+                    lineHeight: 1.5,
+                  }}>
+                    {field.description}
+                  </p>
+                )}
+                <FieldRenderer
+                  field={field}
+                  value={state.answers[field.id]}
+                  onChange={(val) => setAnswer(field.id, val)}
+                  onSubmit={() => {}}
+                  error={error}
+                  theme={theme}
+                  variant="classic"
+                />
+                {error && (
+                  <p style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: theme.colors.error,
+                    fontFamily: theme.fontFamily,
+                  }}>
+                    {error}
+                  </p>
+                )}
+              </div>
+            )
+          })}
+
+          {errors['_form'] && (
+            <p style={{
+              margin: 0,
+              padding: '12px 16px',
+              background: `${theme.colors.error}18`,
+              border: `1px solid ${theme.colors.error}40`,
+              borderRadius: theme.borderRadius,
+              color: theme.colors.error,
+              fontSize: '14px',
+            }}>
+              {errors['_form']}
+            </p>
+          )}
+
+          <div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                padding: '13px 32px',
+                background: isSubmitting ? theme.colors.border : theme.colors.primary,
+                color: theme.colors.background,
+                border: 'none',
+                borderRadius: theme.borderRadius,
+                fontSize: '15px',
+                fontFamily: theme.fontFamily,
+                fontWeight: 700,
+                cursor: isSubmitting ? 'wait' : 'pointer',
+                transition: 'opacity 150ms ease',
+                letterSpacing: '0.01em',
+              }}
+            >
+              {isSubmitting ? 'Submitting...' : (settings.submitLabel ?? 'Submit')}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

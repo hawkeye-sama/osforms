@@ -62,7 +62,9 @@ export async function OPTIONS(req: NextRequest, { params }: Params) {
 
   await connectDB();
 
-  const form = await Form.findOne({ slug, active: true }).select('allowedOrigins');
+  const form = await Form.findOne({ slug, active: true }).select(
+    'allowedOrigins'
+  );
   if (!form) {
     return new NextResponse(null, { status: 404 });
   }

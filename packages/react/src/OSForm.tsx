@@ -54,6 +54,12 @@ export interface OSFormProps {
   onError?: (error: Error) => void;
 
   /**
+   * Render the form full-screen (position: fixed, covers the viewport).
+   * Use for standalone Typeform-style experiences.
+   */
+  fullScreen?: boolean;
+
+  /**
    * Custom loading component.
    */
   loadingComponent?: React.ReactNode;
@@ -74,6 +80,7 @@ export function OSForm({
   onComplete,
   loadingComponent,
   errorComponent,
+  fullScreen,
 }: OSFormProps) {
   // ── Schema resolution ───────────────────────────────────────────────────────
   // If formId provided, fetch from API. Otherwise use the schema prop directly.
@@ -90,49 +97,34 @@ export function OSForm({
   const endpoint =
     endpointProp ?? (formId ? `${baseUrl}/api/v1/f/${formId}` : '');
 
+  // ── Theme (needed for loading/error states too) ─────────────────────────────
+  const resolvedThemeEarly = resolveTheme(themeProp);
+
+  const shellStyle: React.CSSProperties = fullScreen
+    ? { position: 'fixed', inset: 0, zIndex: 9999, background: resolvedThemeEarly.colors.background,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: resolvedThemeEarly.fontFamily }
+    : { display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '200px', background: resolvedThemeEarly.colors.background,
+        fontFamily: resolvedThemeEarly.fontFamily };
+
   // ── Loading state ───────────────────────────────────────────────────────────
   if (!schemaProp && loading) {
-    return (
-      <>
-        {loadingComponent ?? (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '200px',
-              color: '#a8a8a8',
-              fontFamily: 'system-ui, sans-serif',
-              fontSize: '14px',
-            }}
-          >
-            Loading form...
-          </div>
-        )}
-      </>
+    return loadingComponent ? <>{loadingComponent}</> : (
+      <div style={shellStyle}>
+        <span style={{ fontSize: '14px', color: resolvedThemeEarly.colors.textSecondary }}>
+          Loading form...
+        </span>
+      </div>
     );
   }
 
   // ── Error state ─────────────────────────────────────────────────────────────
   if (!schemaProp && error) {
-    return (
-      <>
-        {errorComponent ?? (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '200px',
-              color: '#ef4444',
-              fontFamily: 'system-ui, sans-serif',
-              fontSize: '14px',
-            }}
-          >
-            {error}
-          </div>
-        )}
-      </>
+    return errorComponent ? <>{errorComponent}</> : (
+      <div style={shellStyle}>
+        <span style={{ fontSize: '14px', color: resolvedThemeEarly.colors.error }}>{error}</span>
+      </div>
     );
   }
 
@@ -148,7 +140,7 @@ export function OSForm({
     return null;
   }
 
-  // ── Resolve theme ────────────────────────────────────────────────────────────
+  // ── Resolve theme (schema theme merged with prop overrides) ─────────────────
   const resolvedTheme = resolveTheme({ ...schema.theme, ...themeProp });
 
   // ── Mode ─────────────────────────────────────────────────────────────────────
@@ -161,12 +153,12 @@ export function OSForm({
     redirectUrl,
     theme: resolvedTheme,
     onComplete,
+    fullScreen,
   };
 
   if (mode === 'classic') {
     return <ClassicRenderer {...rendererProps} />;
   }
 
-  // conversational (default) and stepped both use the conversational renderer for now
   return <ConversationalRenderer {...rendererProps} />;
 }

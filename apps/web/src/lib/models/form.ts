@@ -1,5 +1,5 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
 import type { FormSchema } from '@osforms/types';
+import mongoose, { Document, Model, Schema } from 'mongoose';
 
 export interface IForm extends Document {
   _id: mongoose.Types.ObjectId;

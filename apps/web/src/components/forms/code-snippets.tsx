@@ -105,7 +105,12 @@ return (
   }'`;
 
   const tabs = [
-    { key: '@osforms/react', label: '@osforms/react', code: osformsReact, badge: 'Recommended' },
+    {
+      key: '@osforms/react',
+      label: '@osforms/react',
+      code: osformsReact,
+      badge: 'Recommended',
+    },
     { key: 'embed', label: 'Embed', code: embedScript },
     { key: 'html', label: 'HTML', code: htmlBasic },
     { key: 'react', label: 'React (headless)', code: reactNext },
@@ -144,24 +149,28 @@ return (
       {/* Contextual description */}
       {activeTab === '@osforms/react' && (
         <p className="text-muted-foreground text-sm">
-          Install the React package and drop in one component. It fetches your form schema
-          from the Builder tab and renders a beautiful conversational or classic form UI.
+          Install the React package and drop in one component. It fetches your
+          form schema from the Builder tab and renders a beautiful
+          conversational or classic form UI.
         </p>
       )}
       {activeTab === 'embed' && (
         <p className="text-muted-foreground text-sm">
-          Paste two lines of HTML into any site — Webflow, WordPress, or plain HTML.
-          The embed script renders your Builder schema and submits to your endpoint.
+          Paste two lines of HTML into any site — Webflow, WordPress, or plain
+          HTML. The embed script renders your Builder schema and submits to your
+          endpoint.
         </p>
       )}
       {activeTab === 'html' && (
         <p className="text-muted-foreground text-sm">
-          Point a standard HTML form at your endpoint. Works with any HTML site — no JavaScript required.
+          Point a standard HTML form at your endpoint. Works with any HTML site
+          — no JavaScript required.
         </p>
       )}
       {activeTab === 'react' && (
         <p className="text-muted-foreground text-sm">
-          Build your own form UI and submit to your osforms endpoint. Full control over every input and style.
+          Build your own form UI and submit to your osforms endpoint. Full
+          control over every input and style.
         </p>
       )}
 
@@ -219,13 +228,29 @@ function highlightSyntax(line: string): React.ReactNode {
       parts.push(tempLine.slice(lastIndex, match.index));
     }
     if (match[1]) {
-      parts.push(<span key={match.index} className="text-[#569cd6]">{match[1]}</span>);
+      parts.push(
+        <span key={match.index} className="text-[#569cd6]">
+          {match[1]}
+        </span>
+      );
     } else if (match[2]) {
-      parts.push(<span key={match.index} className="text-[#9cdcfe]">{match[2]}</span>);
+      parts.push(
+        <span key={match.index} className="text-[#9cdcfe]">
+          {match[2]}
+        </span>
+      );
     } else if (match[3]) {
-      parts.push(<span key={match.index} className="text-[#ce9178]">{match[3]}</span>);
+      parts.push(
+        <span key={match.index} className="text-[#ce9178]">
+          {match[3]}
+        </span>
+      );
     } else if (match[4]) {
-      parts.push(<span key={match.index} className="text-[#dcdcaa]">{match[4]}</span>);
+      parts.push(
+        <span key={match.index} className="text-[#dcdcaa]">
+          {match[4]}
+        </span>
+      );
     }
     lastIndex = match.index + match[0].length;
   }

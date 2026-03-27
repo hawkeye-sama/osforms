@@ -1,12 +1,12 @@
 'use client';
 
+import type { FieldOption, FormField } from '@osforms/types';
 import { Plus, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import type { FieldOption, FormField } from '@osforms/types';
 
 interface FieldEditorProps {
   field: FormField;
@@ -23,7 +23,9 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
     onChange({ ...field, config: { ...field.config, ...patch } });
   }
 
-  function updateValidation(patch: Partial<NonNullable<FormField['validation']>>) {
+  function updateValidation(
+    patch: Partial<NonNullable<FormField['validation']>>
+  ) {
     onChange({ ...field, validation: { ...field.validation, ...patch } });
   }
 
@@ -41,7 +43,9 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
   function updateOption(id: string, label: string) {
     update({
       options: (field.options ?? []).map((o) =>
-        o.id === id ? { ...o, label, value: label.toLowerCase().replace(/\s+/g, '_') } : o
+        o.id === id
+          ? { ...o, label, value: label.toLowerCase().replace(/\s+/g, '_') }
+          : o
       ),
     });
   }
@@ -56,7 +60,7 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="border-border flex items-center justify-between border-b px-4 py-3">
-        <p className="text-foreground text-xs font-semibold uppercase tracking-wider">
+        <p className="text-foreground text-xs font-semibold tracking-wider uppercase">
           Field Settings
         </p>
         <Button
@@ -72,7 +76,6 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
 
       {/* Scrollable content */}
       <div className="flex-1 space-y-5 overflow-y-auto p-4">
-
         {/* Label */}
         <div className="space-y-1.5">
           <Label className="text-foreground text-xs">
@@ -90,7 +93,9 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
         <div className="space-y-1.5">
           <Label className="text-foreground text-xs">
             Field key{' '}
-            <span className="text-muted-foreground font-normal">(optional)</span>
+            <span className="text-muted-foreground font-normal">
+              (optional)
+            </span>
           </Label>
           <Input
             value={field.id}
@@ -107,28 +112,37 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
             spellCheck={false}
           />
           <p className="text-muted-foreground text-xs">
-            Submission key in payloads &amp; webhooks. Auto-set from label if left as-is.
+            Submission key in payloads &amp; webhooks. Auto-set from label if
+            left as-is.
           </p>
         </div>
 
         {/* Description */}
         <div className="space-y-1.5">
-          <Label className="text-foreground text-xs">Description (optional)</Label>
+          <Label className="text-foreground text-xs">
+            Description (optional)
+          </Label>
           <Input
             value={field.description ?? ''}
-            onChange={(e) => update({ description: e.target.value || undefined })}
+            onChange={(e) =>
+              update({ description: e.target.value || undefined })
+            }
             placeholder="Helper text shown below the label"
             className="bg-card text-sm"
           />
         </div>
 
         {/* Placeholder (text-like fields only) */}
-        {['text', 'email', 'tel', 'url', 'number', 'textarea'].includes(field.type) && (
+        {['text', 'email', 'tel', 'url', 'number', 'textarea'].includes(
+          field.type
+        ) && (
           <div className="space-y-1.5">
             <Label className="text-foreground text-xs">Placeholder</Label>
             <Input
               value={field.placeholder ?? ''}
-              onChange={(e) => update({ placeholder: e.target.value || undefined })}
+              onChange={(e) =>
+                update({ placeholder: e.target.value || undefined })
+              }
               placeholder="Input placeholder text"
               className="bg-card text-sm"
             />
@@ -140,7 +154,9 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-foreground text-xs">Required</Label>
-              <p className="text-muted-foreground text-xs">User must answer this field</p>
+              <p className="text-muted-foreground text-xs">
+                User must answer this field
+              </p>
             </div>
             <Switch
               checked={field.required}
@@ -198,12 +214,16 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
                 min={3}
                 max={10}
                 value={field.config?.maxRating ?? 5}
-                onChange={(e) => updateConfig({ maxRating: Number(e.target.value) })}
+                onChange={(e) =>
+                  updateConfig({ maxRating: Number(e.target.value) })
+                }
                 className="bg-card text-sm"
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-foreground text-xs">Auto-advance on select</Label>
+              <Label className="text-foreground text-xs">
+                Auto-advance on select
+              </Label>
               <Switch
                 checked={field.config?.autoAdvance ?? true}
                 onCheckedChange={(v) => updateConfig({ autoAdvance: v })}
@@ -221,7 +241,9 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
                 <Input
                   type="number"
                   value={field.config?.scaleMin ?? 1}
-                  onChange={(e) => updateConfig({ scaleMin: Number(e.target.value) })}
+                  onChange={(e) =>
+                    updateConfig({ scaleMin: Number(e.target.value) })
+                  }
                   className="bg-card text-sm"
                 />
               </div>
@@ -230,7 +252,9 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
                 <Input
                   type="number"
                   value={field.config?.scaleMax ?? 10}
-                  onChange={(e) => updateConfig({ scaleMax: Number(e.target.value) })}
+                  onChange={(e) =>
+                    updateConfig({ scaleMax: Number(e.target.value) })
+                  }
                   className="bg-card text-sm"
                 />
               </div>
@@ -239,7 +263,9 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
               <Label className="text-foreground text-xs">Low end label</Label>
               <Input
                 value={field.config?.scaleLowLabel ?? ''}
-                onChange={(e) => updateConfig({ scaleLowLabel: e.target.value })}
+                onChange={(e) =>
+                  updateConfig({ scaleLowLabel: e.target.value })
+                }
                 placeholder="e.g. Not likely"
                 className="bg-card text-sm"
               />
@@ -248,13 +274,17 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
               <Label className="text-foreground text-xs">High end label</Label>
               <Input
                 value={field.config?.scaleHighLabel ?? ''}
-                onChange={(e) => updateConfig({ scaleHighLabel: e.target.value })}
+                onChange={(e) =>
+                  updateConfig({ scaleHighLabel: e.target.value })
+                }
                 placeholder="e.g. Very likely"
                 className="bg-card text-sm"
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-foreground text-xs">Auto-advance on select</Label>
+              <Label className="text-foreground text-xs">
+                Auto-advance on select
+              </Label>
               <Switch
                 checked={field.config?.autoAdvance ?? true}
                 onCheckedChange={(v) => updateConfig({ autoAdvance: v })}
@@ -284,26 +314,38 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
             <Label className="text-foreground text-xs">Validation</Label>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-muted-foreground text-xs">Min length</Label>
+                <Label className="text-muted-foreground text-xs">
+                  Min length
+                </Label>
                 <Input
                   type="number"
                   min={0}
                   value={field.validation?.minLength ?? ''}
                   onChange={(e) =>
-                    updateValidation({ minLength: e.target.value ? Number(e.target.value) : undefined })
+                    updateValidation({
+                      minLength: e.target.value
+                        ? Number(e.target.value)
+                        : undefined,
+                    })
                   }
                   placeholder="0"
                   className="bg-card text-sm"
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-muted-foreground text-xs">Max length</Label>
+                <Label className="text-muted-foreground text-xs">
+                  Max length
+                </Label>
                 <Input
                   type="number"
                   min={1}
                   value={field.validation?.maxLength ?? ''}
                   onChange={(e) =>
-                    updateValidation({ maxLength: e.target.value ? Number(e.target.value) : undefined })
+                    updateValidation({
+                      maxLength: e.target.value
+                        ? Number(e.target.value)
+                        : undefined,
+                    })
                   }
                   placeholder="∞"
                   className="bg-card text-sm"
@@ -319,7 +361,9 @@ export function FieldEditor({ field, onChange, onDelete }: FieldEditorProps) {
             <Label className="text-foreground text-xs">Content</Label>
             <textarea
               value={field.description ?? ''}
-              onChange={(e) => update({ description: e.target.value || undefined })}
+              onChange={(e) =>
+                update({ description: e.target.value || undefined })
+              }
               placeholder="Statement text shown to the user..."
               rows={4}
               className="bg-card border-border text-foreground placeholder:text-muted-foreground w-full rounded-md border px-3 py-2 text-sm focus:outline-none"

@@ -2,6 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import type { FormField } from '@osforms/types';
 import {
   AlignLeft,
   BarChart2,
@@ -19,18 +20,35 @@ import {
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import type { FormField } from '@osforms/types';
 
 const FIELD_ICONS: Record<string, React.FC<{ className?: string }>> = {
-  text: Type, email: Mail, textarea: AlignLeft, number: Hash,
-  tel: Phone, url: Link, select: ChevronDown, radio: CircleDot,
-  checkbox: CheckSquare, rating: Star, scale: BarChart2, statement: MessageSquare,
+  text: Type,
+  email: Mail,
+  textarea: AlignLeft,
+  number: Hash,
+  tel: Phone,
+  url: Link,
+  select: ChevronDown,
+  radio: CircleDot,
+  checkbox: CheckSquare,
+  rating: Star,
+  scale: BarChart2,
+  statement: MessageSquare,
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  text: 'Short Text', email: 'Email', textarea: 'Long Text', number: 'Number',
-  tel: 'Phone', url: 'URL', select: 'Dropdown', radio: 'Multiple Choice',
-  checkbox: 'Checkboxes', rating: 'Rating', scale: 'Scale', statement: 'Statement',
+  text: 'Short Text',
+  email: 'Email',
+  textarea: 'Long Text',
+  number: 'Number',
+  tel: 'Phone',
+  url: 'URL',
+  select: 'Dropdown',
+  radio: 'Multiple Choice',
+  checkbox: 'Checkboxes',
+  rating: 'Rating',
+  scale: 'Scale',
+  statement: 'Statement',
 };
 
 interface FieldCardProps {
@@ -40,9 +58,20 @@ interface FieldCardProps {
   onSelect: () => void;
 }
 
-export function FieldCard({ field, index, isSelected, onSelect }: FieldCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: field.id });
+export function FieldCard({
+  field,
+  index,
+  isSelected,
+  onSelect,
+}: FieldCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
 
   const Icon = FIELD_ICONS[field.type] ?? Type;
 
@@ -79,10 +108,21 @@ export function FieldCard({ field, index, isSelected, onSelect }: FieldCardProps
 
       {/* Label */}
       <div className="min-w-0 flex-1">
-        <p className={cn('truncate text-sm font-medium', isSelected ? 'text-foreground' : 'text-foreground/80')}>
-          {field.label || <span className="text-muted-foreground italic">Untitled {FIELD_LABELS[field.type]}</span>}
+        <p
+          className={cn(
+            'truncate text-sm font-medium',
+            isSelected ? 'text-foreground' : 'text-foreground/80'
+          )}
+        >
+          {field.label || (
+            <span className="text-muted-foreground italic">
+              Untitled {FIELD_LABELS[field.type]}
+            </span>
+          )}
         </p>
-        <p className="text-muted-foreground text-xs">{FIELD_LABELS[field.type]}</p>
+        <p className="text-muted-foreground text-xs">
+          {FIELD_LABELS[field.type]}
+        </p>
       </div>
 
       {/* Required dot */}

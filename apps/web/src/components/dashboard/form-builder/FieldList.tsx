@@ -15,10 +15,10 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
+import type { FormField } from '@osforms/types';
 import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import type { FormField } from '@osforms/types';
 
 import { FieldCard } from './FieldCard';
 
@@ -44,7 +44,7 @@ export function FieldList({
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over || active.id === over.id) {return;}
 
     const oldIndex = fields.findIndex((f) => f.id === active.id);
     const newIndex = fields.findIndex((f) => f.id === over.id);
