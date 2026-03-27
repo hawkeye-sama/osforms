@@ -99,6 +99,10 @@ jobs:
       ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NODE_ENV: production
+      GOOGLE_CLIENT_ID: dummy-google-client-id
+      GOOGLE_CLIENT_SECRET: dummy-google-client-secret
+      RESEND_API_KEY: re_dummy_resend_api_key
+      RESEND_EMAIl_SIGNING_SECRET: dummy_resend_email_signing_secret
     steps:
       - uses: actions/checkout@v4
 
