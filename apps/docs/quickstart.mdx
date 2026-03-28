@@ -1,6 +1,6 @@
 ---
-title: "Quick Start"
-description: "Get your form backend running in 2 minutes"
+title: 'Quick Start'
+description: 'Get your form backend running in 2 minutes'
 ---
 
 ## 1. Create an account
@@ -10,6 +10,7 @@ Sign up at [osforms.com](https://osforms.com/signup). You'll receive a 6-digit O
 ## 2. Complete onboarding
 
 Three quick steps:
+
 1. **Profile** — name, website, role
 2. **Integrations** — connect Resend, Google Sheets, or webhooks
 3. **Test** — submit a test form to verify everything works
@@ -43,7 +44,11 @@ Go to **Integrations** in your form and connect:
   <Card title="Resend" icon="envelope" href="/docs/integrations/resend">
     Email notifications on every submission
   </Card>
-  <Card title="Google Sheets" icon="table" href="/docs/integrations/google-sheets">
+  <Card
+    title="Google Sheets"
+    icon="table"
+    href="/docs/integrations/google-sheets"
+  >
     Auto-append rows to a spreadsheet
   </Card>
   <Card title="Webhook" icon="webhook" href="/docs/integrations/webhooks">
@@ -58,7 +63,7 @@ All integrations run in parallel in the background — users get an instant resp
 For embedded or conversational forms:
 
 ```bash
-npm install @osforms/react framer-motion
+npm install @osforms/react
 ```
 
 ```tsx
@@ -77,5 +82,6 @@ export default function ContactPage() {
 ```
 
 <Note>
-  `framer-motion` is required as a peer dependency for animations.
+  `framer-motion` is automatically installed as a dependency of
+  `@osforms/react`.
 </Note>

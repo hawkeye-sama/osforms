@@ -1,6 +1,6 @@
 ---
-title: "Auth"
-description: "Authentication endpoints"
+title: 'Auth'
+description: 'Authentication endpoints'
 ---
 
 osforms uses email/password authentication with OTP verification. JWTs are issued in httpOnly cookies (`ff_token`, 7-day expiry) and also accepted as `Authorization: Bearer <token>` for API usage.
@@ -90,11 +90,11 @@ Returns the authenticated user and sets the `ff_token` JWT cookie.
 }
 ```
 
-| Status | Meaning |
-|---|---|
-| `200` | Login successful |
-| `401` | Invalid email or password |
-| `403` | Email not verified |
+| Status | Meaning                   |
+| ------ | ------------------------- |
+| `200`  | Login successful          |
+| `401`  | Invalid email or password |
+| `403`  | Email not verified        |
 
 ## Log out
 

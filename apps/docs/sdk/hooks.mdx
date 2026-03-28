@@ -1,6 +1,6 @@
 ---
-title: "Hooks"
-description: "Low-level hooks for building custom form UIs"
+title: 'Hooks'
+description: 'Low-level hooks for building custom form UIs'
 ---
 
 ## useFormState
@@ -15,36 +15,36 @@ const [state, actions] = useFormState(schema, endpoint, onComplete, onError);
 
 ### Parameters
 
-| Parameter | Type | Description |
-|---|---|---|
-| `schema` | `FormSchema \| null` | Form schema. Pass `null` while loading. |
-| `endpoint` | `string` | Submission URL (`https://osforms.com/api/v1/f/{slug}`) |
-| `onComplete` | `() => void` | Called after successful submission |
-| `onError` | `(error: Error) => void` | Called when submission fails |
+| Parameter    | Type                     | Description                                            |
+| ------------ | ------------------------ | ------------------------------------------------------ |
+| `schema`     | `FormSchema \| null`     | Form schema. Pass `null` while loading.                |
+| `endpoint`   | `string`                 | Submission URL (`https://osforms.com/api/v1/f/{slug}`) |
+| `onComplete` | `() => void`             | Called after successful submission                     |
+| `onError`    | `(error: Error) => void` | Called when submission fails                           |
 
 ### FormState
 
-| Field | Type | Description |
-|---|---|---|
-| `answers` | `Record<string, unknown>` | Current field values keyed by field ID |
-| `currentIndex` | `number` | Index of the active field in `visibleFields` |
-| `direction` | `'forward' \| 'backward'` | Last navigation direction (use for slide animations) |
-| `errors` | `Record<string, string>` | Validation errors per field ID. `_form` key holds submission errors. |
-| `isSubmitting` | `boolean` | `true` while the POST is in flight |
-| `isComplete` | `boolean` | `true` after successful submission |
-| `showWelcome` | `boolean` | `true` when the welcome screen should be shown |
+| Field          | Type                      | Description                                                          |
+| -------------- | ------------------------- | -------------------------------------------------------------------- |
+| `answers`      | `Record<string, unknown>` | Current field values keyed by field ID                               |
+| `currentIndex` | `number`                  | Index of the active field in `visibleFields`                         |
+| `direction`    | `'forward' \| 'backward'` | Last navigation direction (use for slide animations)                 |
+| `errors`       | `Record<string, string>`  | Validation errors per field ID. `_form` key holds submission errors. |
+| `isSubmitting` | `boolean`                 | `true` while the POST is in flight                                   |
+| `isComplete`   | `boolean`                 | `true` after successful submission                                   |
+| `showWelcome`  | `boolean`                 | `true` when the welcome screen should be shown                       |
 
 ### FormStateActions
 
-| Field | Type | Description |
-|---|---|---|
-| `setAnswer` | `(fieldId, value) => void` | Update a field's value and clear its error |
-| `advance` | `(overrideValue?) => boolean` | Validate current field and advance. Returns `false` if validation failed. |
-| `back` | `() => void` | Move to the previous field |
-| `submit` | `() => Promise<void>` | Validate all fields and POST to the endpoint |
-| `startForm` | `() => void` | Dismiss the welcome screen |
-| `visibleFields` | `FormField[]` | Fields visible based on current answers and conditional logic |
-| `currentField` | `FormField \| undefined` | The field at `state.currentIndex` |
+| Field           | Type                          | Description                                                               |
+| --------------- | ----------------------------- | ------------------------------------------------------------------------- |
+| `setAnswer`     | `(fieldId, value) => void`    | Update a field's value and clear its error                                |
+| `advance`       | `(overrideValue?) => boolean` | Validate current field and advance. Returns `false` if validation failed. |
+| `back`          | `() => void`                  | Move to the previous field                                                |
+| `submit`        | `() => Promise<void>`         | Validate all fields and POST to the endpoint                              |
+| `startForm`     | `() => void`                  | Dismiss the welcome screen                                                |
+| `visibleFields` | `FormField[]`                 | Fields visible based on current answers and conditional logic             |
+| `currentField`  | `FormField \| undefined`      | The field at `state.currentIndex`                                         |
 
 ### Example: custom renderer
 
@@ -97,12 +97,12 @@ const { schema, formName, redirectUrl, loading, error } = useFormSchema(
 
 ### Return value
 
-| Field | Type | Description |
-|---|---|---|
-| `schema` | `FormSchema \| null` | Parsed form schema. `null` while loading. |
-| `formName` | `string` | Display name of the form |
-| `redirectUrl` | `string` | Redirect URL configured in form settings |
-| `loading` | `boolean` | `true` while the fetch is in flight |
-| `error` | `string \| null` | Error message if the fetch failed |
+| Field         | Type                 | Description                               |
+| ------------- | -------------------- | ----------------------------------------- |
+| `schema`      | `FormSchema \| null` | Parsed form schema. `null` while loading. |
+| `formName`    | `string`             | Display name of the form                  |
+| `redirectUrl` | `string`             | Redirect URL configured in form settings  |
+| `loading`     | `boolean`            | `true` while the fetch is in flight       |
+| `error`       | `string \| null`     | Error message if the fetch failed         |
 
 Fetches from: `{baseUrl}/api/v1/f/{formId}/schema`

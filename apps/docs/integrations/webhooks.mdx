@@ -1,6 +1,6 @@
 ---
-title: "Webhooks"
-description: "POST submissions to any URL with HMAC-SHA256 request signing"
+title: 'Webhooks'
+description: 'POST submissions to any URL with HMAC-SHA256 request signing'
 ---
 
 ## Setup
@@ -51,15 +51,11 @@ function verifySignature(
   signature: string,
   secret: string
 ): boolean {
-  const expected = 'sha256=' + crypto
-    .createHmac('sha256', secret)
-    .update(rawBody)
-    .digest('hex');
+  const expected =
+    'sha256=' +
+    crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expected)
-  );
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 
 // Express example
@@ -74,7 +70,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
 ```
 
 <Warning>
-  Always verify the signature before processing a webhook. Use `timingSafeEqual` to prevent timing attacks.
+  Always verify the signature before processing a webhook. Use `timingSafeEqual`
+  to prevent timing attacks.
 </Warning>
 
 ## Retry behavior

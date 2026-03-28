@@ -1,27 +1,27 @@
 ---
-title: "Installation"
-description: "Install and configure @osforms/react"
+title: 'Installation'
+description: 'Install and configure @osforms/react'
 ---
 
 ## Requirements
 
 - React 18 or later
-- framer-motion 11 or later (peer dependency)
 
 ## Install
 
 <CodeGroup>
 ```bash npm
-npm install @osforms/react framer-motion
+npm install @osforms/react
 ```
 
 ```bash pnpm
-pnpm add @osforms/react framer-motion
+pnpm add @osforms/react
 ```
 
 ```bash yarn
-yarn add @osforms/react framer-motion
+yarn add @osforms/react
 ```
+
 </CodeGroup>
 
 ## TypeScript
@@ -72,9 +72,7 @@ Works without additional configuration.
 
 ## Bundle size
 
-| What | Size |
-|---|---|
-| `@osforms/react` (gzipped) | ~25 kB |
-| `framer-motion` (gzipped) | ~40 kB |
-
-`framer-motion` is not bundled into `@osforms/react` — it's a peer dependency that is installed separately and deduplicated by your bundler if already used in your project.
+| What                                      | Size   |
+| ----------------------------------------- | ------ |
+| `@osforms/react` (gzipped)                | ~25 kB |
+| `framer-motion` (gzipped, auto-installed) | ~40 kB |

@@ -1,6 +1,6 @@
 ---
-title: "Conditional Logic"
-description: "Using conditional logic in @osforms/react"
+title: 'Conditional Logic'
+description: 'Using conditional logic in @osforms/react'
 ---
 
 Conditional logic is evaluated automatically by `@osforms/react` as the user fills out the form. Hidden fields are skipped in navigation and excluded from the submission payload.
@@ -8,7 +8,11 @@ Conditional logic is evaluated automatically by `@osforms/react` as the user fil
 ## Types
 
 ```ts
-import type { ConditionalLogic, Condition, ConditionOperator } from '@osforms/react';
+import type {
+  ConditionalLogic,
+  Condition,
+  ConditionOperator,
+} from '@osforms/react';
 ```
 
 ```ts
@@ -30,7 +34,7 @@ interface Condition {
 
 interface ConditionalLogic {
   action: 'show' | 'hide';
-  match: 'all' | 'any';  // AND vs OR
+  match: 'all' | 'any'; // AND vs OR
   conditions: Condition[];
 }
 ```
@@ -48,9 +52,7 @@ const followUpField: FormField = {
   conditionalLogic: {
     action: 'show',
     match: 'all',
-    conditions: [
-      { fieldId: 'rating', operator: 'less_than', value: 3 }
-    ],
+    conditions: [{ fieldId: 'rating', operator: 'less_than', value: 3 }],
   },
 };
 ```
@@ -65,6 +67,7 @@ import { isFieldVisible, getVisibleFields } from '@osforms/react';
 ```
 
 **Evaluation rules**:
+
 - `equals` / `not_equals` — strict string comparison after coercion (`String(value)`)
 - `contains` / `not_contains` — substring check on stringified value
 - `greater_than` / `less_than` — numeric comparison after `Number()` coercion

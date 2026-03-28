@@ -1,6 +1,6 @@
 ---
-title: "Field Types"
-description: "All 15 field types supported in osforms forms"
+title: 'Field Types'
+description: 'All 15 field types supported in osforms forms'
 ---
 
 osforms supports 15 field types across input, choice, scale, display, and layout categories.
@@ -256,28 +256,28 @@ Visual separator. Supported in `classic` and `stepped` modes only. No input coll
 
 Every field shares these properties:
 
-| Property | Type | Required | Description |
-|---|---|---|---|
-| `id` | `string` | Yes | Unique identifier within the form. Used as the key in submissions. |
-| `type` | `FieldType` | Yes | One of the 15 types above. |
-| `label` | `string` | Yes | Question text shown to the user. |
-| `description` | `string` | No | Helper text displayed below the label. |
-| `placeholder` | `string` | No | Input placeholder text. |
-| `required` | `boolean` | No | Default: `false`. |
-| `options` | `FieldOption[]` | For choice types | Array of `{ id, label, value }`. |
-| `validation` | `FieldValidation` | No | See below. |
-| `conditionalLogic` | `ConditionalLogic` | No | Show/hide rules. See [Conditional Logic](/docs/core/conditional-logic). |
-| `config` | `FieldConfig` | No | Type-specific config. |
+| Property           | Type               | Required         | Description                                                             |
+| ------------------ | ------------------ | ---------------- | ----------------------------------------------------------------------- |
+| `id`               | `string`           | Yes              | Unique identifier within the form. Used as the key in submissions.      |
+| `type`             | `FieldType`        | Yes              | One of the 15 types above.                                              |
+| `label`            | `string`           | Yes              | Question text shown to the user.                                        |
+| `description`      | `string`           | No               | Helper text displayed below the label.                                  |
+| `placeholder`      | `string`           | No               | Input placeholder text.                                                 |
+| `required`         | `boolean`          | No               | Default: `false`.                                                       |
+| `options`          | `FieldOption[]`    | For choice types | Array of `{ id, label, value }`.                                        |
+| `validation`       | `FieldValidation`  | No               | See below.                                                              |
+| `conditionalLogic` | `ConditionalLogic` | No               | Show/hide rules. See [Conditional Logic](/docs/core/conditional-logic). |
+| `config`           | `FieldConfig`      | No               | Type-specific config.                                                   |
 
 ## Validation Reference
 
-| Property | Types | Description |
-|---|---|---|
-| `minLength` | `text`, `textarea` | Minimum character count |
-| `maxLength` | `text`, `textarea` | Maximum character count |
-| `min` | `number`, `scale`, `rating` | Minimum numeric value |
-| `max` | `number`, `scale`, `rating` | Maximum numeric value |
-| `pattern` | `text`, `email`, `tel` | Regex string for format validation |
-| `patternError` | `text`, `email`, `tel` | Custom error message on pattern mismatch |
-| `fileTypes` | `file` | Allowed MIME types or extensions |
-| `maxFileSize` | `file` | Max file size in bytes |
+| Property       | Types                       | Description                              |
+| -------------- | --------------------------- | ---------------------------------------- |
+| `minLength`    | `text`, `textarea`          | Minimum character count                  |
+| `maxLength`    | `text`, `textarea`          | Maximum character count                  |
+| `min`          | `number`, `scale`, `rating` | Minimum numeric value                    |
+| `max`          | `number`, `scale`, `rating` | Maximum numeric value                    |
+| `pattern`      | `text`, `email`, `tel`      | Regex string for format validation       |
+| `patternError` | `text`, `email`, `tel`      | Custom error message on pattern mismatch |
+| `fileTypes`    | `file`                      | Allowed MIME types or extensions         |
+| `maxFileSize`  | `file`                      | Max file size in bytes                   |

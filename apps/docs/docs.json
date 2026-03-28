@@ -3,16 +3,13 @@
   "theme": "mint",
   "name": "osforms",
   "colors": {
-    "primary": "#ffffff",
-    "light": "#ffffff",
-    "dark": "#ffffff",
-    "background": {
-      "light": "#ffffff",
-      "dark": "#0a0a0a"
-    }
+    "primary": "#000000",
+    "light": "#FFFFFF",
+    "dark": "#333333"
   },
   "appearance": {
-    "default": "dark"
+    "default": "dark",
+    "strict": true
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -30,7 +27,7 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Get Started Free",
+      "label": "Get Started Free →",
       "href": "https://osforms.com/signup"
     }
   },
@@ -109,11 +106,7 @@
           },
           {
             "group": "Advanced",
-            "pages": [
-              "sdk/field-types",
-              "sdk/theming",
-              "sdk/conditional-logic"
-            ]
+            "pages": ["sdk/field-types", "sdk/theming", "sdk/conditional-logic"]
           }
         ]
       }

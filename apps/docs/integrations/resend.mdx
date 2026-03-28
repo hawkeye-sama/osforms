@@ -1,6 +1,6 @@
 ---
-title: "Resend"
-description: "Forward form submissions to email using your Resend API key"
+title: 'Resend'
+description: 'Forward form submissions to email using your Resend API key'
 ---
 
 ## Prerequisites
@@ -31,21 +31,23 @@ Click **Send Test** in the integration settings to send a sample email and verif
 
 ## Configuration reference
 
-| Field | Required | Description |
-|---|---|---|
-| `apiKey` | Yes | Resend API key starting with `re_` |
-| `fromEmail` | Yes | Sender address on your verified Resend domain |
-| `toEmail` | Yes | Delivery address for notification emails |
-| `subject` | No | Email subject. Default: `"New submission: {form name}"` |
+| Field       | Required | Description                                             |
+| ----------- | -------- | ------------------------------------------------------- |
+| `apiKey`    | Yes      | Resend API key starting with `re_`                      |
+| `fromEmail` | Yes      | Sender address on your verified Resend domain           |
+| `toEmail`   | Yes      | Delivery address for notification emails                |
+| `subject`   | No       | Email subject. Default: `"New submission: {form name}"` |
 
 ## Failure handling
 
 If Resend rejects the request (e.g. invalid API key, unverified domain), the integration is marked as failed and you'll receive:
+
 - An **in-app notification** with the error message
 - An **email alert** at your account email (sent via the system Resend key, not yours)
 
 You can review all integration logs per submission in the dashboard under **Submissions → View Logs**.
 
 <Note>
-  Resend's free tier includes 100 emails/month. You are billed by Resend directly at their rates — osforms never charges for integrations.
+  Resend's free tier includes 100 emails/month. You are billed by Resend
+  directly at their rates — osforms never charges for integrations.
 </Note>

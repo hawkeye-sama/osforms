@@ -1,6 +1,13 @@
 'use client';
 
-import { ChevronDown, LogOut, Menu, Settings, User } from 'lucide-react';
+import {
+  BookOpen,
+  ChevronDown,
+  LogOut,
+  Menu,
+  Settings,
+  User,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -61,6 +68,14 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
 
         {/* Right side - Notifications + Account dropdown */}
         <div className="flex items-center gap-2">
+          {/* Docs link */}
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/docs" target="_blank" rel="noopener noreferrer">
+              <BookOpen className="h-5 w-5" />
+              <span className="sr-only">Documentation</span>
+            </Link>
+          </Button>
+
           {/* Notifications */}
           <NotificationsDropdown />
 

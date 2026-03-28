@@ -29,6 +29,16 @@ export function LandingNavbar() {
             asChild
             className="hidden sm:inline-flex"
           >
+            <Link href="/docs" target="_blank" rel="noopener noreferrer">
+              Docs
+            </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="hidden sm:inline-flex"
+          >
             <Link href="/login">Sign In</Link>
           </Button>
           <Button size="sm" asChild className="button-glow">

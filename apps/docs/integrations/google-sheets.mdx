@@ -1,6 +1,6 @@
 ---
-title: "Google Sheets"
-description: "Append each form submission as a new row in a Google Sheet"
+title: 'Google Sheets'
+description: 'Append each form submission as a new row in a Google Sheet'
 ---
 
 ## Setup
@@ -18,10 +18,10 @@ osforms reads the header row of your sheet and maps submission fields to matchin
 
 Two system columns are always appended if not already present:
 
-| Column | Value |
-|---|---|
+| Column          | Value                              |
+| --------------- | ---------------------------------- |
 | `Submission ID` | MongoDB ObjectId of the submission |
-| `Submitted At` | ISO 8601 timestamp |
+| `Submitted At`  | ISO 8601 timestamp                 |
 
 ## Field key mapping
 
@@ -33,9 +33,9 @@ Column headers match the **field ID** from your form schema (e.g. `full_name`, `
 
 You don't need to pre-create columns. Submit once and osforms will create all the columns for you. After the first submission your sheet will look like:
 
-| name | email | message | Submission ID | Submitted At |
-|---|---|---|---|---|
-| Jane Smith | jane@example.com | Hello! | 64f1a... | 2026-03-27T12:00:00.000Z |
+| name       | email            | message | Submission ID | Submitted At             |
+| ---------- | ---------------- | ------- | ------------- | ------------------------ |
+| Jane Smith | jane@example.com | Hello!  | 64f1a...      | 2026-03-27T12:00:00.000Z |
 
 You can then rename columns — as long as the header text still matches the field ID, mapping continues to work.
 
@@ -50,5 +50,6 @@ If the Sheets API call fails (e.g. revoked OAuth token, sheet deleted), the inte
 To reconnect, go to **Integrations** and click **Reconnect Google Account**.
 
 <Note>
-  Google Sheets API calls count against your Google account's free quota (500 requests/100 seconds). This is rarely a concern for standard form volumes.
+  Google Sheets API calls count against your Google account's free quota (500
+  requests/100 seconds). This is rarely a concern for standard form volumes.
 </Note>

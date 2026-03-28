@@ -1,6 +1,6 @@
 ---
-title: "Theming"
-description: "Customize form appearance in @osforms/react"
+title: 'Theming'
+description: 'Customize form appearance in @osforms/react'
 ---
 
 `@osforms/react` exposes the full `FormTheme` type for TypeScript consumers. Theme props are merged with the schema theme and the default dark theme.
@@ -21,13 +21,13 @@ interface FormTheme {
 }
 
 interface FormThemeColors {
-  background?: string;      // main background
-  surface?: string;         // card / input surface
-  primary?: string;         // button fill and accents
-  text?: string;            // primary text
-  textSecondary?: string;   // helper text, labels
-  border?: string;          // input and card borders
-  error?: string;           // validation error color
+  background?: string; // main background
+  surface?: string; // card / input surface
+  primary?: string; // button fill and accents
+  text?: string; // primary text
+  textSecondary?: string; // helper text, labels
+  border?: string; // input and card borders
+  error?: string; // validation error color
 }
 ```
 
@@ -74,7 +74,7 @@ const lightTheme: FormTheme = {
   buttonVariant: 'solid',
 };
 
-<OSForm formId="abc123" theme={lightTheme} />
+<OSForm formId="abc123" theme={lightTheme} />;
 ```
 
 ## Custom fonts
@@ -87,10 +87,7 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 // In your form component:
-<OSForm
-  formId="abc123"
-  theme={{ fontFamily: inter.style.fontFamily }}
-/>
+<OSForm formId="abc123" theme={{ fontFamily: inter.style.fontFamily }} />;
 ```
 
 ## ConversationalRenderer and ClassicRenderer
@@ -98,7 +95,11 @@ const inter = Inter({ subsets: ['latin'] });
 When using the low-level renderers directly, pass a resolved theme from `resolveTheme`:
 
 ```tsx
-import { ConversationalRenderer, useFormState, useFormSchema } from '@osforms/react';
+import {
+  ConversationalRenderer,
+  useFormState,
+  useFormSchema,
+} from '@osforms/react';
 
 // resolveTheme is not exported — pass theme overrides via OSForm
 // or construct a ResolvedTheme manually for full control

@@ -1,6 +1,6 @@
 ---
-title: "Submit a Form"
-description: "POST /api/v1/f/{slug}"
+title: 'Submit a Form'
+description: 'POST /api/v1/f/{slug}'
 ---
 
 The public submission endpoint. No authentication required.
@@ -39,13 +39,13 @@ curl -X POST https://osforms.com/api/v1/f/{slug} \
 
 ## Response codes
 
-| Status | Meaning |
-|---|---|
-| `200` | Submission stored successfully (JSON clients) |
-| `303` | Submission stored, redirect to redirect URL (HTML forms) |
-| `403` | Monthly submission limit reached |
-| `422` | CAPTCHA verification failed |
-| `429` | Rate limit exceeded |
+| Status | Meaning                                                  |
+| ------ | -------------------------------------------------------- |
+| `200`  | Submission stored successfully (JSON clients)            |
+| `303`  | Submission stored, redirect to redirect URL (HTML forms) |
+| `403`  | Monthly submission limit reached                         |
+| `422`  | CAPTCHA verification failed                              |
+| `429`  | Rate limit exceeded                                      |
 
 ## Rate limiting
 

@@ -1,6 +1,6 @@
 ---
-title: "Introduction"
-description: "Embed forms directly in your React app with @osforms/react"
+title: 'Introduction'
+description: 'Embed forms directly in your React app with @osforms/react'
 ---
 
 `@osforms/react` is the official React SDK for osforms. It renders forms fetched from the osforms API — or forms you define locally — in two modes:
@@ -11,10 +11,8 @@ description: "Embed forms directly in your React app with @osforms/react"
 ## Installation
 
 ```bash
-npm install @osforms/react framer-motion
+npm install @osforms/react
 ```
-
-`framer-motion` is a required peer dependency for animations in conversational mode.
 
 ## Basic usage
 
@@ -53,24 +51,21 @@ const schema: FormSchema = {
 
 export default function ContactPage() {
   return (
-    <OSForm
-      schema={schema}
-      endpoint="https://osforms.com/api/v1/f/your-slug"
-    />
+    <OSForm schema={schema} endpoint="https://osforms.com/api/v1/f/your-slug" />
   );
 }
 ```
 
 ## What's included
 
-| Export | Description |
-|---|---|
-| `OSForm` | Main component — renders full form with schema fetch |
-| `ConversationalRenderer` | Low-level conversational mode renderer |
-| `ClassicRenderer` | Low-level classic mode renderer |
-| `useFormState` | Core state hook — answers, navigation, submission |
-| `useFormSchema` | Schema fetching hook |
-| All types from `@osforms/types` | `FormSchema`, `FormField`, `FormTheme`, etc. |
+| Export                          | Description                                          |
+| ------------------------------- | ---------------------------------------------------- |
+| `OSForm`                        | Main component — renders full form with schema fetch |
+| `ConversationalRenderer`        | Low-level conversational mode renderer               |
+| `ClassicRenderer`               | Low-level classic mode renderer                      |
+| `useFormState`                  | Core state hook — answers, navigation, submission    |
+| `useFormSchema`                 | Schema fetching hook                                 |
+| All types from `@osforms/types` | `FormSchema`, `FormField`, `FormTheme`, etc.         |
 
 ## Modes overview
 
@@ -82,7 +77,7 @@ export default function ContactPage() {
 
 - One field displayed at a time
 - Keyboard navigation (`Enter` to advance, `Backspace` to go back)
-- Animated field transitions via framer-motion
+- Animated field transitions (framer-motion, bundled as a dependency)
 - Auto-advances on selection for `radio`, `rating`, and `scale` fields (configurable)
 - Welcome and thank-you screens supported
 

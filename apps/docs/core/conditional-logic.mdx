@@ -1,6 +1,6 @@
 ---
-title: "Conditional Logic"
-description: "Show or hide fields based on user answers"
+title: 'Conditional Logic'
+description: 'Show or hide fields based on user answers'
 ---
 
 Conditional logic lets you show or hide fields based on answers to earlier questions. Rules are evaluated in real time — fields appear and disappear as the user fills out the form.
@@ -30,11 +30,11 @@ Each field can have one `conditionalLogic` rule:
 
 ## Properties
 
-| Property | Type | Description |
-|---|---|---|
-| `action` | `"show"` \| `"hide"` | Whether to show or hide the field when conditions are met |
-| `match` | `"all"` \| `"any"` | `all` = AND logic (every condition must pass), `any` = OR logic |
-| `conditions` | `Condition[]` | One or more conditions to evaluate |
+| Property     | Type                 | Description                                                     |
+| ------------ | -------------------- | --------------------------------------------------------------- |
+| `action`     | `"show"` \| `"hide"` | Whether to show or hide the field when conditions are met       |
+| `match`      | `"all"` \| `"any"`   | `all` = AND logic (every condition must pass), `any` = OR logic |
+| `conditions` | `Condition[]`        | One or more conditions to evaluate                              |
 
 ## Condition Structure
 
@@ -46,24 +46,24 @@ Each field can have one `conditionalLogic` rule:
 }
 ```
 
-| Property | Type | Description |
-|---|---|---|
-| `fieldId` | `string` | The ID of the field whose value is checked |
-| `operator` | `ConditionOperator` | The comparison to perform |
-| `value` | `string \| number` | The value to compare against (not required for `is_empty` / `is_not_empty`) |
+| Property   | Type                | Description                                                                 |
+| ---------- | ------------------- | --------------------------------------------------------------------------- |
+| `fieldId`  | `string`            | The ID of the field whose value is checked                                  |
+| `operator` | `ConditionOperator` | The comparison to perform                                                   |
+| `value`    | `string \| number`  | The value to compare against (not required for `is_empty` / `is_not_empty`) |
 
 ## Operators
 
-| Operator | Description | Works With |
-|---|---|---|
-| `equals` | Exact match | All types |
-| `not_equals` | Does not match | All types |
-| `contains` | Value includes the string | `text`, `textarea`, `email` |
+| Operator       | Description                       | Works With                  |
+| -------------- | --------------------------------- | --------------------------- |
+| `equals`       | Exact match                       | All types                   |
+| `not_equals`   | Does not match                    | All types                   |
+| `contains`     | Value includes the string         | `text`, `textarea`, `email` |
 | `not_contains` | Value does not include the string | `text`, `textarea`, `email` |
-| `greater_than` | Numeric greater than | `number`, `rating`, `scale` |
-| `less_than` | Numeric less than | `number`, `rating`, `scale` |
-| `is_empty` | No value entered | All types |
-| `is_not_empty` | Any value entered | All types |
+| `greater_than` | Numeric greater than              | `number`, `rating`, `scale` |
+| `less_than`    | Numeric less than                 | `number`, `rating`, `scale` |
+| `is_empty`     | No value entered                  | All types                   |
+| `is_not_empty` | Any value entered                 | All types                   |
 
 ## Examples
 
@@ -98,9 +98,7 @@ Hide a question unless the NPS score is low:
   "conditionalLogic": {
     "action": "show",
     "match": "all",
-    "conditions": [
-      { "fieldId": "nps", "operator": "less_than", "value": 7 }
-    ]
+    "conditions": [{ "fieldId": "nps", "operator": "less_than", "value": 7 }]
   }
 }
 ```
