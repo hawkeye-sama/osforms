@@ -1,0 +1,283 @@
+---
+title: 'Field Types'
+description: 'All 15 field types supported in osforms forms'
+---
+
+osforms supports 15 field types across input, choice, scale, display, and layout categories.
+
+## Text Inputs
+
+### text
+
+Single-line text input.
+
+```json
+{
+  "id": "full_name",
+  "type": "text",
+  "label": "Full name",
+  "required": true,
+  "validation": {
+    "minLength": 2,
+    "maxLength": 100
+  }
+}
+```
+
+### email
+
+Single-line input with email format validation.
+
+```json
+{
+  "id": "email",
+  "type": "email",
+  "label": "Email address",
+  "required": true
+}
+```
+
+### tel
+
+Phone number input. No format enforcement — accepts any string.
+
+```json
+{
+  "id": "phone",
+  "type": "tel",
+  "label": "Phone number"
+}
+```
+
+### url
+
+URL input with format validation.
+
+```json
+{
+  "id": "website",
+  "type": "url",
+  "label": "Website URL",
+  "placeholder": "https://example.com"
+}
+```
+
+### number
+
+Numeric input. Supports `min` / `max` validation.
+
+```json
+{
+  "id": "age",
+  "type": "number",
+  "label": "Age",
+  "validation": { "min": 18, "max": 120 }
+}
+```
+
+### textarea
+
+Multi-line text input. Defaults to 4 rows.
+
+```json
+{
+  "id": "message",
+  "type": "textarea",
+  "label": "Message",
+  "config": { "rows": 6 }
+}
+```
+
+---
+
+## Choice
+
+### select
+
+Dropdown single-select. Supports optional search.
+
+```json
+{
+  "id": "country",
+  "type": "select",
+  "label": "Country",
+  "options": [
+    { "id": "us", "label": "United States", "value": "US" },
+    { "id": "gb", "label": "United Kingdom", "value": "GB" }
+  ],
+  "config": { "searchable": true }
+}
+```
+
+### radio
+
+Single-choice visible option list. Auto-advances in conversational mode.
+
+```json
+{
+  "id": "plan",
+  "type": "radio",
+  "label": "Which plan are you on?",
+  "options": [
+    { "id": "free", "label": "Free", "value": "free" },
+    { "id": "pro", "label": "Pro", "value": "pro" }
+  ],
+  "config": { "layout": "vertical" }
+}
+```
+
+**Layout options**: `vertical` (default), `horizontal`, `grid`
+
+### checkbox
+
+Multi-select option list. Submitted as an array of selected values.
+
+```json
+{
+  "id": "interests",
+  "type": "checkbox",
+  "label": "What are you interested in?",
+  "options": [
+    { "id": "a", "label": "API integrations", "value": "api" },
+    { "id": "b", "label": "React SDK", "value": "sdk" },
+    { "id": "c", "label": "Webhooks", "value": "webhooks" }
+  ]
+}
+```
+
+### date
+
+Date picker. Value submitted as `YYYY-MM-DD`.
+
+```json
+{
+  "id": "dob",
+  "type": "date",
+  "label": "Date of birth"
+}
+```
+
+---
+
+## Scale & Rating
+
+### rating
+
+Star (or icon) rating. Defaults to 1–5. Auto-advances in conversational mode.
+
+```json
+{
+  "id": "satisfaction",
+  "type": "rating",
+  "label": "How satisfied are you?",
+  "config": {
+    "maxRating": 5,
+    "ratingIcon": "star"
+  }
+}
+```
+
+**Icon options**: `star` (default), `heart`, `thumb`
+
+### scale
+
+NPS-style numeric scale. Auto-advances in conversational mode.
+
+```json
+{
+  "id": "nps",
+  "type": "scale",
+  "label": "How likely are you to recommend us?",
+  "config": {
+    "scaleMin": 0,
+    "scaleMax": 10,
+    "scaleLowLabel": "Not likely",
+    "scaleHighLabel": "Very likely"
+  }
+}
+```
+
+---
+
+## File Upload
+
+### file
+
+File upload input.
+
+```json
+{
+  "id": "resume",
+  "type": "file",
+  "label": "Upload your resume",
+  "validation": {
+    "fileTypes": [".pdf", ".doc", ".docx"],
+    "maxFileSize": 5242880
+  }
+}
+```
+
+`maxFileSize` is in bytes. Default: `10485760` (10 MB).
+
+`fileTypes` accepts MIME types (`image/*`, `application/pdf`) or extensions (`.pdf`, `.jpg`).
+
+---
+
+## Display
+
+### statement
+
+Display-only text block. No input collected. Use for instructions, section headers, or legal notices.
+
+```json
+{
+  "id": "intro",
+  "type": "statement",
+  "label": "Before you continue",
+  "description": "Please read our privacy policy before submitting."
+}
+```
+
+### divider
+
+Visual separator. Supported in `classic` and `stepped` modes only. No input collected.
+
+```json
+{
+  "id": "sep1",
+  "type": "divider",
+  "label": ""
+}
+```
+
+---
+
+## Common Field Properties
+
+Every field shares these properties:
+
+| Property           | Type               | Required         | Description                                                             |
+| ------------------ | ------------------ | ---------------- | ----------------------------------------------------------------------- |
+| `id`               | `string`           | Yes              | Unique identifier within the form. Used as the key in submissions.      |
+| `type`             | `FieldType`        | Yes              | One of the 15 types above.                                              |
+| `label`            | `string`           | Yes              | Question text shown to the user.                                        |
+| `description`      | `string`           | No               | Helper text displayed below the label.                                  |
+| `placeholder`      | `string`           | No               | Input placeholder text.                                                 |
+| `required`         | `boolean`          | No               | Default: `false`.                                                       |
+| `options`          | `FieldOption[]`    | For choice types | Array of `{ id, label, value }`.                                        |
+| `validation`       | `FieldValidation`  | No               | See below.                                                              |
+| `conditionalLogic` | `ConditionalLogic` | No               | Show/hide rules. See [Conditional Logic](/docs/core/conditional-logic). |
+| `config`           | `FieldConfig`      | No               | Type-specific config.                                                   |
+
+## Validation Reference
+
+| Property       | Types                       | Description                              |
+| -------------- | --------------------------- | ---------------------------------------- |
+| `minLength`    | `text`, `textarea`          | Minimum character count                  |
+| `maxLength`    | `text`, `textarea`          | Maximum character count                  |
+| `min`          | `number`, `scale`, `rating` | Minimum numeric value                    |
+| `max`          | `number`, `scale`, `rating` | Maximum numeric value                    |
+| `pattern`      | `text`, `email`, `tel`      | Regex string for format validation       |
+| `patternError` | `text`, `email`, `tel`      | Custom error message on pattern mismatch |
+| `fileTypes`    | `file`                      | Allowed MIME types or extensions         |
+| `maxFileSize`  | `file`                      | Max file size in bytes                   |

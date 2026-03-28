@@ -1,0 +1,95 @@
+---
+title: 'Conditional Logic'
+description: 'Using conditional logic in @osforms/react'
+---
+
+Conditional logic is evaluated automatically by `@osforms/react` as the user fills out the form. Hidden fields are skipped in navigation and excluded from the submission payload.
+
+## Types
+
+```ts
+import type {
+  ConditionalLogic,
+  Condition,
+  ConditionOperator,
+} from '@osforms/react';
+```
+
+```ts
+type ConditionOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'not_contains'
+  | 'greater_than'
+  | 'less_than'
+  | 'is_empty'
+  | 'is_not_empty';
+
+interface Condition {
+  fieldId: string;
+  operator: ConditionOperator;
+  value?: string | number; // not needed for is_empty / is_not_empty
+}
+
+interface ConditionalLogic {
+  action: 'show' | 'hide';
+  match: 'all' | 'any'; // AND vs OR
+  conditions: Condition[];
+}
+```
+
+## Usage in FormField
+
+```ts
+import type { FormField } from '@osforms/react';
+
+const followUpField: FormField = {
+  id: 'feedback_details',
+  type: 'textarea',
+  label: 'Tell us more',
+  required: false,
+  conditionalLogic: {
+    action: 'show',
+    match: 'all',
+    conditions: [{ fieldId: 'rating', operator: 'less_than', value: 3 }],
+  },
+};
+```
+
+## How the SDK evaluates conditions
+
+The `@osforms/react` SDK evaluates conditions in real time using the `isFieldVisible` utility:
+
+```ts
+import { isFieldVisible, getVisibleFields } from '@osforms/react';
+// Note: these utils are used internally by useFormState
+```
+
+**Evaluation rules**:
+
+- `equals` / `not_equals` — strict string comparison after coercion (`String(value)`)
+- `contains` / `not_contains` — substring check on stringified value
+- `greater_than` / `less_than` — numeric comparison after `Number()` coercion
+- `is_empty` — `undefined`, `null`, or empty string
+- `is_not_empty` — any other value
+- `match: 'all'` — every condition must be true (AND)
+- `match: 'any'` — at least one condition must be true (OR)
+
+## Accessing visible fields
+
+When using `useFormState` directly, `visibleFields` reflects the current set of visible fields after applying all conditional logic:
+
+```tsx
+import { useFormState, useFormSchema } from '@osforms/react';
+
+const { schema } = useFormSchema('form-slug');
+const [state, actions] = useFormState(schema, endpoint);
+
+// actions.visibleFields — fields visible based on current answers
+// actions.currentField  — the field at state.currentIndex
+```
+
+Hidden fields are automatically filtered out of `visibleFields` and are not included in the submission payload.
+
+For full conditional logic documentation, see [Core / Conditional Logic](/docs/core/conditional-logic).

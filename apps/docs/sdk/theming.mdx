@@ -1,0 +1,110 @@
+---
+title: 'Theming'
+description: 'Customize form appearance in @osforms/react'
+---
+
+`@osforms/react` exposes the full `FormTheme` type for TypeScript consumers. Theme props are merged with the schema theme and the default dark theme.
+
+```ts
+import type { FormTheme } from '@osforms/react';
+```
+
+## FormTheme
+
+```ts
+interface FormTheme {
+  colors?: FormThemeColors;
+  fontFamily?: string;
+  fontSize?: 'sm' | 'md' | 'lg';
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
+  buttonVariant?: 'solid' | 'outline' | 'ghost';
+}
+
+interface FormThemeColors {
+  background?: string; // main background
+  surface?: string; // card / input surface
+  primary?: string; // button fill and accents
+  text?: string; // primary text
+  textSecondary?: string; // helper text, labels
+  border?: string; // input and card borders
+  error?: string; // validation error color
+}
+```
+
+## Priority
+
+Theme values are resolved in this order (highest to lowest):
+
+1. `OSForm` `theme` prop
+2. `FormSchema.theme`
+3. Default dark theme
+
+## Passing themes
+
+```tsx
+<OSForm
+  formId="abc123"
+  theme={{
+    colors: { primary: '#6366f1', background: '#ffffff', text: '#111827' },
+    borderRadius: 'lg',
+  }}
+/>
+```
+
+Only the properties you specify are overridden. All others fall back to the schema theme or default.
+
+## Light theme example
+
+```tsx
+import type { FormTheme } from '@osforms/react';
+
+const lightTheme: FormTheme = {
+  colors: {
+    background: '#ffffff',
+    surface: '#f9fafb',
+    primary: '#111827',
+    text: '#111827',
+    textSecondary: '#6b7280',
+    border: '#e5e7eb',
+    error: '#ef4444',
+  },
+  fontFamily: '"Inter", sans-serif',
+  fontSize: 'md',
+  borderRadius: 'md',
+  buttonVariant: 'solid',
+};
+
+<OSForm formId="abc123" theme={lightTheme} />;
+```
+
+## Custom fonts
+
+Set `fontFamily` to any CSS font-family string. The SDK does not load fonts — ensure the font is loaded in your app (e.g., via Google Fonts or `next/font`):
+
+```tsx
+// app/layout.tsx
+import { Inter } from 'next/font/google';
+const inter = Inter({ subsets: ['latin'] });
+
+// In your form component:
+<OSForm formId="abc123" theme={{ fontFamily: inter.style.fontFamily }} />;
+```
+
+## ConversationalRenderer and ClassicRenderer
+
+When using the low-level renderers directly, pass a resolved theme from `resolveTheme`:
+
+```tsx
+import {
+  ConversationalRenderer,
+  useFormState,
+  useFormSchema,
+} from '@osforms/react';
+
+// resolveTheme is not exported — pass theme overrides via OSForm
+// or construct a ResolvedTheme manually for full control
+```
+
+For custom renderer patterns, see [Hooks](/docs/sdk/hooks).
+
+For a full reference of theme options, see [Core / Theming](/docs/core/theming).

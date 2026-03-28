@@ -1,0 +1,146 @@
+---
+title: 'Conditional Logic'
+description: 'Show or hide fields based on user answers'
+---
+
+Conditional logic lets you show or hide fields based on answers to earlier questions. Rules are evaluated in real time — fields appear and disappear as the user fills out the form.
+
+## Structure
+
+Each field can have one `conditionalLogic` rule:
+
+```json
+{
+  "id": "details",
+  "type": "textarea",
+  "label": "Tell us more",
+  "conditionalLogic": {
+    "action": "show",
+    "match": "all",
+    "conditions": [
+      {
+        "fieldId": "satisfied",
+        "operator": "equals",
+        "value": "no"
+      }
+    ]
+  }
+}
+```
+
+## Properties
+
+| Property     | Type                 | Description                                                     |
+| ------------ | -------------------- | --------------------------------------------------------------- |
+| `action`     | `"show"` \| `"hide"` | Whether to show or hide the field when conditions are met       |
+| `match`      | `"all"` \| `"any"`   | `all` = AND logic (every condition must pass), `any` = OR logic |
+| `conditions` | `Condition[]`        | One or more conditions to evaluate                              |
+
+## Condition Structure
+
+```json
+{
+  "fieldId": "plan_type",
+  "operator": "equals",
+  "value": "pro"
+}
+```
+
+| Property   | Type                | Description                                                                 |
+| ---------- | ------------------- | --------------------------------------------------------------------------- |
+| `fieldId`  | `string`            | The ID of the field whose value is checked                                  |
+| `operator` | `ConditionOperator` | The comparison to perform                                                   |
+| `value`    | `string \| number`  | The value to compare against (not required for `is_empty` / `is_not_empty`) |
+
+## Operators
+
+| Operator       | Description                       | Works With                  |
+| -------------- | --------------------------------- | --------------------------- |
+| `equals`       | Exact match                       | All types                   |
+| `not_equals`   | Does not match                    | All types                   |
+| `contains`     | Value includes the string         | `text`, `textarea`, `email` |
+| `not_contains` | Value does not include the string | `text`, `textarea`, `email` |
+| `greater_than` | Numeric greater than              | `number`, `rating`, `scale` |
+| `less_than`    | Numeric less than                 | `number`, `rating`, `scale` |
+| `is_empty`     | No value entered                  | All types                   |
+| `is_not_empty` | Any value entered                 | All types                   |
+
+## Examples
+
+### Show a follow-up field
+
+Show a text field only when the user selects "Other" from a radio:
+
+```json
+{
+  "id": "role_other",
+  "type": "text",
+  "label": "Please specify your role",
+  "conditionalLogic": {
+    "action": "show",
+    "match": "all",
+    "conditions": [
+      { "fieldId": "role", "operator": "equals", "value": "other" }
+    ]
+  }
+}
+```
+
+### Hide a field based on NPS score
+
+Hide a question unless the NPS score is low:
+
+```json
+{
+  "id": "what_went_wrong",
+  "type": "textarea",
+  "label": "What could we improve?",
+  "conditionalLogic": {
+    "action": "show",
+    "match": "all",
+    "conditions": [{ "fieldId": "nps", "operator": "less_than", "value": 7 }]
+  }
+}
+```
+
+### Multiple conditions (AND)
+
+Show a field only if the user is a Pro customer AND has submitted before:
+
+```json
+{
+  "conditionalLogic": {
+    "action": "show",
+    "match": "all",
+    "conditions": [
+      { "fieldId": "plan", "operator": "equals", "value": "pro" },
+      { "fieldId": "returning", "operator": "equals", "value": "yes" }
+    ]
+  }
+}
+```
+
+### Multiple conditions (OR)
+
+Show a field if the user selected either "email" or "phone":
+
+```json
+{
+  "conditionalLogic": {
+    "action": "show",
+    "match": "any",
+    "conditions": [
+      { "fieldId": "contact_pref", "operator": "equals", "value": "email" },
+      { "fieldId": "contact_pref", "operator": "equals", "value": "phone" }
+    ]
+  }
+}
+```
+
+## How It Works
+
+- Conditions reference fields **by ID** — the `id` property on a `FormField`
+- Fields referenced in conditions must appear **before** the conditional field in the `fields` array
+- Hidden fields are **excluded from submission** — their values are not sent
+- In conversational mode, hidden fields are skipped automatically in the navigation sequence
+- The `statement` and `divider` types are always excluded from submissions regardless of visibility

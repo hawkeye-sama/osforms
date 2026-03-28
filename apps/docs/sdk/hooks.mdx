@@ -1,6 +1,6 @@
 ---
-title: "Hooks"
-description: "Low-level hooks for building custom form UIs"
+title: 'Hooks'
+description: 'Low-level hooks for building custom form UIs'
 ---
 
 ## useFormState
@@ -13,29 +13,74 @@ import { useFormState } from '@osforms/react';
 const [state, actions] = useFormState(schema, endpoint, onComplete, onError);
 ```
 
-### State
+### Parameters
 
-| Field | Type | Description |
-|---|---|---|
-| `answers` | `Record<string, unknown>` | Current field values |
-| `currentIndex` | `number` | Index of the active field |
-| `direction` | `'forward' \| 'backward'` | Last navigation direction (for animations) |
-| `errors` | `Record<string, string>` | Validation errors per field ID |
-| `isSubmitting` | `boolean` | True while the POST is in flight |
-| `isComplete` | `boolean` | True after successful submission |
-| `showWelcome` | `boolean` | True if the welcome screen should be shown |
+| Parameter    | Type                     | Description                                            |
+| ------------ | ------------------------ | ------------------------------------------------------ |
+| `schema`     | `FormSchema \| null`     | Form schema. Pass `null` while loading.                |
+| `endpoint`   | `string`                 | Submission URL (`https://osforms.com/api/v1/f/{slug}`) |
+| `onComplete` | `() => void`             | Called after successful submission                     |
+| `onError`    | `(error: Error) => void` | Called when submission fails                           |
 
-### Actions
+### FormState
 
-| Field | Type | Description |
-|---|---|---|
-| `setAnswer` | `(fieldId, value) => void` | Update a field's value |
-| `advance` | `(overrideValue?) => boolean` | Validate current field and move forward |
-| `back` | `() => void` | Move to the previous field |
-| `submit` | `() => Promise<void>` | Validate all fields and submit |
-| `startForm` | `() => void` | Dismiss the welcome screen |
-| `visibleFields` | `FormField[]` | Fields visible based on conditional logic |
-| `currentField` | `FormField \| undefined` | The currently active field |
+| Field          | Type                      | Description                                                          |
+| -------------- | ------------------------- | -------------------------------------------------------------------- |
+| `answers`      | `Record<string, unknown>` | Current field values keyed by field ID                               |
+| `currentIndex` | `number`                  | Index of the active field in `visibleFields`                         |
+| `direction`    | `'forward' \| 'backward'` | Last navigation direction (use for slide animations)                 |
+| `errors`       | `Record<string, string>`  | Validation errors per field ID. `_form` key holds submission errors. |
+| `isSubmitting` | `boolean`                 | `true` while the POST is in flight                                   |
+| `isComplete`   | `boolean`                 | `true` after successful submission                                   |
+| `showWelcome`  | `boolean`                 | `true` when the welcome screen should be shown                       |
+
+### FormStateActions
+
+| Field           | Type                          | Description                                                               |
+| --------------- | ----------------------------- | ------------------------------------------------------------------------- |
+| `setAnswer`     | `(fieldId, value) => void`    | Update a field's value and clear its error                                |
+| `advance`       | `(overrideValue?) => boolean` | Validate current field and advance. Returns `false` if validation failed. |
+| `back`          | `() => void`                  | Move to the previous field                                                |
+| `submit`        | `() => Promise<void>`         | Validate all fields and POST to the endpoint                              |
+| `startForm`     | `() => void`                  | Dismiss the welcome screen                                                |
+| `visibleFields` | `FormField[]`                 | Fields visible based on current answers and conditional logic             |
+| `currentField`  | `FormField \| undefined`      | The field at `state.currentIndex`                                         |
+
+### Example: custom renderer
+
+```tsx
+import { useFormState, useFormSchema } from '@osforms/react';
+
+function MyForm({ formSlug }: { formSlug: string }) {
+  const { schema, loading } = useFormSchema(formSlug);
+  const [state, actions] = useFormState(
+    schema,
+    `https://osforms.com/api/v1/f/${formSlug}`,
+    () => alert('Submitted!'),
+    (err) => alert(err.message)
+  );
+
+  if (loading) return <p>Loading...</p>;
+  if (state.isComplete) return <p>Thanks!</p>;
+
+  const field = actions.currentField;
+  if (!field) return null;
+
+  return (
+    <div>
+      <label>{field.label}</label>
+      <input
+        value={(state.answers[field.id] as string) ?? ''}
+        onChange={(e) => actions.setAnswer(field.id, e.target.value)}
+      />
+      {state.errors[field.id] && <p>{state.errors[field.id]}</p>}
+      <button onClick={() => actions.advance()}>Next</button>
+    </div>
+  );
+}
+```
+
+---
 
 ## useFormSchema
 
@@ -46,6 +91,18 @@ import { useFormSchema } from '@osforms/react';
 
 const { schema, formName, redirectUrl, loading, error } = useFormSchema(
   'your-form-slug',
-  'https://osforms.com' // optional baseUrl
+  'https://osforms.com' // optional baseUrl override
 );
 ```
+
+### Return value
+
+| Field         | Type                 | Description                               |
+| ------------- | -------------------- | ----------------------------------------- |
+| `schema`      | `FormSchema \| null` | Parsed form schema. `null` while loading. |
+| `formName`    | `string`             | Display name of the form                  |
+| `redirectUrl` | `string`             | Redirect URL configured in form settings  |
+| `loading`     | `boolean`            | `true` while the fetch is in flight       |
+| `error`       | `string \| null`     | Error message if the fetch failed         |
+
+Fetches from: `{baseUrl}/api/v1/f/{formId}/schema`

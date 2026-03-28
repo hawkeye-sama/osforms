@@ -1,32 +1,55 @@
 ---
-title: "Google Sheets"
-description: "Append each form submission as a row in a Google Sheet"
+title: 'Google Sheets'
+description: 'Append each form submission as a new row in a Google Sheet'
 ---
 
 ## Setup
 
 1. Go to **Integrations** in your osforms dashboard
 2. Click **Connect** next to Google Sheets
-3. Sign in with your Google account and grant access
-4. Paste your Google Sheet URL or ID
-5. Optionally specify a sheet name (defaults to the first sheet)
-6. Save
+3. Click **Sign in with Google** and authorize access
+4. Paste your Google Sheet URL or Sheet ID
+5. Optionally enter a sheet tab name (defaults to the first tab)
+6. Click **Save**
 
 ## How columns work
 
-osforms automatically detects your sheet's header row and maps submission fields to the correct columns. If a field doesn't have a matching column, it's added to the end of the header row automatically.
+osforms reads the header row of your sheet and maps submission fields to matching columns. If a field key doesn't match an existing column, it's automatically appended to the header row on the next submission.
 
-Two system columns are always added:
+Two system columns are always appended if not already present:
 
-| Column | Value |
-|---|---|
+| Column          | Value                              |
+| --------------- | ---------------------------------- |
 | `Submission ID` | MongoDB ObjectId of the submission |
-| `Submitted At` | ISO 8601 timestamp |
+| `Submitted At`  | ISO 8601 timestamp                 |
 
 ## Field key mapping
 
-Column headers match the **field key** set in your form builder (e.g. `full_name`, `email`, `message`). You can customize field keys in the form builder under each field's settings.
+Column headers match the **field ID** from your form schema (e.g. `full_name`, `email`, `message`). Set field IDs intentionally in the form builder — they become the column names in your sheet.
+
+**Example**: A field with `id: "company_name"` maps to a column titled `company_name`.
+
+## Setting up the sheet
+
+You don't need to pre-create columns. Submit once and osforms will create all the columns for you. After the first submission your sheet will look like:
+
+| name       | email            | message | Submission ID | Submitted At             |
+| ---------- | ---------------- | ------- | ------------- | ------------------------ |
+| Jane Smith | jane@example.com | Hello!  | 64f1a...      | 2026-03-27T12:00:00.000Z |
+
+You can then rename columns — as long as the header text still matches the field ID, mapping continues to work.
+
+## Permissions
+
+The Google account you connect must have **Editor** access to the spreadsheet. Service accounts are not supported — connect a personal or workspace Google account.
+
+## Failure handling
+
+If the Sheets API call fails (e.g. revoked OAuth token, sheet deleted), the integration is marked as failed and you'll receive an in-app notification and email alert.
+
+To reconnect, go to **Integrations** and click **Reconnect Google Account**.
 
 <Note>
-  The Google account you connect must have edit access to the spreadsheet.
+  Google Sheets API calls count against your Google account's free quota (500
+  requests/100 seconds). This is rarely a concern for standard form volumes.
 </Note>

@@ -1,0 +1,120 @@
+---
+title: 'Integrations'
+description: 'Manage integrations via the REST API'
+---
+
+All endpoints require authentication via JWT cookie or `Authorization: Bearer <token>` header.
+
+## List integrations
+
+```
+GET /api/v1/integrations
+```
+
+Returns all integrations for the authenticated user.
+
+```json
+[
+  {
+    "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
+    "type": "EMAIL",
+    "enabled": true,
+    "createdAt": "2026-03-01T00:00:00.000Z"
+  }
+]
+```
+
+## Create an integration
+
+```
+POST /api/v1/integrations
+```
+
+```json
+{
+  "type": "EMAIL",
+  "config": {
+    "apiKey": "re_xxxxxxxxxxxx",
+    "fromEmail": "you@yourdomain.com",
+    "toEmail": "you@yourdomain.com",
+    "subject": "New form submission"
+  }
+}
+```
+
+**Integration types**: `EMAIL`, `WEBHOOK`, `GOOGLE_SHEETS`
+
+### EMAIL config
+
+| Field       | Required | Description                                             |
+| ----------- | -------- | ------------------------------------------------------- |
+| `apiKey`    | Yes      | Resend API key (`re_...`)                               |
+| `fromEmail` | Yes      | Sender address on your verified Resend domain           |
+| `toEmail`   | Yes      | Recipient address for submission notifications          |
+| `subject`   | No       | Email subject. Default: `"New submission: {form name}"` |
+
+### WEBHOOK config
+
+| Field           | Required       | Description                                                   |
+| --------------- | -------------- | ------------------------------------------------------------- |
+| `url`           | Yes            | HTTPS endpoint URL                                            |
+| `signingSecret` | Auto-generated | HMAC-SHA256 signing key — returned on creation, not updatable |
+
+### GOOGLE_SHEETS config
+
+Google Sheets integrations are configured via OAuth. Use the dashboard UI at `/dashboard/integrations` to connect your Google account.
+
+## Update an integration
+
+```
+PATCH /api/v1/integrations/{id}
+```
+
+```json
+{
+  "enabled": false
+}
+```
+
+Updateable fields: `enabled`, `config` (partial updates supported).
+
+Config fields are merged, not replaced. Pass only the fields you want to change.
+
+## Delete an integration
+
+```
+DELETE /api/v1/integrations/{id}
+```
+
+Returns `204 No Content`.
+
+## Test an integration
+
+```
+POST /api/v1/integrations/{id}/test
+```
+
+Sends a sample payload through the integration to verify it's configured correctly.
+
+```json
+{
+  "success": true,
+  "message": "Test email sent"
+}
+```
+
+## Check integration status
+
+```
+GET /api/v1/integrations/{id}/status
+```
+
+```json
+{
+  "status": "healthy",
+  "lastRun": "2026-03-27T10:00:00.000Z",
+  "lastError": null
+}
+```
+
+**Status values**: `healthy`, `failing`, `never_run`

@@ -3,16 +3,13 @@
   "theme": "mint",
   "name": "osforms",
   "colors": {
-    "primary": "#ffffff",
-    "light": "#ffffff",
-    "dark": "#ffffff",
-    "background": {
-      "light": "#ffffff",
-      "dark": "#0a0a0a"
-    }
+    "primary": "#000000",
+    "light": "#FFFFFF",
+    "dark": "#333333"
   },
   "appearance": {
-    "default": "dark"
+    "default": "dark",
+    "strict": true
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -24,13 +21,13 @@
   "navbar": {
     "links": [
       {
-        "name": "GitHub",
+        "label": "GitHub",
         "href": "https://github.com/hawkeye-sama/osforms"
       }
     ],
     "primary": {
       "type": "button",
-      "name": "Get Started Free",
+      "label": "Get Started Free →",
       "href": "https://osforms.com/signup"
     }
   },
@@ -38,12 +35,12 @@
     "global": {
       "anchors": [
         {
-          "name": "GitHub",
+          "anchor": "GitHub",
           "icon": "github",
           "href": "https://github.com/hawkeye-sama/osforms"
         },
         {
-          "name": "npm",
+          "anchor": "npm",
           "icon": "npm",
           "href": "https://www.npmjs.com/package/@osforms/react"
         }
@@ -56,6 +53,14 @@
           {
             "group": "Getting Started",
             "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "core/field-types",
+              "core/conditional-logic",
+              "core/theming"
+            ]
           },
           {
             "group": "Integrations",
@@ -77,6 +82,14 @@
           {
             "group": "Forms",
             "pages": ["api-reference/forms"]
+          },
+          {
+            "group": "Integrations",
+            "pages": ["api-reference/integrations"]
+          },
+          {
+            "group": "Auth",
+            "pages": ["api-reference/auth"]
           }
         ]
       },
@@ -90,6 +103,10 @@
           {
             "group": "Components",
             "pages": ["sdk/osform", "sdk/hooks"]
+          },
+          {
+            "group": "Advanced",
+            "pages": ["sdk/field-types", "sdk/theming", "sdk/conditional-logic"]
           }
         ]
       }

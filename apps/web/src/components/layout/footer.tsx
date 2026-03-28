@@ -28,6 +28,14 @@ export function Footer() {
           </div>
           <nav className="flex flex-col gap-2">
             <Link
+              href="/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+            >
+              Documentation
+            </Link>
+            <Link
               href="https://github.com/hawkeye-sama/osforms"
               target="_blank"
               rel="noopener noreferrer"
