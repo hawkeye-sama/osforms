@@ -3,9 +3,9 @@ title: "Introduction"
 description: "Embed forms directly in your React app with @osforms/react"
 ---
 
-`@osforms/react` is the official React SDK for osforms. It renders forms in two modes:
+`@osforms/react` is the official React SDK for osforms. It renders forms fetched from the osforms API — or forms you define locally — in two modes:
 
-- **Conversational** — Typeform-style, one field at a time with animated transitions
+- **Conversational** — one field at a time, Typeform-style, with animated transitions
 - **Classic** — all fields on one page, standard form layout
 
 ## Installation
@@ -14,7 +14,7 @@ description: "Embed forms directly in your React app with @osforms/react"
 npm install @osforms/react framer-motion
 ```
 
-`framer-motion` is required for animations in conversational mode.
+`framer-motion` is a required peer dependency for animations in conversational mode.
 
 ## Basic usage
 
@@ -27,16 +27,17 @@ export default function ContactPage() {
       formId="your-form-slug"
       mode="conversational"
       fullScreen
+      onComplete={() => console.log('submitted!')}
     />
   );
 }
 ```
 
-The component fetches the form schema from the osforms API automatically using `formId`.
+The `formId` prop fetches the form schema automatically from `https://osforms.com/api/v1/f/{formId}/schema`.
 
 ## Headless usage
 
-Pass a schema directly without an API fetch:
+Pass a schema directly — no API fetch required:
 
 ```tsx
 import { OSForm } from '@osforms/react';
@@ -59,3 +60,39 @@ export default function ContactPage() {
   );
 }
 ```
+
+## What's included
+
+| Export | Description |
+|---|---|
+| `OSForm` | Main component — renders full form with schema fetch |
+| `ConversationalRenderer` | Low-level conversational mode renderer |
+| `ClassicRenderer` | Low-level classic mode renderer |
+| `useFormState` | Core state hook — answers, navigation, submission |
+| `useFormSchema` | Schema fetching hook |
+| All types from `@osforms/types` | `FormSchema`, `FormField`, `FormTheme`, etc. |
+
+## Modes overview
+
+### Conversational
+
+```tsx
+<OSForm formId="abc123" mode="conversational" fullScreen />
+```
+
+- One field displayed at a time
+- Keyboard navigation (`Enter` to advance, `Backspace` to go back)
+- Animated field transitions via framer-motion
+- Auto-advances on selection for `radio`, `rating`, and `scale` fields (configurable)
+- Welcome and thank-you screens supported
+
+### Classic
+
+```tsx
+<OSForm formId="abc123" mode="classic" />
+```
+
+- All visible fields on one page
+- Standard form layout
+- Submit button at the bottom
+- Scrolls to first error on validation failure

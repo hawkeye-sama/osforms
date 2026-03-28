@@ -7,7 +7,7 @@ osforms is a form backend SaaS that stores submissions and routes them to your o
 
 ## Why osforms
 
-Every competitor (Formspree, FormBold, Basin) paywalls integrations behind \$5–15/month even though your own API keys power them. osforms flips that — 100 free submissions/month with all integrations included.
+Every competitor (Formspree, FormBold, Basin) paywalls integrations behind \$5–15/month even though your own API keys power them. osforms flips that — **100 free submissions/month with all integrations included**.
 
 <CardGroup cols={2}>
   <Card title="Quick Start" icon="rocket" href="/docs/quickstart">
@@ -19,8 +19,8 @@ Every competitor (Formspree, FormBold, Basin) paywalls integrations behind \$5�
   <Card title="Google Sheets" icon="table" href="/docs/integrations/google-sheets">
     Append submissions to a spreadsheet automatically
   </Card>
-  <Card title="Webhooks" icon="webhook" href="/docs/integrations/webhooks">
-    POST submissions to any endpoint with HMAC signing
+  <Card title="React SDK" icon="react" href="/docs/sdk/introduction">
+    Embed conversational or classic forms in your app
   </Card>
 </CardGroup>
 
@@ -41,3 +41,23 @@ Every competitor (Formspree, FormBold, Basin) paywalls integrations behind \$5�
 ```
 
 No JavaScript required. Works with any HTML form.
+
+## Key features
+
+- **15 field types** — text, email, radio, scale, rating, file, and more
+- **Conditional logic** — show/hide fields based on answers
+- **3 integrations** — Resend email, Google Sheets, custom webhooks
+- **React SDK** — conversational (Typeform-style) and classic modes
+- **CAPTCHA support** — Google reCAPTCHA, hCaptcha, Cloudflare Turnstile
+- **Webhook signing** — HMAC-SHA256 on every webhook delivery
+- **CORS control** — per-form origin allowlist
+- **Rate limiting** — configurable per form, per IP
+
+## Pricing
+
+| Plan | Submissions | Integrations |
+|---|---|---|
+| Free | 100/month | All included |
+| Pro | 2,000/month | All included |
+
+No per-integration fees. You pay your own provider costs directly (e.g. Resend's \$0.10/1,000 emails).

@@ -5,17 +5,24 @@ description: "Get your form backend running in 2 minutes"
 
 ## 1. Create an account
 
-Sign up at [osforms.com](https://osforms.com/signup). Verify your email with the OTP sent to your inbox.
+Sign up at [osforms.com](https://osforms.com/signup). You'll receive a 6-digit OTP by email — enter it to verify your account.
 
-## 2. Create a form
+## 2. Complete onboarding
 
-From your dashboard, click **New Form**. Give it a name — you'll get a unique endpoint URL like:
+Three quick steps:
+1. **Profile** — name, website, role
+2. **Integrations** — connect Resend, Google Sheets, or webhooks
+3. **Test** — submit a test form to verify everything works
+
+## 3. Create a form
+
+From your dashboard click **New Form**. You'll get a unique endpoint URL:
 
 ```
 https://osforms.com/api/v1/f/abc123def456
 ```
 
-## 3. Point your HTML form at the endpoint
+## 4. Point your HTML form at the endpoint
 
 ```html
 <form action="https://osforms.com/api/v1/f/abc123def456" method="POST">
@@ -26,24 +33,32 @@ https://osforms.com/api/v1/f/abc123def456
 </form>
 ```
 
-On success, the user is redirected to your form's redirect URL (configurable in settings).
+On success the user is redirected to your form's redirect URL (configurable in form settings). For JSON clients, returns `{ "success": true }`.
 
-## 4. Configure integrations
+## 5. Configure integrations
 
-Go to **Integrations** in your dashboard and connect:
+Go to **Integrations** in your form and connect:
 
-- **Resend** — paste your Resend API key to receive submissions by email
-- **Google Sheets** — connect via OAuth to append each submission as a row
-- **Webhook** — enter any URL to receive a signed POST on every submission
+<CardGroup cols={3}>
+  <Card title="Resend" icon="envelope" href="/docs/integrations/resend">
+    Email notifications on every submission
+  </Card>
+  <Card title="Google Sheets" icon="table" href="/docs/integrations/google-sheets">
+    Auto-append rows to a spreadsheet
+  </Card>
+  <Card title="Webhook" icon="webhook" href="/docs/integrations/webhooks">
+    POST to any URL with HMAC signing
+  </Card>
+</CardGroup>
 
-All integrations run in parallel in the background — your users get an instant response regardless.
+All integrations run in parallel in the background — users get an instant response regardless.
 
-## 5. (Optional) Use the React SDK
+## 6. (Optional) Use the React SDK
 
-For conversational or classic embedded forms, install the SDK:
+For embedded or conversational forms:
 
 ```bash
-npm install @osforms/react
+npm install @osforms/react framer-motion
 ```
 
 ```tsx
@@ -62,5 +77,5 @@ export default function ContactPage() {
 ```
 
 <Note>
-  `framer-motion` is required as a peer dependency: `npm install framer-motion`
+  `framer-motion` is required as a peer dependency for animations.
 </Note>

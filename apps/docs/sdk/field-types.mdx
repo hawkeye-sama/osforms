@@ -1,0 +1,192 @@
+---
+title: "Field Types"
+description: "Field type definitions and schema for @osforms/react"
+---
+
+All field type definitions are exported from `@osforms/react`. You can import them directly for TypeScript type safety when building headless forms.
+
+```ts
+import type {
+  FormField,
+  FieldType,
+  FieldOption,
+  FieldValidation,
+  FieldConfig,
+} from '@osforms/react';
+```
+
+## FieldType
+
+```ts
+type FieldType =
+  | 'text'
+  | 'email'
+  | 'number'
+  | 'tel'
+  | 'url'
+  | 'textarea'
+  | 'select'
+  | 'radio'
+  | 'checkbox'
+  | 'date'
+  | 'file'
+  | 'rating'
+  | 'scale'
+  | 'statement'
+  | 'divider';
+```
+
+## FormField
+
+```ts
+interface FormField {
+  id: string;
+  type: FieldType;
+  label: string;
+  description?: string;
+  placeholder?: string;
+  required: boolean;
+  options?: FieldOption[];
+  validation?: FieldValidation;
+  conditionalLogic?: ConditionalLogic;
+  config?: FieldConfig;
+}
+```
+
+## FieldOption
+
+Used by `select`, `radio`, and `checkbox` fields.
+
+```ts
+interface FieldOption {
+  id: string;     // nanoid(6)
+  label: string;  // display text shown to user
+  value: string;  // value submitted (defaults to label if not set)
+}
+```
+
+## FieldValidation
+
+```ts
+interface FieldValidation {
+  minLength?: number;      // text, textarea
+  maxLength?: number;      // text, textarea
+  min?: number;            // number, scale, rating
+  max?: number;            // number, scale, rating
+  pattern?: string;        // regex (text, email, tel)
+  patternError?: string;   // custom error on pattern mismatch
+  fileTypes?: string[];    // file: e.g. ['image/*', '.pdf']
+  maxFileSize?: number;    // file: bytes (default 10_485_760 = 10 MB)
+}
+```
+
+## FieldConfig
+
+Type-specific configuration options.
+
+```ts
+interface FieldConfig {
+  // rating
+  maxRating?: number;
+  ratingIcon?: 'star' | 'heart' | 'thumb';
+
+  // scale
+  scaleMin?: number;
+  scaleMax?: number;
+  scaleLowLabel?: string;   // e.g. "Not likely"
+  scaleHighLabel?: string;  // e.g. "Very likely"
+
+  // textarea
+  rows?: number;            // default: 4
+
+  // select
+  searchable?: boolean;
+
+  // checkbox / radio
+  layout?: 'vertical' | 'horizontal' | 'grid';
+
+  // conversational mode: auto-advance after selection
+  // default: true for radio, rating, and scale
+  autoAdvance?: boolean;
+}
+```
+
+---
+
+## Building a Headless Form
+
+```tsx
+import { OSForm } from '@osforms/react';
+import type { FormSchema } from '@osforms/react';
+
+const schema: FormSchema = {
+  mode: 'conversational',
+  fields: [
+    {
+      id: 'name',
+      type: 'text',
+      label: 'What\'s your name?',
+      required: true,
+      validation: { minLength: 2 },
+    },
+    {
+      id: 'role',
+      type: 'radio',
+      label: 'What\'s your role?',
+      required: true,
+      options: [
+        { id: 'dev', label: 'Developer', value: 'developer' },
+        { id: 'design', label: 'Designer', value: 'designer' },
+        { id: 'pm', label: 'Product Manager', value: 'pm' },
+        { id: 'other', label: 'Other', value: 'other' },
+      ],
+    },
+    {
+      id: 'role_other',
+      type: 'text',
+      label: 'Please specify',
+      conditionalLogic: {
+        action: 'show',
+        match: 'all',
+        conditions: [{ fieldId: 'role', operator: 'equals', value: 'other' }],
+      },
+    },
+    {
+      id: 'nps',
+      type: 'scale',
+      label: 'How likely are you to recommend us?',
+      config: {
+        scaleMin: 0,
+        scaleMax: 10,
+        scaleLowLabel: 'Not likely',
+        scaleHighLabel: 'Very likely',
+      },
+    },
+  ],
+  welcomeScreen: {
+    enabled: true,
+    title: 'Quick survey',
+    description: 'Takes less than 2 minutes.',
+    buttonLabel: 'Start',
+  },
+  thankYouScreen: {
+    enabled: true,
+    title: 'Thanks!',
+    description: 'Your response has been recorded.',
+  },
+};
+
+export default function SurveyPage() {
+  return (
+    <OSForm
+      schema={schema}
+      endpoint="https://osforms.com/api/v1/f/your-slug"
+      mode="conversational"
+      fullScreen
+      onComplete={() => console.log('done')}
+    />
+  );
+}
+```
+
+For a full reference of all field types, see [Core / Field Types](/docs/core/field-types).

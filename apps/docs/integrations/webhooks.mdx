@@ -7,9 +7,9 @@ description: "POST submissions to any URL with HMAC-SHA256 request signing"
 
 1. Go to **Integrations** in your osforms dashboard
 2. Click **Connect** next to Webhook
-3. Enter your endpoint URL
-4. Copy the **signing secret** — store it securely
-5. Save
+3. Enter your endpoint URL (must be HTTPS)
+4. Copy the **signing secret** and store it securely — it's shown once
+5. Click **Save**
 
 ## Request format
 
@@ -29,6 +29,8 @@ osforms sends a `POST` request with `Content-Type: application/json`:
 }
 ```
 
+`data` keys match the **field IDs** set in your form schema.
+
 ## Verifying signatures
 
 Every request includes an `X-osforms-Signature-256` header:
@@ -37,15 +39,21 @@ Every request includes an `X-osforms-Signature-256` header:
 X-osforms-Signature-256: sha256=<hex>
 ```
 
+The signature is computed as `HMAC-SHA256(requestBody, signingSecret)` where `requestBody` is the raw JSON string.
+
 Verify it in your endpoint:
 
 ```ts
 import crypto from 'crypto';
 
-function verifySignature(body: string, signature: string, secret: string): boolean {
+function verifySignature(
+  rawBody: string,
+  signature: string,
+  secret: string
+): boolean {
   const expected = 'sha256=' + crypto
     .createHmac('sha256', secret)
-    .update(body)
+    .update(rawBody)
     .digest('hex');
 
   return crypto.timingSafeEqual(
@@ -53,12 +61,34 @@ function verifySignature(body: string, signature: string, secret: string): boole
     Buffer.from(expected)
   );
 }
+
+// Express example
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['x-osforms-signature-256'] as string;
+  if (!verifySignature(req.body.toString(), sig, process.env.WEBHOOK_SECRET!)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  // Process the submission...
+  res.json({ ok: true });
+});
 ```
 
 <Warning>
   Always verify the signature before processing a webhook. Use `timingSafeEqual` to prevent timing attacks.
 </Warning>
 
+## Retry behavior
+
+Webhooks do not automatically retry on failure. If your endpoint returns a non-2xx status or times out:
+
+- The delivery is marked as failed in the integration log
+- You receive an in-app notification and email alert
+- You can view the error in **Submissions → View Logs**
+
 ## Timeout
 
-Webhook requests time out after **30 seconds**. If your endpoint doesn't respond in time, the delivery is marked as failed and you'll receive an in-app notification.
+Webhook requests time out after **30 seconds**. Ensure your endpoint responds within this window.
+
+## Testing
+
+Click **Send Test** in the integration settings to send a sample payload to your endpoint and verify your signature verification logic.

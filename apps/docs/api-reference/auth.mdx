@@ -1,0 +1,145 @@
+---
+title: "Auth"
+description: "Authentication endpoints"
+---
+
+osforms uses email/password authentication with OTP verification. JWTs are issued in httpOnly cookies (`ff_token`, 7-day expiry) and also accepted as `Authorization: Bearer <token>` for API usage.
+
+## Sign up
+
+```
+POST /api/auth/signup
+```
+
+```json
+{
+  "email": "you@example.com",
+  "password": "your-password"
+}
+```
+
+Creates an account and sends a 6-digit OTP to the provided email address. The account is not active until the OTP is verified.
+
+```json
+{ "message": "Verification email sent" }
+```
+
+## Verify email
+
+```
+POST /api/auth/verify-email
+```
+
+```json
+{
+  "email": "you@example.com",
+  "code": "123456"
+}
+```
+
+Verifies the OTP. On success, issues a JWT in an httpOnly cookie and returns the user object.
+
+```json
+{
+  "user": {
+    "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
+    "email": "you@example.com",
+    "isVerified": true,
+    "onboardingComplete": false
+  }
+}
+```
+
+OTPs expire after **30 minutes**. If yours has expired, use the resend endpoint below.
+
+## Resend OTP
+
+```
+POST /api/auth/resend-otp
+```
+
+```json
+{ "email": "you@example.com" }
+```
+
+Generates a new 6-digit OTP and resends the verification email.
+
+## Log in
+
+```
+POST /api/auth/login
+```
+
+```json
+{
+  "email": "you@example.com",
+  "password": "your-password"
+}
+```
+
+Returns the authenticated user and sets the `ff_token` JWT cookie.
+
+```json
+{
+  "user": {
+    "_id": "...",
+    "email": "you@example.com",
+    "isVerified": true,
+    "onboardingComplete": true
+  }
+}
+```
+
+| Status | Meaning |
+|---|---|
+| `200` | Login successful |
+| `401` | Invalid email or password |
+| `403` | Email not verified |
+
+## Log out
+
+```
+POST /api/auth/logout
+```
+
+Clears the `ff_token` cookie. No body required.
+
+## Get current user
+
+```
+GET /api/auth/me
+```
+
+Returns the currently authenticated user from the JWT.
+
+```json
+{
+  "user": {
+    "_id": "...",
+    "email": "you@example.com",
+    "name": "Jane Smith",
+    "isVerified": true,
+    "onboardingComplete": true,
+    "monthlySubmissionCount": 42,
+    "monthlySubmissionLimit": 100
+  }
+}
+```
+
+Returns `401` if not authenticated.
+
+## Google OAuth (Google Sheets)
+
+Google OAuth is used to grant access to Google Sheets for the Sheets integration. It is not used for account authentication.
+
+```
+GET /api/auth/google/login
+```
+
+Redirects to Google's consent screen. After approval, redirects back to:
+
+```
+GET /api/auth/google/callback
+```
+
+Stores the OAuth tokens (encrypted) for use by the Google Sheets integration.

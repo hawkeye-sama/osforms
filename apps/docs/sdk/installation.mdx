@@ -6,34 +6,75 @@ description: "Install and configure @osforms/react"
 ## Requirements
 
 - React 18 or later
-- framer-motion 11 or later
+- framer-motion 11 or later (peer dependency)
 
 ## Install
 
-```bash
+<CodeGroup>
+```bash npm
 npm install @osforms/react framer-motion
 ```
 
-```bash
+```bash pnpm
 pnpm add @osforms/react framer-motion
 ```
 
-```bash
+```bash yarn
 yarn add @osforms/react framer-motion
 ```
+</CodeGroup>
 
 ## TypeScript
 
-Types are included — no separate `@types` package needed.
+Types are bundled — no separate `@types` package needed.
 
-## Next.js
+All types from `@osforms/types` are re-exported from `@osforms/react`:
 
-Works out of the box with Next.js App Router. No special configuration required.
+```ts
+import type {
+  FormSchema,
+  FormField,
+  FormTheme,
+  FieldType,
+  ConditionalLogic,
+} from '@osforms/react';
+```
 
-If you're using the Pages Router, mark the component as a client component:
+## Next.js (App Router)
+
+Works out of the box. Add `'use client'` when using in a Server Component file:
 
 ```tsx
-'use client'; // not needed in Pages Router, already client-side
+'use client';
 
 import { OSForm } from '@osforms/react';
+
+export default function ContactPage() {
+  return <OSForm formId="abc123" mode="conversational" fullScreen />;
+}
 ```
+
+## Next.js (Pages Router)
+
+No special configuration needed — all files in `pages/` are client-side by default:
+
+```tsx
+import { OSForm } from '@osforms/react';
+
+export default function ContactPage() {
+  return <OSForm formId="abc123" />;
+}
+```
+
+## Vite / CRA
+
+Works without additional configuration.
+
+## Bundle size
+
+| What | Size |
+|---|---|
+| `@osforms/react` (gzipped) | ~25 kB |
+| `framer-motion` (gzipped) | ~40 kB |
+
+`framer-motion` is not bundled into `@osforms/react` — it's a peer dependency that is installed separately and deduplicated by your bundler if already used in your project.
