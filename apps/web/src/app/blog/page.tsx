@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { formatDate, getAllPosts } from '@/lib/blog';
@@ -50,24 +51,23 @@ export default function BlogPage() {
             rel="noopener noreferrer"
             className="group mb-8 block"
           >
-            <article className="border-border bg-card/40 hover:bg-card/70 relative overflow-hidden rounded-2xl border p-8 transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,255,255,0.05)] sm:p-10">
+            <article className="border-border bg-card/40 hover:bg-card/70 relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,255,255,0.05)]">
               {/* top accent line */}
               <div className="from-border via-foreground/20 to-border absolute inset-x-0 top-0 h-px bg-linear-to-r" />
 
-              <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex-1">
+              <div className="flex flex-col lg:flex-row">
+                {/* Text side */}
+                <div className="flex flex-1 flex-col justify-center p-8 sm:p-10">
                   <div className="mb-4 flex flex-wrap items-center gap-3">
                     <span
                       className={`rounded-md border px-2.5 py-0.5 text-xs font-medium ${CATEGORY_STYLES[featured.category] ?? CATEGORY_STYLES.Build}`}
                     >
                       {featured.category}
                     </span>
-                    <span className="text-muted-foreground text-sm">
-                      Latest
-                    </span>
+                    <span className="text-muted-foreground text-sm">Latest</span>
                   </div>
 
-                  <h2 className="text-foreground mb-3 text-2xl leading-snug font-bold tracking-tight transition-colors group-hover:opacity-80 sm:text-3xl">
+                  <h2 className="text-foreground mb-3 text-2xl font-bold leading-snug tracking-tight transition-colors group-hover:opacity-80 sm:text-3xl">
                     {featured.title}
                   </h2>
                   <p className="text-muted-foreground text-base leading-relaxed">
@@ -75,9 +75,7 @@ export default function BlogPage() {
                   </p>
 
                   <div className="text-muted-foreground mt-6 flex flex-wrap items-center gap-4 text-sm">
-                    <time dateTime={featured.date}>
-                      {formatDate(featured.date)}
-                    </time>
+                    <time dateTime={featured.date}>{formatDate(featured.date)}</time>
                     <span>·</span>
                     <span>{featured.readingTime}</span>
                     {featured.tags.length > 0 && (
@@ -96,11 +94,23 @@ export default function BlogPage() {
                       </>
                     )}
                   </div>
+
+                  <span className="text-muted-foreground group-hover:text-foreground mt-6 inline-flex w-fit items-center gap-1 text-sm transition-colors">
+                    Read article →
+                  </span>
                 </div>
 
-                <span className="text-muted-foreground group-hover:text-foreground hidden shrink-0 text-sm transition-colors sm:block sm:pt-1">
-                  Read →
-                </span>
+                {/* Cover image side */}
+                {featured.coverImage && (
+                  <div className="border-border/40 relative hidden h-64 w-full overflow-hidden border-t lg:block lg:h-auto lg:w-96 lg:border-t-0 lg:border-l xl:w-120">
+                    <Image
+                      src={featured.coverImage}
+                      alt={featured.title}
+                      fill
+                      className="object-cover object-left opacity-80 transition-opacity duration-300 group-hover:opacity-100"
+                    />
+                  </div>
+                )}
               </div>
             </article>
           </Link>
@@ -117,33 +127,42 @@ export default function BlogPage() {
                 rel="noopener noreferrer"
                 className="group block"
               >
-                <article className="border-border bg-card/40 hover:bg-card/70 flex h-full flex-col rounded-xl border p-6 transition-all duration-300 hover:shadow-[0_0_24px_rgba(255,255,255,0.04)]">
-                  <div className="mb-4 flex items-center justify-between">
-                    <span
-                      className={`rounded-md border px-2 py-0.5 text-xs font-medium ${CATEGORY_STYLES[post.category] ?? CATEGORY_STYLES.Build}`}
-                    >
-                      {post.category}
-                    </span>
-                    <time
-                      dateTime={post.date}
-                      className="text-muted-foreground text-xs"
-                    >
-                      {formatDate(post.date)}
-                    </time>
-                  </div>
+                <article className="border-border bg-card/40 hover:bg-card/70 flex h-full flex-col overflow-hidden rounded-xl border transition-all duration-300 hover:shadow-[0_0_24px_rgba(255,255,255,0.04)]">
+                  {/* Cover image thumbnail */}
+                  {post.coverImage && (
+                    <div className="border-border/40 relative h-40 w-full overflow-hidden border-b">
+                      <Image
+                        src={post.coverImage}
+                        alt={post.title}
+                        fill
+                        className="object-cover object-left opacity-80 transition-opacity duration-300 group-hover:opacity-100"
+                      />
+                    </div>
+                  )}
 
-                  <h2 className="text-foreground mb-2 flex-1 text-base leading-snug font-semibold tracking-tight group-hover:opacity-80">
-                    {post.title}
-                  </h2>
-                  <p className="text-muted-foreground mb-4 line-clamp-2 text-sm leading-relaxed">
-                    {post.description}
-                  </p>
+                  <div className="flex flex-1 flex-col p-6">
+                    <div className="mb-4 flex items-center justify-between">
+                      <span
+                        className={`rounded-md border px-2 py-0.5 text-xs font-medium ${CATEGORY_STYLES[post.category] ?? CATEGORY_STYLES.Build}`}
+                      >
+                        {post.category}
+                      </span>
+                      <time dateTime={post.date} className="text-muted-foreground text-xs">
+                        {formatDate(post.date)}
+                      </time>
+                    </div>
 
-                  <div className="text-muted-foreground flex items-center justify-between text-xs">
-                    <span>{post.readingTime}</span>
-                    <span className="group-hover:text-foreground transition-colors">
-                      Read →
-                    </span>
+                    <h2 className="text-foreground mb-2 flex-1 text-base font-semibold leading-snug tracking-tight group-hover:opacity-80">
+                      {post.title}
+                    </h2>
+                    <p className="text-muted-foreground mb-4 line-clamp-2 text-sm leading-relaxed">
+                      {post.description}
+                    </p>
+
+                    <div className="text-muted-foreground flex items-center justify-between text-xs">
+                      <span>{post.readingTime}</span>
+                      <span className="group-hover:text-foreground transition-colors">Read →</span>
+                    </div>
                   </div>
                 </article>
               </Link>

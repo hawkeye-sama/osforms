@@ -1,16 +1,31 @@
 ---
 title: "How to Add Email Notifications to HTML Forms (Without a Backend)"
-description: "Learn how to point your HTML form at osforms and get email notifications via Resend — zero server code required."
+description: "Learn how to point your HTML form at osforms and get email notifications via Resend — zero server code, zero monthly integration fees."
 date: "2026-04-20"
+dateModified: "2026-04-27"
 author: "osforms Team"
 tags: ["tutorial", "resend", "email", "html"]
 readingTime: "5 min read"
 category: "Integrate"
+seoTitle: "HTML Form Email Notifications with Resend | osforms"
+focusKeyphrase: "HTML form email notifications"
+coverImage: "/content/images/html-form-email-notifications-cover.png"
+faq:
+  - question: "Does this work with React and Next.js, not just plain HTML?"
+    answer: "Yes. Use the standard HTML form tag in any framework, or POST JSON via fetch or axios. osforms handles both application/x-www-form-urlencoded and application/json content types."
+  - question: "What happens if Resend is down when a submission arrives?"
+    answer: "The submission is stored immediately regardless. If the Resend call fails, you get an in-app notification in the osforms dashboard with the error so you can review the submission manually."
+  - question: "Can I send notifications to multiple email addresses?"
+    answer: "Yes. Set up multiple email integrations pointing to different addresses, or configure your Resend account to forward to a distribution list. osforms runs all integrations in parallel per submission."
+  - question: "Is the honeypot field visible to users?"
+    answer: "No. Add it as a hidden input with CSS (display: none). Real users never see or fill it. Bots that auto-fill all fields get caught by the mismatch and their submissions are silently discarded."
+  - question: "What is the difference between osforms and using Resend directly?"
+    answer: "Resend requires server-side code to make the API call. osforms is that server code. You point your HTML form at an endpoint and get submission storage, integration logs, and spam protection with zero backend work on your side."
 ---
 
 Every web app has at least one form. Contact forms, waitlist signups, feedback widgets. And every time you ship one, you need the same thing: **get notified when someone fills it out**.
 
-The usual path is painful. You stand up a server, wire up an email provider, handle errors, manage retries. Or you sign up for Formspree and hit a paywall the moment you want email forwarding.
+The usual path for HTML form email notifications is painful. You stand up a server, wire up an email provider, handle errors, manage retries. Or you sign up for Formspree and hit a paywall the moment you want email forwarding — even though you're supplying the Resend API key yourself.
 
 There's a better way.
 
@@ -19,29 +34,33 @@ There's a better way.
 A plain HTML contact form that:
 
 - Stores every submission in a dashboard
-- Forwards submissions to your email via Resend
+- Sends email notifications via your own Resend account
 - Requires zero backend code from you
+
+> "You're not paying for integrations. You're paying for the markup on your own API keys."
 
 ## Prerequisites
 
-- An [osforms account](https://osforms.com/signup) (free)
-- A [Resend account](https://resend.com) (free tier covers 3,000 emails/month)
+- An [osforms account](https://osforms.com/signup) — free, no card required
+- A [Resend account](https://resend.com) — free tier covers 3,000 emails/month
 
 ## Step 1 — Create a Form in osforms
 
 Log in and hit **New Form**. Give it a name like "Contact Form". You'll get a unique endpoint URL:
 
-```
+```bash
 https://osforms.com/api/v1/f/abc123xyz
 ```
 
-Copy that URL — you'll use it as your form's `action`.
+Copy that URL — you'll use it as your form's `action` attribute. That endpoint is all you need. No servers. No middleware.
 
 ## Step 2 — Connect Your Resend API Key
 
-In the dashboard, go to **Integrations → Email**. Paste your Resend API key (starts with `re_`). Enter the "from" address and the "to" address where you want to receive submissions.
+In the dashboard, go to **Integrations → Email**. Paste your Resend API key (starts with `re_`). Enter the "from" address and the "to" address where notifications should land.
 
-osforms encrypts your key at rest with AES-256-GCM. It's never stored in plain text.
+osforms encrypts your key at rest with AES-256-GCM. It's never stored in plain text, never logged, and only decrypted in memory when a submission arrives.
+
+> "Your API key powers the email. osforms just makes the call."
 
 ## Step 3 — Point Your Form at the Endpoint
 
@@ -62,36 +81,31 @@ Update your HTML form's `action` attribute:
 </form>
 ```
 
-That's it. Submit the form and within seconds you'll get an email.
+That's it. Submit the form and within seconds you'll get an email. The form works on any stack — plain HTML, React, Vue, Astro, anything that can send a POST request.
 
-## Step 4 — Handle Success Redirects
+## Step 4 — Set a Success Redirect
 
-By default, after a successful submission, osforms redirects back to the referring page. You can set a custom redirect URL in your form settings — point it to a `/thank-you` page for a better experience.
+By default, after a submission, osforms redirects back to the referring page. Set a custom redirect URL in your form settings — point it to a `/thank-you` page for a cleaner experience.
 
 ## How It Works Under the Hood
 
-When a submission comes in:
+When a submission hits your endpoint:
 
-1. osforms stores it in the dashboard (you can always review submissions there)
-2. Your Resend integration fires in the background — no waiting
-3. The email lands in your inbox with all form fields included
+1. osforms stores it in the dashboard immediately
+2. Returns a `200 OK` — your visitor never waits
+3. Your Resend integration fires asynchronously in the background via `waitUntil()`
+4. The email arrives with all submitted fields formatted and readable
 
-Integrations run asynchronously via `waitUntil()`. Your visitor gets an instant response; the email goes out in parallel.
-
-## What's Free
-
-osforms gives you **100 submissions/month free** with all integrations included. There's no separate "email tier" — if you connect Resend, email forwarding works on the free plan.
-
-When you go over 100 submissions, upgrade to 2,000/month for $9/mo.
+Integrations run in parallel using `Promise.allSettled()`. If Resend is unavailable, the submission is still stored and you get an in-app notification — nothing is lost.
 
 ## Spam Protection
 
-Two built-in options:
+Two built-in options that require zero configuration on your end:
 
-- **Honeypot field**: Add a hidden input named `_honey`. Bots fill it in; osforms discards those submissions automatically.
-- **reCAPTCHA / hCaptcha / Turnstile**: Bring your own site key. osforms verifies the token server-side before storing the submission.
+- **Honeypot field**: Add a hidden input named `_honey`. Bots fill it in; osforms silently discards those submissions.
+- **reCAPTCHA / hCaptcha / Turnstile**: Bring your own site key. osforms verifies the token server-side before storing anything.
 
-## Summary
+## Setup Time
 
 | Step | Time |
 |------|------|
@@ -99,6 +113,33 @@ Two built-in options:
 | Add Resend API key | 1 min |
 | Update form action attribute | 30 sec |
 
-Five minutes, no backend, no monthly integration fees.
+Five minutes. No monthly integration fees. Your Resend account handles the sending costs directly — at Resend's pricing, which starts free.
 
-If you run into issues, check the **Integration Logs** tab in your form dashboard — every email attempt is logged with its result.
+## The osforms Take
+
+Every form backend on the market charges you for email forwarding. Formspree: $15/month. FormBold: $9/month. Basin: $7/month. All of them — for a feature that runs entirely on your Resend API key.
+
+That's not a business model. It's a markup on your own credentials.
+
+osforms flips this completely. You bring the Resend key; the email integration is free. We only make money on submission volume — which scales with your actual usage, not with the number of integrations you dare to enable. HTML form email notifications should never be a paid feature. We built osforms to prove that.
+
+The code is [open source on GitHub](https://github.com/hawkeye-sama/osforms). If you want to audit exactly how your Resend key is stored, encrypted, and used — go ahead.
+
+---
+
+## FAQ
+
+**Does this work with React and Next.js, not just plain HTML?**
+Yes. You can use the standard HTML `<form>` tag in any framework, or use `fetch` / `axios` to POST JSON to your endpoint. osforms handles both `application/x-www-form-urlencoded` and `application/json` content types.
+
+**What happens if Resend is down when a submission arrives?**
+The submission is stored immediately regardless. If the Resend call fails, you get an in-app notification in the osforms dashboard with the error. You can review the submission and resend manually.
+
+**Can I send to multiple email addresses?**
+Set up multiple email integrations pointing to different addresses, or configure your Resend account to forward to a distribution list. osforms runs all configured integrations in parallel for every submission.
+
+**Is the `_honey` honeypot field visible to users?**
+No. You add it as a hidden field with CSS (`display: none` or `visibility: hidden`). Real users never see or fill it. Bots that auto-fill all fields get caught by the mismatch.
+
+**What's the difference between osforms and just using Resend directly?**
+Resend requires you to write server-side code — an API route, a serverless function, something that runs on your infrastructure. osforms is the server code. You point your HTML form at our endpoint, and we handle the server layer, storage, and Resend call. Zero backend required on your side.

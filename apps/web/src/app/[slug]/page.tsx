@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
@@ -7,7 +8,10 @@ import remarkGfm from 'remark-gfm';
 
 import { Footer } from '@/components/layout/footer';
 import { LandingNavbar } from '@/components/layout/landing-navbar';
+import type { BlogPost } from '@/lib/blog';
 import { formatDate, getAllPosts, getPostBySlug } from '@/lib/blog';
+
+const BASE_URL = 'https://osforms.com';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -24,19 +28,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {};
   }
 
+  const ogImages = post.coverImage
+    ? [{ url: `${BASE_URL}${post.coverImage}`, width: 1200, height: 630, alt: post.title }]
+    : [];
+
   return {
     title: post.title,
     description: post.description,
+    alternates: {
+      canonical: `${BASE_URL}/${slug}`,
+    },
     openGraph: {
       title: post.title,
       description: post.description,
       type: 'article',
       publishedTime: post.date,
+      modifiedTime: post.dateModified ?? post.date,
       authors: [post.author],
+      images: ogImages,
     },
     twitter: {
+      card: 'summary_large_image',
       title: post.title,
       description: post.description,
+      images: ogImages.map((img) => img.url),
     },
   };
 }
@@ -69,6 +84,66 @@ const CATEGORY_COLORS: Record<string, string> = {
   'BYOK Files': 'border-border text-foreground',
 };
 
+function JsonLd({ post, slug }: { post: BlogPost; slug: string }) {
+  const blogPosting = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    dateModified: post.dateModified ?? post.date,
+    url: `${BASE_URL}/${slug}`,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE_URL}/${slug}` },
+    ...(post.coverImage && { image: `${BASE_URL}${post.coverImage}` }),
+    author: {
+      '@type': 'Person',
+      name: 'Bahroze Ali',
+      url: 'https://github.com/hawkeye-sama',
+      sameAs: ['https://github.com/hawkeye-sama'],
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'osforms',
+      url: BASE_URL,
+    },
+  };
+
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Blog', item: `${BASE_URL}/blog` },
+      { '@type': 'ListItem', position: 2, name: post.title, item: `${BASE_URL}/${slug}` },
+    ],
+  };
+
+  const schemas: object[] = [blogPosting, breadcrumb];
+
+  if (post.faq && post.faq.length > 0) {
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: post.faq.map(({ question, answer }) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: { '@type': 'Answer', text: answer },
+      })),
+    });
+  }
+
+  return (
+    <>
+      {schemas.map((schema, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+    </>
+  );
+}
+
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = getPostBySlug(slug);
@@ -78,6 +153,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div className="dark bg-background text-foreground relative min-h-screen">
+      <JsonLd post={post} slug={slug} />
       <div className="bg-grid-glow pointer-events-none fixed inset-0" />
       <LandingNavbar />
 
@@ -134,8 +210,24 @@ export default async function BlogPostPage({ params }: Props) {
               )}
             </header>
 
-            {/* ── Divider ─────────────────────── */}
-            <div className="via-border mb-12 h-px bg-linear-to-r from-transparent to-transparent" />
+            {/* ── Cover image ─────────────────── */}
+            {post.coverImage && (
+              <div className="border-border mb-12 overflow-hidden rounded-xl border">
+                <Image
+                  src={post.coverImage}
+                  alt={post.title}
+                  width={1200}
+                  height={630}
+                  className="h-auto w-full"
+                  priority
+                />
+              </div>
+            )}
+
+            {/* ── Divider (only when no cover image) ── */}
+            {!post.coverImage && (
+              <div className="via-border mb-12 h-px bg-linear-to-r from-transparent to-transparent" />
+            )}
 
             {/* ── MDX Content ─────────────────── */}
             <article className="blog-content">
@@ -170,7 +262,7 @@ export default async function BlogPostPage({ params }: Props) {
                 ← All Posts
               </Link>
               <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`https://osforms.com/${post.slug}`)}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`${BASE_URL}/${post.slug}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground text-sm transition-colors"

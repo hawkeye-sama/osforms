@@ -17,10 +17,13 @@ export interface BlogPost {
   title: string;
   description: string;
   date: string;
+  dateModified?: string;
   author: string;
   tags: string[];
   readingTime: string;
   category: BlogCategory;
+  coverImage?: string;
+  faq?: Array<{ question: string; answer: string }>;
   content: string;
 }
 
@@ -43,10 +46,12 @@ export function getAllPosts(): BlogPostMeta[] {
         title: data.title as string,
         description: data.description as string,
         date: data.date as string,
+        dateModified: data.dateModified as string | undefined,
         author: (data.author as string) ?? 'osforms Team',
         tags: (data.tags as string[]) ?? [],
         readingTime: (data.readingTime as string) ?? '5 min read',
         category: (data.category as BlogCategory) ?? 'Build',
+        coverImage: data.coverImage as string | undefined,
       };
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -66,10 +71,13 @@ export function getPostBySlug(slug: string): BlogPost | null {
     title: data.title as string,
     description: data.description as string,
     date: data.date as string,
+    dateModified: data.dateModified as string | undefined,
     author: (data.author as string) ?? 'osforms Team',
     tags: (data.tags as string[]) ?? [],
     readingTime: (data.readingTime as string) ?? '5 min read',
     category: (data.category as BlogCategory) ?? 'Build',
+    coverImage: data.coverImage as string | undefined,
+    faq: data.faq as Array<{ question: string; answer: string }> | undefined,
     content,
   };
 }
