@@ -1,3 +1,5 @@
+'use client';
+
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,6 +25,16 @@ export function LandingNavbar() {
           />
         </Link>
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="hidden sm:inline-flex"
+          >
+            <Link href="/blog" target="_blank" rel="noopener noreferrer">
+              Blog
+            </Link>
+          </Button>
           <Button
             variant="ghost"
             size="sm"

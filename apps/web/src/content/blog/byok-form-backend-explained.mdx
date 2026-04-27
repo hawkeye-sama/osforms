@@ -1,0 +1,95 @@
+---
+title: "BYOK Form Backends: Why You Should Own Your API Keys"
+description: "Most form backends charge you for integrations powered by your own API keys. Here's why BYOK is a better model — and how osforms implements it."
+date: "2026-04-10"
+author: "osforms Team"
+tags: ["open-source", "byok", "pricing", "integrations"]
+readingTime: "6 min read"
+category: "BYOK Files"
+---
+
+If you've used a form backend before, you've hit this wall: you want to forward submissions to your email, or append them to a Google Sheet, and the service locks that behind a $9–$15/month plan.
+
+Here's the part that should bother you: **those integrations run on your API keys**.
+
+You provide the Resend key. You grant the Google OAuth token. The form backend just makes the API call. But they charge you for the privilege of using your own credentials.
+
+That's the problem osforms is built to solve.
+
+## What BYOK Means
+
+BYOK — Bring Your Own Keys — means you supply the API credentials, and the platform uses them to execute integrations on your behalf.
+
+This is already how most things work at the infrastructure level. You bring AWS credentials to Terraform. You bring a Stripe secret key to your payments library. The tool doesn't charge you for Stripe usage — Stripe does.
+
+Form backends should work the same way. If you're paying Resend $0.10 per 1,000 emails, why is the form backend charging you again just to call the Resend API?
+
+## How osforms Implements BYOK
+
+When you add an integration in osforms:
+
+1. You paste your API key (Resend, webhook signing secret, etc.) or complete an OAuth flow (Google Sheets)
+2. osforms encrypts the credential at rest with AES-256-GCM using a per-installation encryption key
+3. When a submission comes in, osforms decrypts the credential in memory and executes the integration
+4. The decrypted key is never logged or persisted beyond the execution
+
+Your key, your data, your costs.
+
+```
+Submission → osforms → decrypts your key → calls Resend API → logs result
+                                                 ↑
+                                     Resend bills your account
+```
+
+## What This Means for Pricing
+
+Because integrations aren't a service osforms provides — they're a pass-through to your providers — there's no reason to paywall them.
+
+osforms pricing is simple:
+
+- **Free**: 100 submissions/month, all integrations included
+- **$9/month**: 2,000 submissions/month, all integrations included
+
+That's it. No "integration add-ons." No per-seat pricing. The only variable is submission volume.
+
+Your Resend costs are separate (and likely negligible — 3,000 emails/month is free on Resend's free tier).
+
+## Security Considerations
+
+Storing third-party credentials introduces real responsibility. Here's what osforms does:
+
+**Encryption at rest**: Every API key is encrypted with AES-256-GCM before hitting the database. The encryption key lives in the environment, not the database. If someone dumps your MongoDB, they get ciphertext.
+
+**Never logged**: Decrypted credentials are used in memory and discarded. They don't appear in logs, error messages, or any persistent storage.
+
+**Scoped OAuth**: The Google Sheets integration requests only `drive.file` scope — access to files you explicitly share, not your entire Drive.
+
+## Open Source as a Trust Signal
+
+osforms is fully open source. You can audit exactly how credentials are stored, encrypted, and used. There's no black box.
+
+If you want to self-host — run osforms on your own infrastructure, connect your own MongoDB — you can. The same codebase powers the hosted version.
+
+This matters for teams with strict data policies. If you can't send form submissions through a third-party service, run osforms yourself.
+
+## Comparison
+
+| Feature | osforms | Formspree | FormBold |
+|---------|---------|-----------|----------|
+| Email forwarding | Free (BYOK) | $15/mo | $9/mo |
+| Google Sheets | Free (BYOK) | $15/mo | $9/mo |
+| Webhooks | Free | $9/mo | $9/mo |
+| Open source | Yes | No | No |
+| Self-hostable | Yes | No | No |
+
+## The Philosophy
+
+We didn't build osforms to compete on features. We built it because the pricing model of existing form backends is backwards.
+
+When the user supplies the integration credentials, the integration cost should accrue to the user's provider account — not the form backend. Charging for integrations in this model is a tax on developer convenience.
+
+BYOK form backends are the right default. osforms is our attempt at building one properly.
+
+---
+
+Questions? Open an issue on [GitHub](https://github.com/hawkeye-sama/osforms) or reach out via the dashboard.

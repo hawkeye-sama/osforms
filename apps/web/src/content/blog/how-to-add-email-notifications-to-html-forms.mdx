@@ -1,0 +1,104 @@
+---
+title: "How to Add Email Notifications to HTML Forms (Without a Backend)"
+description: "Learn how to point your HTML form at osforms and get email notifications via Resend — zero server code required."
+date: "2026-04-20"
+author: "osforms Team"
+tags: ["tutorial", "resend", "email", "html"]
+readingTime: "5 min read"
+category: "Integrate"
+---
+
+Every web app has at least one form. Contact forms, waitlist signups, feedback widgets. And every time you ship one, you need the same thing: **get notified when someone fills it out**.
+
+The usual path is painful. You stand up a server, wire up an email provider, handle errors, manage retries. Or you sign up for Formspree and hit a paywall the moment you want email forwarding.
+
+There's a better way.
+
+## What You'll Build
+
+A plain HTML contact form that:
+
+- Stores every submission in a dashboard
+- Forwards submissions to your email via Resend
+- Requires zero backend code from you
+
+## Prerequisites
+
+- An [osforms account](https://osforms.com/signup) (free)
+- A [Resend account](https://resend.com) (free tier covers 3,000 emails/month)
+
+## Step 1 — Create a Form in osforms
+
+Log in and hit **New Form**. Give it a name like "Contact Form". You'll get a unique endpoint URL:
+
+```
+https://osforms.com/api/v1/f/abc123xyz
+```
+
+Copy that URL — you'll use it as your form's `action`.
+
+## Step 2 — Connect Your Resend API Key
+
+In the dashboard, go to **Integrations → Email**. Paste your Resend API key (starts with `re_`). Enter the "from" address and the "to" address where you want to receive submissions.
+
+osforms encrypts your key at rest with AES-256-GCM. It's never stored in plain text.
+
+## Step 3 — Point Your Form at the Endpoint
+
+Update your HTML form's `action` attribute:
+
+```html
+<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+  <label for="name">Name</label>
+  <input type="text" id="name" name="name" required />
+
+  <label for="email">Email</label>
+  <input type="email" id="email" name="email" required />
+
+  <label for="message">Message</label>
+  <textarea id="message" name="message" rows="4" required></textarea>
+
+  <button type="submit">Send</button>
+</form>
+```
+
+That's it. Submit the form and within seconds you'll get an email.
+
+## Step 4 — Handle Success Redirects
+
+By default, after a successful submission, osforms redirects back to the referring page. You can set a custom redirect URL in your form settings — point it to a `/thank-you` page for a better experience.
+
+## How It Works Under the Hood
+
+When a submission comes in:
+
+1. osforms stores it in the dashboard (you can always review submissions there)
+2. Your Resend integration fires in the background — no waiting
+3. The email lands in your inbox with all form fields included
+
+Integrations run asynchronously via `waitUntil()`. Your visitor gets an instant response; the email goes out in parallel.
+
+## What's Free
+
+osforms gives you **100 submissions/month free** with all integrations included. There's no separate "email tier" — if you connect Resend, email forwarding works on the free plan.
+
+When you go over 100 submissions, upgrade to 2,000/month for $9/mo.
+
+## Spam Protection
+
+Two built-in options:
+
+- **Honeypot field**: Add a hidden input named `_honey`. Bots fill it in; osforms discards those submissions automatically.
+- **reCAPTCHA / hCaptcha / Turnstile**: Bring your own site key. osforms verifies the token server-side before storing the submission.
+
+## Summary
+
+| Step | Time |
+|------|------|
+| Create osforms account | 1 min |
+| Add Resend API key | 1 min |
+| Update form action attribute | 30 sec |
+
+Five minutes, no backend, no monthly integration fees.
+
+If you run into issues, check the **Integration Logs** tab in your form dashboard — every email attempt is logged with its result.
