@@ -10,7 +10,12 @@ import { CursorGridGlow } from '@/components/blog/cursor-grid-glow';
 import { Footer } from '@/components/layout/footer';
 import { LandingNavbar } from '@/components/layout/landing-navbar';
 import type { BlogPost } from '@/lib/blog';
-import { formatDate, getAllPosts, getPostBySlug } from '@/lib/blog';
+import {
+  formatDate,
+  getAllPosts,
+  getCoverUrl,
+  getPostBySlug,
+} from '@/lib/blog';
 import { SITE_URL as BASE_URL } from '@/lib/site';
 
 interface Props {
@@ -28,11 +33,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {};
   }
 
-  const ogImageUrl = post.coverImage
-    ? `${BASE_URL}${post.coverImage}`
-    : `${BASE_URL}/og-image.png`;
   const ogImages = [
-    { url: ogImageUrl, width: 1200, height: 630, alt: post.title },
+    {
+      url: `${BASE_URL}${getCoverUrl(post)}`,
+      width: 1200,
+      height: 630,
+      alt: post.title,
+    },
   ];
 
   const keywords = Array.from(
@@ -110,9 +117,7 @@ function JsonLd({ post, slug }: { post: BlogPost; slug: string }) {
     dateModified: post.dateModified ?? post.date,
     url: `${BASE_URL}/${slug}`,
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE_URL}/${slug}` },
-    image: post.coverImage
-      ? `${BASE_URL}${post.coverImage}`
-      : `${BASE_URL}/og-image.png`,
+    image: `${BASE_URL}${getCoverUrl(post)}`,
     ...(post.tags.length > 0 && { keywords: post.tags.join(', ') }),
     inLanguage: 'en',
     author,
@@ -229,18 +234,16 @@ export default async function BlogPostPage({ params }: Props) {
           </header>
 
           {/* ── Cover image ─────────────────────── */}
-          {post.coverImage && (
-            <div className="border-border mb-14 overflow-hidden rounded-2xl border">
-              <Image
-                src={post.coverImage}
-                alt={post.title}
-                width={1200}
-                height={630}
-                className="h-auto w-full"
-                priority
-              />
-            </div>
-          )}
+          <div className="border-border mb-14 overflow-hidden rounded-2xl border">
+            <Image
+              src={getCoverUrl(post)}
+              alt={post.title}
+              width={1200}
+              height={630}
+              className="h-auto w-full"
+              priority
+            />
+          </div>
 
           {/* ── MDX Content ─────────────────────── */}
           <article className="blog-content">

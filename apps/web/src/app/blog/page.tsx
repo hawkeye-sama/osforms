@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { formatDate, getAllPosts } from '@/lib/blog';
+import { formatDate, getAllPosts, getCoverUrl } from '@/lib/blog';
 import { SITE_URL as BASE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -162,18 +162,16 @@ export default function BlogPage() {
                 </div>
               </div>
 
-              {featured.coverImage && (
-                <div className="border-border bg-background relative min-h-60 overflow-hidden border-t lg:border-t-0 lg:border-l">
-                  <Image
-                    src={featured.coverImage}
-                    alt={featured.title}
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    priority
-                  />
-                </div>
-              )}
+              <div className="border-border bg-background relative min-h-60 overflow-hidden border-t lg:border-t-0 lg:border-l">
+                <Image
+                  src={getCoverUrl(featured)}
+                  alt={featured.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
+                />
+              </div>
             </div>
           </Link>
         )}
