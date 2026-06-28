@@ -47,3 +47,6 @@ marketing/
 
 # Local dev playground — not committed
 apps/playground/
+
+# Local blog-cover generator — authoring tool, kept out of the open-source tree
+apps/web/scripts/

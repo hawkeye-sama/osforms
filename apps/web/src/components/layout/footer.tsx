@@ -36,6 +36,14 @@ export function Footer() {
               Documentation
             </Link>
             <Link
+              href="/blog"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+            >
+              Blog
+            </Link>
+            <Link
               href="https://github.com/hawkeye-sama/osforms"
               target="_blank"
               rel="noopener noreferrer"

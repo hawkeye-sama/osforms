@@ -1,0 +1,129 @@
+---
+title: 'How to Send Form Email Notifications With Resend'
+description: 'Set up form email notifications with your own Resend key: get instant alerts on every submission, with no backend code and no per-email paywall.'
+date: '2026-04-20'
+dateModified: '2026-04-27'
+author: 'Bahroze Ali'
+tags: ['tutorial', 'resend', 'email', 'html']
+readingTime: '6 min read'
+category: 'Integrate'
+seoTitle: 'Send Form Email Notifications With Resend'
+focusKeyphrase: 'form email notifications'
+coverImage: '/content/images/form-email-notifications-cover.png'
+coverTitle: 'Form Email Notifications'
+coverSubtitle: 'Alerts + auto-reply on your own Resend key'
+faq:
+  - question: 'Does this work with React and Next.js, not just plain HTML?'
+    answer: 'Yes. Use the standard HTML form tag in any framework, or POST JSON via fetch or axios. OSForms handles both application/x-www-form-urlencoded and application/json content types.'
+  - question: 'What happens if Resend is down when a submission arrives?'
+    answer: 'The submission is stored immediately regardless. If the Resend call fails, you get an in-app notification in the OSForms dashboard with the error so you can review the submission manually.'
+  - question: 'Can I send notifications to multiple email addresses?'
+    answer: 'Yes. Set up multiple email integrations pointing to different addresses, or configure your Resend account to forward to a distribution list. OSForms runs all integrations in parallel per submission.'
+  - question: 'How does the auto-reply know where to send?'
+    answer: 'It auto-detects common email field names in the submission (email, user_email, contactEmail, and similar) and replies to that address. If your field has an unusual name, set it explicitly in the auto-reply settings. If no valid email is found, the auto-reply is skipped and the notification still sends.'
+  - question: 'What is the difference between OSForms and using Resend directly?'
+    answer: 'Resend requires server-side code to make the API call. OSForms is that server code. You point your HTML form at an endpoint and get submission storage, integration logs, and spam protection with zero backend work on your side.'
+---
+
+Every web app has at least one form — contact forms, waitlist signups, feedback widgets. And every time you ship one, you need the same thing: **get notified when someone fills it out**, and ideally send the person a confirmation back.
+
+The usual path is painful. You stand up a server, wire up an email provider, handle errors, manage retries. Or you reach for a hosted form tool and hit a paywall the moment you want email forwarding — even though you're [supplying the API key yourself](/bring-your-own-key).
+
+This walks through form email notifications the BYOK way: alerts to your inbox **and** a custom auto-reply to the submitter, both sent through your own [Resend](https://resend.com) account, with no backend to maintain.
+
+## Form Email Notifications Without a Paywall
+
+Here's what you'll wire up:
+
+- Every submission stored in a dashboard you control
+- A notification email to your team on each submission
+- A custom auto-reply to the person who submitted
+- Per-send delivery logs so you can see exactly what happened
+
+All of it runs on **your** Resend key. OSForms makes the API call; Resend bills your account directly — at Resend's pricing, which starts at 3,000 emails/month free. There's no per-email markup and no integration tier to unlock.
+
+> "You're not paying for integrations. You're paying for the markup on your own API keys."
+
+You'll need an [OSForms account](https://osforms.com/signup) and a [Resend account](https://resend.com) — both free, no card required.
+
+## Connecting Your Resend Key
+
+**1. Create a form.** In the dashboard, hit **New Form** and name it (e.g. "Contact Form"). You'll get a unique endpoint URL:
+
+```bash
+https://osforms.com/api/v1/f/abc123xyz
+```
+
+**2. Add the email integration.** Go to **Integrations → Email**, paste your Resend API key (it starts with `re_`), and set the **from** address plus one or more **to** addresses for notifications.
+
+OSForms encrypts your key at rest with AES-256-GCM. It's never stored in plain text, never logged, and only decrypted in memory when a submission arrives.
+
+**3. Point your form at the endpoint.** Set the URL as your form's `action` attribute:
+
+```html
+<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+  <label for="name">Name</label>
+  <input type="text" id="name" name="name" required />
+
+  <label for="email">Email</label>
+  <input type="email" id="email" name="email" required />
+
+  <label for="message">Message</label>
+  <textarea id="message" name="message" rows="4" required></textarea>
+
+  <button type="submit">Send</button>
+</form>
+```
+
+Submit it, and within seconds the notification email lands in your inbox with every field formatted into a table. The form works on any stack — plain HTML, React, Vue, Astro — anything that can send a POST request.
+
+**4. Set a success redirect.** If you don't set a redirect URL, the endpoint replies with a JSON `{ "success": true }` body — fine for `fetch`/AJAX, but a plain HTML form will drop your visitor on raw JSON. For HTML forms, set a **redirect URL** in form settings (e.g. `/thank-you`) so visitors land on a clean confirmation.
+
+## Writing a Custom Auto-Reply Template
+
+A notification tells _you_ about the submission. An **auto-reply** tells the _submitter_ you got it — the feature most hosted tools lock behind a higher tier. OSForms includes it for free.
+
+In your email integration, turn on **Auto-Reply**. It ships with a sensible default template you can edit, and you control two things:
+
+- **Subject** — e.g. `Thanks for reaching out`
+- **HTML template** — the body of the reply
+
+Both support variables interpolated from the submission:
+
+- `{{formName}}`, `{{submittedAt}}`, `{{submissionId}}` — submission metadata
+- `{{fieldName}}` — any field your form posts (e.g. `{{name}}`, `{{email}}`)
+- `{{#if fieldName}}...{{/if}}` — render a block only when that field is present
+
+```html
+<p>Hi {{name}},</p>
+<p>
+  Thanks for reaching out — we got your message and will reply within one
+  business day.
+</p>
+{{#if company}}
+<p>Noted that you're writing on behalf of {{company}}.</p>
+{{/if}}
+<p>— The team</p>
+```
+
+You don't have to tell OSForms which field holds the submitter's address. It **auto-detects** common field names (`email`, `user_email`, `contactEmail`, and similar) and replies there. If your field has an unusual name, set it explicitly in the auto-reply settings. If no valid email is found, the auto-reply is skipped — and the notification still sends.
+
+## Debugging Delivery With Per-Send Logs
+
+Email silently failing is the worst failure mode, so every send is logged. For each submission, OSForms records an **integration log** with the result of every integration that ran — success, or the exact error message Resend returned.
+
+That means you can answer "did the email actually go out?" without guessing:
+
+- **Submission stored first.** The endpoint stores the submission and returns `200 OK` immediately, then fires integrations in the background via `waitUntil()`. Your visitor never waits on Resend.
+- **Each send logged independently.** The notification and the auto-reply run and log separately, so a skipped auto-reply (say, no email field in the submission) never hides a successful notification.
+- **Failures surface.** If a send fails, you get an in-app notification with the error so you can fix the key and move on — nothing is lost, because the submission is already saved.
+
+## The OSForms Take
+
+Every hosted form tool charges for email forwarding. Formspree: $15/month. FormBold: $9/month. Basin: $7/month. Auto-reply usually sits a tier higher still — all for features that run entirely on your Resend key.
+
+That's not a business model. It's a markup on your own credentials.
+
+OSForms flips it: you bring the Resend key, and email — notifications _and_ auto-reply — is free. We only charge on submission volume, which scales with actual usage, not with how many integrations you dare to enable.
+
+The code is [open source on GitHub](https://github.com/hawkeye-sama/osforms) — audit exactly how your key is stored, encrypted, and used. And for the reasoning behind the model, read [what bring your own key actually means](/bring-your-own-key).

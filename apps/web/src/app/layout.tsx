@@ -42,6 +42,11 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+  alternates: {
+    types: {
+      'application/rss+xml': `${baseUrl}/feed.xml`,
+    },
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',

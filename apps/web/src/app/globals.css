@@ -3,6 +3,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -113,6 +115,185 @@ body {
 
 * {
   border-color: var(--border);
+}
+
+/* ──────────────────────────────────────────────────────
+   Blog / MDX Prose Styles
+   ────────────────────────────────────────────────────── */
+
+.blog-content {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--muted-foreground);
+}
+
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4 {
+  color: var(--foreground);
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.blog-content h1 {
+  font-size: 1.875rem;
+}
+.blog-content h2 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+}
+.blog-content h3 {
+  font-size: 1.25rem;
+}
+.blog-content h4 {
+  font-size: 1.125rem;
+}
+
+.blog-content p {
+  margin-bottom: 1.25rem;
+}
+
+.blog-content a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 150ms ease;
+}
+
+.blog-content a:hover {
+  opacity: 0.75;
+}
+
+.blog-content strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.blog-content em {
+  font-style: italic;
+}
+
+.blog-content ul,
+.blog-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.blog-content ul {
+  list-style-type: disc;
+}
+.blog-content ol {
+  list-style-type: decimal;
+}
+
+.blog-content li {
+  margin-bottom: 0.4rem;
+}
+
+.blog-content blockquote {
+  border-left: 3px solid var(--border-strong);
+  padding-left: 1.25rem;
+  margin: 1.5rem 0;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+/* Inline code */
+.blog-content :not(pre) > code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.875em;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  color: var(--foreground);
+}
+
+/* rehype-pretty-code: code figure wrapper */
+.blog-content figure[data-rehype-pretty-code-figure] {
+  margin: 1.75rem 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* rehype-pretty-code: optional filename/title bar */
+.blog-content figcaption[data-rehype-pretty-code-title] {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+/* rehype-pretty-code: the <pre> block */
+.blog-content pre[data-theme] {
+  background: var(--bg-element, #212121) !important;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.blog-content pre[data-theme] code {
+  font-family: var(--font-mono), monospace;
+  background: none;
+  border: none;
+  padding: 0;
+  counter-reset: line;
+}
+
+/* Highlighted lines */
+.blog-content pre [data-highlighted-line] {
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 2px solid rgba(255, 255, 255, 0.3);
+  padding-left: calc(1rem - 2px);
+  margin-left: -1rem;
+  padding-right: 1rem;
+  margin-right: -1rem;
+}
+
+.blog-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+.blog-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.blog-content th {
+  background: var(--card);
+  color: var(--foreground);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+}
+
+.blog-content td {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+.blog-content tr:hover td {
+  background: var(--card);
+}
+
+.blog-content img {
+  border-radius: 8px;
+  max-width: 100%;
+  margin: 1.5rem 0;
 }
 
 /* ──────────────────────────────────────────────────────
@@ -249,6 +430,30 @@ body {
   background-size:
     32px 32px,
     100% 100%;
+}
+
+/* Cursor-following spotlight that lights up the grid dots near the pointer.
+   Same 32px dot grid as .bg-grid-glow but brighter, revealed through a radial
+   mask centered on the cursor (--gx/--gy set by <CursorGridGlow />). */
+.cursor-grid-glow {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.4) 1px,
+    transparent 1px
+  );
+  background-size: 32px 32px;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  -webkit-mask-image: radial-gradient(
+    220px circle at var(--gx, -300px) var(--gy, -300px),
+    #000 0%,
+    transparent 65%
+  );
+  mask-image: radial-gradient(
+    220px circle at var(--gx, -300px) var(--gy, -300px),
+    #000 0%,
+    transparent 65%
+  );
 }
 
 .gradient-radial-glow {
