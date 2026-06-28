@@ -1,0 +1,168 @@
+---
+title: 'How to Handle Form Submissions Without a Backend'
+description: 'No server? You can still handle form submissions. Here are the real options for receiving, storing, and routing form data without building a backend.'
+date: '2026-06-28'
+dateModified: '2026-06-28'
+author: 'Bahroze Ali'
+tags: ['form submissions', 'no backend', 'forms', 'tutorial']
+readingTime: '9 min read'
+category: 'Build'
+seoTitle: 'How to Handle Form Submissions Without a Backend'
+focusKeyphrase: 'form submissions'
+coverImage: '/content/images/handle-form-submissions-cover.png'
+coverTitle: 'Form Submissions Without a Backend'
+coverSubtitle: 'Every real option for receiving form data, compared'
+faq:
+  - question: 'Can you really handle form submissions without any backend?'
+    answer: "Not literally, since something has to receive the POST. But you don't have to build or host that something. A hosted or open-source form backend gives you the receiving endpoint, storage, and integrations, so there's no server in your codebase to write or maintain."
+  - question: 'Is a mailto: link a real option for form submissions?'
+    answer: 'Only for the simplest cases. A mailto: form opens the visitor email client instead of sending data anywhere. Nothing is stored, there is no spam protection, and it fails entirely for anyone without a configured desktop mail app. Fine for a personal page, not for anything that matters.'
+  - question: "What's the difference between a serverless function and a form backend?"
+    answer: 'A serverless function is code you write, deploy, and maintain to handle one form. A form backend is that layer as a service: you point your form at an endpoint and get storage, a dashboard, spam protection, and integrations without writing server code.'
+  - question: 'Does this work with React, Vue, or any SPA, not just plain HTML?'
+    answer: 'Yes. Any stack that can send an HTTP POST works. A plain HTML form posts directly; in a SPA you send the data with fetch as JSON and read the JSON response. OSForms accepts url-encoded, multipart, and JSON bodies.'
+  - question: 'Where does my form data live if I use OSForms?'
+    answer: 'Submissions are stored so you can view and export them as JSON or CSV anytime. Integrations forward each submission to your own services (your Resend account, your Google Sheet, your webhook) using your keys. You can also self-host OSForms against your own MongoDB to keep everything on your infrastructure.'
+  - question: 'How do I stop spam without forcing a captcha on users?'
+    answer: 'A honeypot field is the frictionless option: add a hidden input that real users never fill, and discard any submission that arrives with it populated. OSForms supports a configurable honeypot field plus optional reCAPTCHA, hCaptcha, or Turnstile if you want a captcha as well.'
+---
+
+You built a form. The HTML was the easy part. Now you need to actually _do something_ with the data when someone hits submit, and that is the wall every front-end developer runs into: a form's `action` has to POST somewhere, and "somewhere" usually means a backend you don't have.
+
+Good news. You can handle **form submissions** without building or hosting a backend. There are four real options: a `mailto:` link, a serverless function, a hosted form backend, or an open-source form backend you point your form at. This guide walks through each one honestly, including what it does, where it breaks, and how to pick for your stack.
+
+## The Problem With Handling Form Submissions Yourself
+
+A form is just HTML. The moment someone submits it, the browser sends an HTTP request, and that request needs a server to catch it. That is the whole problem. The front end is done, but receiving the data is a back-end job, and a static host (GitHub Pages, an S3 bucket, a plain static deploy) has no server to run.
+
+It is also more work than "catch the request" suggests. A form can submit in three different shapes, and your receiver has to handle whichever the browser sends:
+
+- `application/x-www-form-urlencoded`, the default for a simple form
+- `multipart/form-data`, used when the form includes a file input
+- `application/json`, when you submit with `fetch` from a SPA
+
+Parsing the body is only step one. To handle form submissions properly you also need to:
+
+- **Store** each submission somewhere you can read it later
+- **Notify** yourself (usually email) when one arrives
+- **Route** the data to other tools: a spreadsheet, a CRM, a webhook
+- **Validate** input and **block spam** so bots don't flood your inbox
+- **Set CORS** so a cross-origin POST from your site is allowed
+- **Rate-limit** abuse, and **not lose** a submission if your email provider is down
+
+None of that is hard on its own. All of it together, for every project, is the tax that turns a five-minute form into an afternoon. The options below really differ in how much of that tax you pay yourself.
+
+## Your Options for Form Submissions Without a Backend
+
+### mailto: — the no-code escape hatch
+
+The simplest possible "backend" is no backend at all:
+
+```html
+<form action="mailto:you@example.com" method="POST" enctype="text/plain">
+  <input name="email" />
+  <textarea name="message"></textarea>
+  <button>Send</button>
+</form>
+```
+
+This hands the submission to the visitor's email client as a pre-filled draft. It is zero setup, and it breaks the moment you care. Nothing is stored. There is no spam protection. The formatting is ugly. It does nothing for the many users on devices without a configured mail app, and even when it "works" the email comes from the visitor's own address, so deliverability and reply-to are a mess. Use it for a personal landing page, never for a contact or lead form that matters.
+
+### Serverless functions — own it, and maintain it
+
+The "proper" DIY path is a serverless function. You write an endpoint, deploy it to Vercel, Netlify, or Cloudflare, and your form posts to it. Here is a minimal version that emails you on submit:
+
+```js
+// api/contact.js — a serverless function you deploy and maintain
+import { Resend } from 'resend';
+
+export async function POST(req) {
+  const data = await req.formData();
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  await resend.emails.send({
+    from: 'forms@yourdomain.com',
+    to: 'you@yourdomain.com',
+    subject: 'New submission',
+    text: `Email: ${data.get('email')}\nMessage: ${data.get('message')}`,
+  });
+
+  return Response.json({ ok: true });
+}
+```
+
+This works, and you fully own it. But look at everything the snippet _doesn't_ do. It doesn't store the submission, validate input, stop spam, set CORS, rate-limit, or retry a failed send, and there is nowhere to actually view what came in. Add those and the "quick function" becomes a small app, with its own secrets to manage and its own bugs, that you now copy into every project. For one form on one site, fine. Across a handful of client sites, it is death by a thousand maintenance cuts.
+
+### Hosted form backends — fast, but rented
+
+Hosted services like Formspree, FormBold, and Basin remove the code entirely. You point your form at their endpoint and they handle receiving, storage, and a dashboard. That is genuinely the fastest way to ship.
+
+The catch is the model. Your submissions live on their servers, and the useful parts (email forwarding, Google Sheets, webhooks) are typically gated behind paid tiers, **even though those integrations run on API keys you supply yourself.** You are renting both your data and the connectors to it, and if you ever leave, the migration is on you. Some static hosts also bundle a forms add-on, like Netlify Forms, but those tie you to one platform and stop at basic notification plus storage.
+
+## The Open-Source Way to Handle Form Submissions
+
+There is a fourth option that keeps the speed of a hosted backend without renting your data: an **open-source, bring-your-own-key form backend**. That is what OSForms is. You create a form, get an endpoint, and point your HTML at it. No server code:
+
+```html
+<form action="https://osforms.com/api/v1/f/your-form-id" method="POST">
+  <input type="email" name="email" required />
+  <textarea name="message" required></textarea>
+  <button type="submit">Send</button>
+</form>
+```
+
+Not using a plain HTML form? Because the endpoint also accepts JSON, any SPA can submit with `fetch` and read the response:
+
+```js
+async function onSubmit(e) {
+  e.preventDefault();
+  const form = e.currentTarget;
+  const res = await fetch('https://osforms.com/api/v1/f/your-form-id', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.fromEntries(new FormData(form))),
+  });
+  const { success } = await res.json(); // { success: true }
+  if (success) form.reset();
+}
+```
+
+That endpoint stores every submission and forwards it to **your** integrations: your Resend account for email, your Google Sheet, your webhook, all using keys you provide. The integrations are free because they run on your credentials, not a marked-up reseller plan. That is the [bring-your-own-key model](/bring-your-own-key), and it is the whole reason the connectors aren't paywalled.
+
+You also get the parts the DIY function skipped, without writing any of them:
+
+- **A submissions dashboard** plus **CSV/JSON export**, so your data is never trapped
+- **Spam protection**: a configurable honeypot field, plus optional reCAPTCHA, hCaptcha, or Turnstile
+- **Per-form CORS and rate limiting** handled at the endpoint
+- **Resilient delivery**: the submission is saved and a `200` returned instantly, then integrations run in the background, so a failing email provider never loses a submission. You get a per-submission log either way.
+
+And because it is open source, you can [self-host it](/docs) against your own MongoDB if you want every byte on your own infrastructure. For a concrete integration walkthrough, see [how to send form email notifications with Resend](/form-email-notifications).
+
+## Picking the Right Approach for Your Stack
+
+There is no single answer. It depends on what the form is worth to you.
+
+| Approach | Stores data | Free integrations | You own the data | Spam tools | Maintenance |
+| --- | --- | --- | --- | --- | --- |
+| `mailto:` | No | No | n/a | No | None |
+| Serverless function | Only if you build it | You wire them up | Yes | Build it yourself | You maintain it |
+| Hosted backend | Yes | Usually paywalled | No (their servers) | Yes | None |
+| OSForms (open source) | Yes | Yes (BYOK) | Yes (export / self-host) | Yes | None |
+
+If you are evaluating a form backend specifically, the questions worth asking are:
+
+- **Who owns the data?** Can you export it, and can you self-host if you need to?
+- **What is the integration cost model?** Are connectors free on your own keys, or rented?
+- **Does it handle spam** without forcing a captcha on every user?
+- **Will it work with your stack?** Anything that can POST works (plain HTML, React, Vue, Svelte, Astro); SPAs just submit JSON with `fetch`.
+
+A rough rule of thumb:
+
+- **Throwaway personal page?** `mailto:` is fine.
+- **Want full control and enjoy owning the code?** Write the serverless function.
+- **Want it handled in two minutes and don't mind renting?** A hosted backend works.
+- **Want it handled in two minutes _and_ want to keep your data and free integrations?** That is the open-source BYOK route.
+
+Whatever you pick, the point is the same. Handling form submissions is a solved problem. You don't need to stand up and babysit a backend just to find out who filled in your contact form.
+
+Want the two-minute version? [Get started free](/signup), create a form, paste the endpoint into your HTML, and you are collecting submissions.
