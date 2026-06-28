@@ -54,8 +54,8 @@ export default function BlogPage() {
       headline: post.title,
       description: post.description,
       url: `${BASE_URL}/${post.slug}`,
-      datePublished: post.date,
-      dateModified: post.dateModified ?? post.date,
+      datePublished: new Date(post.date).toISOString(),
+      dateModified: new Date(post.dateModified ?? post.date).toISOString(),
     })),
   };
 
