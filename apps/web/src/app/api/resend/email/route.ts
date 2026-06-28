@@ -12,11 +12,11 @@ interface ReceivedEmailData {
 }
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const SIGNING_SECRET = process.env.RESEND_EMAIl_SIGNING_SECRET;
+const SIGNING_SECRET = process.env.RESEND_EMAIL_SIGNING_SECRET;
 
 export async function POST(req: NextRequest) {
   if (!SIGNING_SECRET) {
-    console.error('RESEND_EMAIl_SIGNING_SECRET is not configured');
+    console.error('RESEND_EMAIL_SIGNING_SECRET is not configured');
     return NextResponse.json(
       { error: 'Webhook configuration error' },
       { status: 500 }

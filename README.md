@@ -1,74 +1,102 @@
-# osforms
+# OSForms
 
-Open-source form backend with BYOK (Bring Your Own Keys) integrations. Point your HTML forms at osforms, and we store submissions + route them to your own Resend, Google Sheets, and webhooks.
+Open-source form backend with BYOK (Bring Your Own Keys) integrations. Point your HTML forms at OSForms, and it stores submissions + routes them to your own Resend, Google Sheets, and webhooks.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/hawkeye-sama/osforms)](https://github.com/hawkeye-sama/osforms)
+[![npm](https://img.shields.io/npm/v/@osforms/react?label=%40osforms%2Freact)](https://www.npmjs.com/package/@osforms/react)
 [![Live](https://img.shields.io/badge/live-osforms.com-black)](https://osforms.com)
 
-## Why osforms?
+## Why OSForms?
 
-Every form backend (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5-15+/month — for basic features that you can get for free if you bring your own keys. osforms flips that: **100 free submissions/month with all integrations included**, because you bring your own keys or if you have more demand, you can self host it without any limits.
+Every form backend (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5–15+/month — for basic features you can get for free if you bring your own keys. OSForms flips that: **100 free submissions/month with all integrations included**, because you bring your own keys. Need more? Self-host it with no limits.
 
 ## Features
 
-- **BYOK Integrations** — Resend email, Google Sheets, webhooks. All free, powered by your API keys.
-- **Instant Setup** — Create a form, get an endpoint URL, point your HTML form at it.
-- **API Keys Encrypted at Rest** — AES-256-GCM encryption. Keys decrypted only during execution.
-- **Webhook HMAC Signatures** — SHA-256 signed payloads for request verification.
-- **CORS Control** — Configure allowed origins per form.
-- **Spam Protection** — Honeypot fields + reCAPTCHA/hCaptcha/Turnstile support (BYOK).
-- **Rate Limiting** — Configurable per-form rate limits (default: 10 req/min).
-- **Submission Analytics** — Dashboard with charts, export to CSV/JSON.
-- **Open Source** — MIT licensed. Self-host or use the hosted version.
+- **BYOK integrations** — Resend email, Google Sheets, webhooks. All free, powered by your API keys.
+- **Instant setup** — Create a form, get an endpoint URL, point your HTML form at it.
+- **API keys encrypted at rest** — AES-256-GCM. Keys decrypted only during execution.
+- **Webhook HMAC signatures** — SHA-256 signed payloads for request verification.
+- **CORS control** — Configure allowed origins per form.
+- **Spam protection** — Honeypot fields + reCAPTCHA/hCaptcha/Turnstile support (BYOK).
+- **Rate limiting** — Configurable per-form rate limits (default: 10 req/min).
+- **Submission analytics** — Dashboard with charts, export to CSV/JSON.
+- **React SDK** — [`@osforms/react`](https://www.npmjs.com/package/@osforms/react) for classic and conversational (Typeform-style) forms.
+- **Open source** — MIT licensed. Self-host or use the hosted version.
+
+## Repository layout
+
+OSForms is a [pnpm](https://pnpm.io) + [Turborepo](https://turbo.build) monorepo:
+
+```text
+.
+├── apps/
+│   ├── web/        # The Next.js 15 app — dashboard, API, public submission endpoint
+│   └── docs/       # Mintlify documentation site (osforms.com/docs)
+├── packages/
+│   ├── react/      # @osforms/react — the published React SDK
+│   └── types/      # @osforms/types — shared TypeScript types
+├── docker-compose.yml   # Local MongoDB
+└── turbo.json
+```
+
+The app source lives in [apps/web/src](apps/web/src). The environment file lives at [apps/web/.env.example](apps/web/.env.example).
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+
-- Docker (for local MongoDB) or a MongoDB connection string
-- npm
+- **Node.js 20+**
+- **pnpm 10+** — `corepack enable` (ships with Node) or `npm i -g pnpm`
+- **Docker** (for local MongoDB) or a MongoDB connection string
 
 ### Setup
 
 ```bash
-# Clone the repo
+# 1. Clone (or your fork)
 git clone https://github.com/hawkeye-sama/osforms.git
 cd osforms
 
-# Install dependencies
-npm install
+# 2. Install all workspace dependencies
+pnpm install
 
-# Copy environment variables
-cp .env.example .env
+# 3. Create your env file (note the path — it's inside apps/web)
+cp apps/web/.env.example apps/web/.env
 ```
 
-Edit `.env` with your values:
+Edit `apps/web/.env`. At minimum you need:
 
 ```bash
 MONGODB_URI=mongodb://localhost:27017/osforms
-JWT_SECRET=your-random-secret-string
-ENCRYPTION_KEY=<64-char hex string>  # Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+JWT_SECRET=any-long-random-string
+ENCRYPTION_KEY=<64-char hex string>   # node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+
+Google and Resend keys are optional — see [Environment Variables](#environment-variables).
 
 ### Run
 
 ```bash
-# Start MongoDB (Docker)
-docker-compose up -d
+# Start MongoDB
+docker compose up -d
+
+# Build the workspace packages once (the web app imports @osforms/react)
+pnpm build --filter @osforms/react
 
 # Start the dev server
-npm run dev
+pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000), create an account, and complete onboarding.
+
+> `pnpm dev` runs Turborepo, which starts the Next.js app and rebuilds `@osforms/react` in watch mode. Building the package once first avoids a first-run race where the app boots before the SDK is built.
 
 ## How It Works
 
-1. Create a form in your dashboard and get an endpoint URL
-2. Point your HTML form at it:
+**1. Create a form** in your dashboard and copy its endpoint URL.
+
+**2. Point your HTML form at it:**
 
 ```html
 <form action="https://osforms.com/api/v1/f/your-form-slug" method="POST">
@@ -79,81 +107,77 @@ Open [http://localhost:3000](http://localhost:3000).
 </form>
 ```
 
-1. Submissions are stored and routed to your configured integrations (email, Google Sheets, webhooks) — all in the background.
+**3. The submission is stored**, then your configured integrations (email, Google Sheets, webhooks) run in the background.
+
+The endpoint returns `{ "success": true }` for JSON/API calls, or redirects to your form's redirect URL when one is set (for classic HTML forms).
 
 ## Tech Stack
 
 | Layer           | Technology                                   |
 | --------------- | -------------------------------------------- |
 | Framework       | Next.js 15 (App Router)                      |
+| Monorepo        | pnpm workspaces + Turborepo                  |
 | Database        | MongoDB + Mongoose                           |
 | Auth            | Email/password + OTP verification + JWT      |
 | Encryption      | AES-256-GCM (Node crypto)                    |
 | Styling         | Tailwind CSS + shadcn/ui                     |
 | Integrations    | Resend, Google Sheets (googleapis), Webhooks |
-| Background Jobs | `@vercel/functions` waitUntil                |
+| Background jobs | `@vercel/functions` waitUntil                |
 | Charts          | Recharts                                     |
-
-## Project Structure
-
-```text
-src/
-├── app/                    # Next.js App Router
-│   ├── (auth)/             # Login, signup pages
-│   ├── (dashboard)/        # Dashboard, onboarding, form detail
-│   └── api/
-│       ├── auth/           # Signup, login, verify-email, OAuth
-│       └── v1/
-│           ├── forms/      # CRUD + submissions
-│           ├── f/[slug]/   # Public submission endpoint
-│           └── integrations/
-├── lib/
-│   ├── models/             # Mongoose models (User, Form, Submission, etc.)
-│   ├── integrations/       # Email, Google Sheets, Webhook handlers
-│   ├── auth.ts             # JWT + bcrypt helpers
-│   ├── encryption.ts       # AES-256-GCM encrypt/decrypt
-│   └── validations.ts      # Zod schemas
-└── components/
-    ├── ui/                 # shadcn/ui primitives
-    ├── dashboard/          # Dashboard components
-    └── integrations/       # Integration config forms
-```
+| SDK             | `@osforms/react` (built with tsup)           |
 
 ## Environment Variables
 
-| Variable                      | Description                         | Required |
-| ----------------------------- | ----------------------------------- | -------- |
-| `MONGODB_URI`                 | MongoDB connection string           | Yes      |
-| `JWT_SECRET`                  | Secret for signing JWT tokens       | Yes      |
-| `ENCRYPTION_KEY`              | 64-char hex string for AES-256-GCM  | Yes      |
-| `NEXT_PUBLIC_APP_URL`         | Public app URL                      | Yes      |
-| `GOOGLE_CLIENT_ID`            | Google OAuth client ID (for Sheets) | Optional |
-| `GOOGLE_CLIENT_SECRET`        | Google OAuth client secret          | Optional |
-| `RESEND_API_KEY`              | Resend API key (for system emails)  | Optional |
-| `RESEND_EMAIL_SIGNING_SECRET` | Resend webhook signing secret       | Optional |
+All variables live in `apps/web/.env` (copy from [apps/web/.env.example](apps/web/.env.example)).
 
-See [.env.example](.env.example) for a template.
+| Variable                      | Description                                         | Required |
+| ----------------------------- | --------------------------------------------------- | -------- |
+| `MONGODB_URI`                 | MongoDB connection string                           | Yes      |
+| `JWT_SECRET`                  | Secret for signing JWT auth tokens                  | Yes      |
+| `ENCRYPTION_KEY`              | 64-char hex string (32 bytes) for AES-256-GCM       | Yes      |
+| `NEXT_PUBLIC_APP_URL`         | Public app URL for CORS, redirects, OAuth callback  | Yes      |
+| `GOOGLE_CLIENT_ID`            | Google OAuth client ID (Google Sheets only)         | No       |
+| `GOOGLE_CLIENT_SECRET`        | Google OAuth client secret                          | No       |
+| `RESEND_API_KEY`              | Resend API key (system emails + Resend integration) | No       |
+| `RESEND_EMAIL_SIGNING_SECRET` | Signing secret for inbound Resend email webhook     | No       |
+
+> Without `RESEND_API_KEY`, account verification emails won't send. For local dev you can read the OTP from the server logs, or set a Resend key.
+
+## Deploy / Self-Host
+
+OSForms runs anywhere Next.js runs. The hosted version is on Vercel + MongoDB Atlas. Full step-by-step (MongoDB, Google OAuth, Resend, Vercel settings) is in **[SELF_HOSTING.md](SELF_HOSTING.md)**.
+
+Background integrations use Vercel's `waitUntil`, which is capped at ~10s on the Hobby plan and up to 60s on Pro.
+
+## Forking & staying in sync
+
+Forks ship with a scheduled GitHub Action ([.github/workflows/sync-fork.yml](.github/workflows/sync-fork.yml)) that keeps your fork's `main` up to date with upstream automatically. It only runs on forks — never on the upstream repo. Enable Actions on your fork once and it runs daily. See [SELF_HOSTING.md → Keep your fork in sync](SELF_HOSTING.md#keep-your-fork-in-sync).
 
 ## Development
 
+Scripts run from the repo root via Turborepo (they fan out to every workspace package):
+
 ```bash
-npm run dev            # Start dev server
-npm run build          # Production build
-npm run lint           # Run ESLint
-npm run format         # Format with Prettier
-npm run format:check   # Check formatting
+pnpm dev            # Start the app + SDK watch build
+pnpm build          # Production build of all packages
+pnpm lint           # Lint + typecheck all packages
+pnpm format         # Format with Prettier
+pnpm format:check   # Check formatting
 ```
+
+Target a single package with `--filter`, e.g. `pnpm build --filter @osforms/web`.
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on setting up your development environment, code style, and submitting pull requests.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for environment setup, code style, and how to open a pull request.
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE).
 
 ## Links
 
-- [Live Site](https://osforms.com)
-- [GitHub](https://github.com/hawkeye-sama/osforms)
-- [Report an Issue](https://github.com/hawkeye-sama/osforms/issues)
+- [Live site](https://osforms.com)
+- [Documentation](https://osforms.com/docs)
+- [npm: @osforms/react](https://www.npmjs.com/package/@osforms/react)
+- [Report an issue](https://github.com/hawkeye-sama/osforms/issues)

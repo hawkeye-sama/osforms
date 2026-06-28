@@ -1,0 +1,39 @@
+name: Sync Fork
+
+# Keeps a fork's `main` branch up to date with the upstream OSForms repo.
+#
+# This workflow ships in the repo, so every fork inherits it. The `if` guard
+# below means it does nothing on the upstream repo itself — it only acts on
+# forks. Enable Actions on your fork once (Actions tab) and it runs daily;
+# you can also trigger it on demand from the Actions tab ("Run workflow").
+#
+# It performs a fast-forward-only sync. If your fork's `main` has diverged
+# from upstream (you committed directly to `main`), the sync will fail rather
+# than overwrite your work — rebase your commits onto upstream, or do your
+# work on a branch instead of `main`.
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # daily at 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Sync main from upstream
+    runs-on: ubuntu-latest
+    # Never run on the upstream repo — only on forks.
+    if: github.repository != 'hawkeye-sama/osforms'
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+
+      - name: Sync main from upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh repo sync "${{ github.repository }}" \
+            --source hawkeye-sama/osforms \
+            --branch main
