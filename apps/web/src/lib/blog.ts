@@ -16,6 +16,10 @@ export interface BlogPost {
   slug: string;
   title: string;
   description: string;
+  /** Optional search-optimized title used for the <title>/OG tag (falls back to title). */
+  seoTitle?: string;
+  /** Primary keyphrase the post targets; surfaced as the lead keyword. */
+  focusKeyphrase?: string;
   date: string;
   dateModified?: string;
   author: string;
@@ -45,9 +49,11 @@ export function getAllPosts(): BlogPostMeta[] {
         slug,
         title: data.title as string,
         description: data.description as string,
+        seoTitle: data.seoTitle as string | undefined,
+        focusKeyphrase: data.focusKeyphrase as string | undefined,
         date: data.date as string,
         dateModified: data.dateModified as string | undefined,
-        author: (data.author as string) ?? 'osforms Team',
+        author: (data.author as string) ?? 'Bahroze Ali',
         tags: (data.tags as string[]) ?? [],
         readingTime: (data.readingTime as string) ?? '5 min read',
         category: (data.category as BlogCategory) ?? 'Build',
@@ -70,9 +76,11 @@ export function getPostBySlug(slug: string): BlogPost | null {
     slug,
     title: data.title as string,
     description: data.description as string,
+    seoTitle: data.seoTitle as string | undefined,
+    focusKeyphrase: data.focusKeyphrase as string | undefined,
     date: data.date as string,
     dateModified: data.dateModified as string | undefined,
-    author: (data.author as string) ?? 'osforms Team',
+    author: (data.author as string) ?? 'Bahroze Ali',
     tags: (data.tags as string[]) ?? [],
     readingTime: (data.readingTime as string) ?? '5 min read',
     category: (data.category as BlogCategory) ?? 'Build',

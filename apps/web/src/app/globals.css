@@ -3,6 +3,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -415,6 +417,30 @@ body {
   background-size:
     32px 32px,
     100% 100%;
+}
+
+/* Cursor-following spotlight that lights up the grid dots near the pointer.
+   Same 32px dot grid as .bg-grid-glow but brighter, revealed through a radial
+   mask centered on the cursor (--gx/--gy set by <CursorGridGlow />). */
+.cursor-grid-glow {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.4) 1px,
+    transparent 1px
+  );
+  background-size: 32px 32px;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  -webkit-mask-image: radial-gradient(
+    220px circle at var(--gx, -300px) var(--gy, -300px),
+    #000 0%,
+    transparent 65%
+  );
+  mask-image: radial-gradient(
+    220px circle at var(--gx, -300px) var(--gy, -300px),
+    #000 0%,
+    transparent 65%
+  );
 }
 
 .gradient-radial-glow {

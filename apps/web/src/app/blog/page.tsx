@@ -3,171 +3,224 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { formatDate, getAllPosts } from '@/lib/blog';
+import { SITE_URL as BASE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Blog',
   description:
-    'Tutorials, guides, and insights on form backends, BYOK integrations, and developer tools from the osforms team.',
-};
-
-const CATEGORY_STYLES: Record<string, string> = {
-  Build: 'bg-card border-border text-muted-foreground',
-  Integrate: 'bg-card border-border text-muted-foreground',
-  Ship: 'bg-card border-border text-muted-foreground',
-  Compare: 'bg-card border-border text-muted-foreground',
-  'BYOK Files': 'bg-card border-border text-foreground',
+    'Tutorials, guides, and insights on form backends, BYOK integrations, and developer tools from the OSForms team.',
+  alternates: {
+    canonical: `${BASE_URL}/blog`,
+    types: {
+      'application/rss+xml': `${BASE_URL}/feed.xml`,
+    },
+  },
+  openGraph: {
+    title: 'OSForms Blog',
+    description:
+      'Tutorials, comparisons, and opinions on form backends, BYOK integrations, and building for developers.',
+    url: `${BASE_URL}/blog`,
+    type: 'website',
+  },
 };
 
 export default function BlogPage() {
   const posts = getAllPosts();
   const [featured, ...rest] = posts;
 
+  const categories = Array.from(
+    posts.reduce(
+      (m, p) => m.set(p.category, (m.get(p.category) ?? 0) + 1),
+      new Map<string, number>(),
+    ),
+    ([name, count]) => ({ name, count }),
+  );
+
+  const blogJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'OSForms Blog',
+    description:
+      'Tutorials, comparisons, and opinions on form backends, BYOK integrations, and building for developers.',
+    url: `${BASE_URL}/blog`,
+    publisher: {
+      '@type': 'Organization',
+      name: 'OSForms',
+      url: BASE_URL,
+      logo: { '@type': 'ImageObject', url: `${BASE_URL}/logo.png` },
+    },
+    blogPost: posts.map((post) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      description: post.description,
+      url: `${BASE_URL}/${post.slug}`,
+      datePublished: post.date,
+      dateModified: post.dateModified ?? post.date,
+    })),
+  };
+
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: posts.map((post, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${BASE_URL}/${post.slug}`,
+      name: post.title,
+    })),
+  };
+
   return (
-    <div className="px-8 py-20">
-      <div className="mx-auto max-w-6xl px-8">
-        {/* ── Page Header ────────────────────────── */}
-        <div className="mb-16 max-w-xl">
-          <p className="text-muted-foreground mb-3 text-sm font-medium tracking-widest uppercase">
-            From the team
-          </p>
-          <h1 className="text-foreground text-5xl font-bold tracking-tight">
-            Blog
-          </h1>
-          <p className="text-muted-foreground mt-4 text-lg leading-relaxed">
-            Tutorials, comparisons, and opinions on form backends, BYOK
-            integrations, and building for developers.
-          </p>
-        </div>
+    <div className="relative px-6 py-20 sm:py-28">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
 
-        {posts.length === 0 && (
-          <p className="text-muted-foreground text-sm">No posts yet.</p>
-        )}
+      <div className="mx-auto max-w-5xl">
+        {/* ── Header ─────────────────────────────── */}
+        <header className="mb-16 grid gap-10 lg:grid-cols-[1fr_15rem] lg:items-start">
+          <div>
+            <div className="text-muted-foreground mb-6 flex items-center gap-3 font-mono text-xs tracking-widest uppercase">
+              <span className="bg-foreground/60 h-px w-8" />
+              <span>Writing</span>
+              <span className="text-muted-foreground/70">
+                ({String(posts.length).padStart(2, '0')})
+              </span>
+            </div>
+            <h1 className="text-foreground text-5xl font-bold tracking-tight sm:text-7xl">
+              Blog
+            </h1>
+            <p className="text-muted-foreground mt-6 max-w-xl text-lg leading-relaxed text-balance">
+              Tutorials, comparisons, and opinions on form backends, BYOK
+              integrations, and building for developers — from the team behind
+              OSForms.
+            </p>
+          </div>
 
-        {/* ── Featured Post ───────────────────────── */}
+          {categories.length > 0 && (
+            <aside className="border-border bg-card/40 rounded-2xl border p-5 lg:mt-2">
+              <div className="text-muted-foreground mb-4 font-mono text-[11px] tracking-widest uppercase">
+                Topics
+              </div>
+              <ul className="space-y-2.5">
+                {categories.map((c) => (
+                  <li
+                    key={c.name}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span className="text-foreground">{c.name}</span>
+                    <span className="text-muted-foreground font-mono text-xs tabular-nums">
+                      {String(c.count).padStart(2, '0')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="/feed.xml"
+                className="border-border text-muted-foreground hover:text-foreground mt-5 flex items-center gap-1.5 border-t pt-4 font-mono text-xs tracking-wide transition-colors"
+              >
+                RSS feed →
+              </a>
+            </aside>
+          )}
+        </header>
+
+        {/* ── Featured (latest) ──────────────────── */}
         {featured && (
           <Link
             href={`/${featured.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group mb-8 block"
+            className="group bg-card/40 border-border hover:bg-card/60 relative block overflow-hidden rounded-2xl border transition-colors duration-300"
           >
-            <article className="border-border bg-card/40 hover:bg-card/70 relative overflow-hidden rounded-2xl border transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,255,255,0.05)]">
-              {/* top accent line */}
-              <div className="from-border via-foreground/20 to-border absolute inset-x-0 top-0 h-px bg-linear-to-r" />
-
-              <div className="flex flex-col lg:flex-row">
-                {/* Text side */}
-                <div className="flex flex-1 flex-col justify-center p-8 sm:p-10">
-                  <div className="mb-4 flex flex-wrap items-center gap-3">
-                    <span
-                      className={`rounded-md border px-2.5 py-0.5 text-xs font-medium ${CATEGORY_STYLES[featured.category] ?? CATEGORY_STYLES.Build}`}
-                    >
-                      {featured.category}
-                    </span>
-                    <span className="text-muted-foreground text-sm">Latest</span>
-                  </div>
-
-                  <h2 className="text-foreground mb-3 text-2xl font-bold leading-snug tracking-tight transition-colors group-hover:opacity-80 sm:text-3xl">
-                    {featured.title}
-                  </h2>
-                  <p className="text-muted-foreground text-base leading-relaxed">
-                    {featured.description}
-                  </p>
-
-                  <div className="text-muted-foreground mt-6 flex flex-wrap items-center gap-4 text-sm">
-                    <time dateTime={featured.date}>{formatDate(featured.date)}</time>
-                    <span>·</span>
-                    <span>{featured.readingTime}</span>
-                    {featured.tags.length > 0 && (
-                      <>
-                        <span>·</span>
-                        <div className="flex gap-2">
-                          {featured.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="border-border bg-background rounded px-2 py-0.5 text-xs"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <span className="text-muted-foreground group-hover:text-foreground mt-6 inline-flex w-fit items-center gap-1 text-sm transition-colors">
-                    Read article →
-                  </span>
+            <div className="grid items-stretch lg:grid-cols-[1.1fr_1fr]">
+              <div className="flex flex-col justify-center gap-5 p-8 sm:p-10">
+                <div className="text-muted-foreground flex items-center gap-3 font-mono text-[11px] tracking-widest uppercase">
+                  <span className="text-foreground">Latest</span>
+                  <span className="text-muted-foreground/50">/</span>
+                  <span>{featured.category}</span>
                 </div>
 
-                {/* Cover image side */}
-                {featured.coverImage && (
-                  <div className="border-border/40 relative hidden h-64 w-full overflow-hidden border-t lg:block lg:h-auto lg:w-96 lg:border-t-0 lg:border-l xl:w-120">
-                    <Image
-                      src={featured.coverImage}
-                      alt={featured.title}
-                      fill
-                      className="object-cover object-left opacity-80 transition-opacity duration-300 group-hover:opacity-100"
-                    />
-                  </div>
-                )}
+                <h2 className="text-foreground text-2xl leading-snug font-bold tracking-tight transition-opacity group-hover:opacity-80 sm:text-3xl">
+                  {featured.title}
+                </h2>
+                <p className="text-muted-foreground leading-relaxed">
+                  {featured.description}
+                </p>
+                <div className="text-muted-foreground mt-1 flex items-center gap-3 font-mono text-xs">
+                  <time dateTime={featured.date}>
+                    {formatDate(featured.date)}
+                  </time>
+                  <span className="text-muted-foreground/50">·</span>
+                  <span>{featured.readingTime}</span>
+                  <span className="text-foreground ml-auto inline-flex items-center transition-transform duration-300 group-hover:translate-x-1">
+                    Read →
+                  </span>
+                </div>
               </div>
-            </article>
+
+              {featured.coverImage && (
+                <div className="border-border bg-background relative min-h-60 overflow-hidden border-t lg:border-t-0 lg:border-l">
+                  <Image
+                    src={featured.coverImage}
+                    alt={featured.title}
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    priority
+                  />
+                </div>
+              )}
+            </div>
           </Link>
         )}
 
-        {/* ── Remaining Posts Grid ────────────────── */}
+        {/* ── Indexed list ───────────────────────── */}
         {rest.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {rest.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/${post.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block"
-              >
-                <article className="border-border bg-card/40 hover:bg-card/70 flex h-full flex-col overflow-hidden rounded-xl border transition-all duration-300 hover:shadow-[0_0_24px_rgba(255,255,255,0.04)]">
-                  {/* Cover image thumbnail */}
-                  {post.coverImage && (
-                    <div className="border-border/40 relative h-40 w-full overflow-hidden border-b">
-                      <Image
-                        src={post.coverImage}
-                        alt={post.title}
-                        fill
-                        className="object-cover object-left opacity-80 transition-opacity duration-300 group-hover:opacity-100"
-                      />
-                    </div>
-                  )}
+          <ul className="border-border mt-16 border-t">
+            {rest.map((post, i) => (
+              <li key={post.slug}>
+                <Link
+                  href={`/${post.slug}`}
+                  className="group border-border hover:bg-card/40 grid grid-cols-[auto_1fr] items-baseline gap-x-5 border-b px-2 py-7 transition-colors duration-200 sm:grid-cols-[3rem_1fr_auto] sm:gap-x-8"
+                >
+                  <span className="text-muted-foreground/70 group-hover:text-muted-foreground font-mono text-sm tabular-nums transition-colors">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
 
-                  <div className="flex flex-1 flex-col p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                      <span
-                        className={`rounded-md border px-2 py-0.5 text-xs font-medium ${CATEGORY_STYLES[post.category] ?? CATEGORY_STYLES.Build}`}
-                      >
-                        {post.category}
-                      </span>
-                      <time dateTime={post.date} className="text-muted-foreground text-xs">
-                        {formatDate(post.date)}
-                      </time>
+                  <div className="min-w-0">
+                    <div className="text-muted-foreground mb-2 flex items-center gap-3 font-mono text-[11px] tracking-widest uppercase">
+                      <span>{post.category}</span>
+                      <span className="text-muted-foreground/30">·</span>
+                      <time dateTime={post.date}>{formatDate(post.date)}</time>
                     </div>
-
-                    <h2 className="text-foreground mb-2 flex-1 text-base font-semibold leading-snug tracking-tight group-hover:opacity-80">
+                    <h3 className="text-foreground text-xl font-semibold tracking-tight transition-opacity group-hover:opacity-70">
                       {post.title}
-                    </h2>
-                    <p className="text-muted-foreground mb-4 line-clamp-2 text-sm leading-relaxed">
+                    </h3>
+                    <p className="text-muted-foreground mt-1.5 line-clamp-2 max-w-2xl text-sm leading-relaxed">
                       {post.description}
                     </p>
-
-                    <div className="text-muted-foreground flex items-center justify-between text-xs">
-                      <span>{post.readingTime}</span>
-                      <span className="group-hover:text-foreground transition-colors">Read →</span>
-                    </div>
                   </div>
-                </article>
-              </Link>
+
+                  <div className="text-muted-foreground/50 col-start-2 mt-3 flex items-center gap-4 font-mono text-xs sm:col-start-3 sm:mt-0 sm:self-center">
+                    <span className="hidden sm:inline">{post.readingTime}</span>
+                    <span className="text-foreground inline-flex translate-x-0 items-center transition-transform duration-200 group-hover:translate-x-1">
+                      →
+                    </span>
+                  </div>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
+        )}
+
+        {posts.length === 0 && (
+          <p className="text-muted-foreground font-mono text-sm">
+            No posts yet.
+          </p>
         )}
       </div>
     </div>

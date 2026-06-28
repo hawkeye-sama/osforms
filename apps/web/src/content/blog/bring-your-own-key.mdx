@@ -1,129 +1,97 @@
 ---
-title: "BYOK Form Backends: Why You Should Own Your API Keys"
-description: "Most form backends charge you for integrations powered by your own API keys. Here's why the BYOK model is better — and how osforms implements it."
-date: "2026-04-10"
-dateModified: "2026-04-27"
-author: "osforms Team"
-tags: ["open-source", "byok", "pricing", "integrations"]
-readingTime: "6 min read"
-category: "BYOK Files"
-seoTitle: "BYOK Form Backend: Own Your API Keys | osforms"
-focusKeyphrase: "BYOK form backend"
-coverImage: "/content/images/byok-form-backend-cover.png"
+title: 'What Bring Your Own Key (BYOK) Actually Means'
+description: "Bring your own key (BYOK) is showing up everywhere. Here's what it actually means, why it changes who controls your data, and where it matters most."
+date: '2026-04-10'
+dateModified: '2026-04-27'
+author: 'Bahroze Ali'
+tags: ['byok', 'data-ownership', 'open-source', 'api-keys']
+readingTime: '6 min read'
+category: 'BYOK Files'
+seoTitle: 'What Bring Your Own Key (BYOK) Actually Means'
+focusKeyphrase: 'bring your own key'
+coverImage: '/content/images/byok-form-backend-cover.png'
 faq:
-  - question: "What integrations does osforms support?"
-    answer: "Resend (email notifications), Google Sheets (row append on each submission), and custom webhooks with HMAC-SHA256 signatures. All three run on your credentials and are free."
-  - question: "How does osforms make money without charging for integrations?"
-    answer: "Submission volume. Integrations are never gated — only the volume of submissions is limited on the free tier."
-  - question: "Can I self-host osforms?"
-    answer: "Yes. Clone the repo, point it at your own MongoDB, set your environment variables, and deploy anywhere. Nothing in the codebase requires the hosted version."
-  - question: "How is the credential encryption key managed?"
-    answer: "It lives in the ENCRYPTION_KEY environment variable — 64 hex characters (32 bytes). You generate it; the osforms team never sees it. In self-hosted deployments it is entirely yours."
-  - question: "What happens if I delete my osforms account?"
-    answer: "All submissions and encrypted credentials are deleted. Data is stored as standard JSON so you can export at any time before deletion."
-  - question: "How is BYOK different from building my own serverless function?"
-    answer: "A serverless function handles one integration with no storage or dashboard. osforms handles storage, integration logs, spam protection, and a submissions dashboard. You just change your form action attribute."
+  - question: 'What integrations does OSForms support?'
+    answer: 'Resend (email notifications), Google Sheets (row append on each submission), and custom webhooks with HMAC-SHA256 signatures. All three run on your credentials and are free.'
+  - question: 'How does OSForms make money without charging for integrations?'
+    answer: 'Submission volume. Integrations are never gated — only the volume of submissions is limited on the free tier.'
+  - question: 'Can I self-host OSForms?'
+    answer: 'Yes. Clone the repo, point it at your own MongoDB, set your environment variables, and deploy anywhere. Nothing in the codebase requires the hosted version.'
+  - question: 'How is the credential encryption key managed?'
+    answer: 'It lives in the ENCRYPTION_KEY environment variable — 64 hex characters (32 bytes). You generate it; the OSForms team never sees it. In self-hosted deployments it is entirely yours.'
+  - question: 'What happens if I delete my OSForms account?'
+    answer: 'All submissions and encrypted credentials are deleted. Data is stored as standard JSON so you can export at any time before deletion.'
+  - question: 'How is BYOK different from building my own serverless function?'
+    answer: 'A serverless function handles one integration with no storage or dashboard. OSForms handles storage, integration logs, spam protection, and a submissions dashboard. You just change your form action attribute.'
 ---
 
-If you've used a form backend before, you've hit this wall: you want to forward submissions to your email, or append them to a Google Sheet, and the service locks that behind a $9–$15/month plan.
+Bring your own key — BYOK — used to be an enterprise checkbox. Now it's everywhere: AI tools that run on your own OpenAI or Anthropic key, email APIs, analytics, form backends. The phrase keeps showing up on pricing pages, and it quietly changes who controls your data.
 
-Here's the part that should bother you: **those integrations run on your API keys**.
+Here's what bring your own key actually means, why it changes your relationship with a tool, and where it matters beyond forms.
 
-You provide the Resend key. You grant the Google OAuth token. The BYOK form backend just makes the API call. But they charge you for the privilege of using your own credentials.
+## What Bring Your Own Key Means
 
-That's the problem osforms is built to solve.
+Bring your own key means you supply the API credentials, and the platform uses your keys to do the work on your behalf — instead of reselling you access through its own account.
 
-## What BYOK Means
+This is already how most things work at the infrastructure level. You bring AWS credentials to Terraform. You bring a Stripe secret key to your payments library. The tool orchestrates; the provider bills you directly. Nobody adds a margin on top of your Stripe usage — Stripe does the charging.
 
-BYOK — Bring Your Own Keys — means you supply the API credentials, and the platform uses them to execute integrations on your behalf.
+> "You're not paying for the integration. You're paying for the markup on your own API keys."
 
-This is already how most things work at the infrastructure level. You bring AWS credentials to Terraform. You bring a Stripe secret key to your payments library. The tool doesn't charge you for Stripe usage — Stripe does.
+The opposite model — call it bring-your-wallet — is where the tool holds the keys, makes the calls on its own account, and bills you a marked-up rate for the privilege. BYOK flips that ownership back to you.
 
-Form backends should work the same way. If you're paying Resend $0.10 per 1,000 emails, why is the form backend charging you again just to call the Resend API?
+## Why BYOK Changes the Trust Model
 
-> "You're not paying for integrations. You're paying for the markup on your own API keys."
+When the keys are yours, the relationship with the tool changes in three concrete ways:
 
-## How osforms Implements BYOK
+**Cost accrues to you, not a middleman.** If you're paying Resend $0.10 per 1,000 emails, that's the cost — full stop. There's no integration tier marking up an API you already pay for.
 
-When you add an integration in osforms:
+**You can leave.** Revoke the key and the tool's access ends instantly. Your data isn't hostage to a credential the vendor controls, and there's no migration tax to switch providers.
 
-1. You paste your API key (Resend, webhook signing secret, etc.) or complete an OAuth flow (Google Sheets)
-2. osforms encrypts the credential at rest with AES-256-GCM using a per-installation encryption key
-3. When a submission arrives, osforms decrypts the credential in memory and executes the integration
-4. The decrypted key is never logged or persisted beyond the execution
+**Security responsibility is explicit.** Holding someone's third-party credentials is real responsibility. The honest version of BYOK is verifiable, not just promised:
+
+- **Encrypted at rest** — keys encrypted (OSForms uses AES-256-GCM) before they touch the database, with the encryption key in the environment, not the DB. Dump the database, you get ciphertext.
+- **Never logged** — decrypted in memory for the call, then discarded. Not in logs, errors, or storage.
+- **Scoped access** — OAuth integrations request the narrowest scope that works (OSForms' Google Sheets integration uses `drive.file`, not full-Drive access).
+
+> "You don't have to trust a description of how your keys are handled — when the code is open source, you can read the implementation."
+
+## BYOK in Practice With a Form Backend
+
+A form backend is a clean example, because every integration it offers runs on a key you already own. In OSForms, adding one looks like this:
+
+1. You paste your API key (Resend, a webhook signing secret) or complete an OAuth flow (Google Sheets).
+2. The credential is encrypted at rest with AES-256-GCM.
+3. When a submission arrives, OSForms decrypts it in memory and makes the call.
+4. The decrypted key is never logged or persisted beyond that execution.
 
 ```
-Submission → osforms → decrypts your key → calls Resend API → logs result
+Submission → OSForms → decrypts your key → calls Resend API → logs result
                                                  ↑
                                      Resend bills your account
 ```
 
-Your key, your data, your costs. The BYOK form backend model means your provider costs accrue to you directly — not through an intermediary with a margin on top.
+The practical payoff shows up on the pricing page. Here's what the same integrations cost when the tool owns the keys versus when you do:
 
-## Security Considerations
+| Feature          | OSForms (BYOK) | Formspree | FormBold |
+| ---------------- | -------------- | --------- | -------- |
+| Email forwarding | Free           | $15/mo    | $9/mo    |
+| Google Sheets    | Free           | $15/mo    | $9/mo    |
+| Webhooks         | Free           | $9/mo     | $9/mo    |
+| Open source      | Yes            | No        | No       |
+| Self-hostable    | Yes            | No        | No       |
 
-Storing third-party credentials introduces real responsibility. Here's exactly what osforms does:
+Every paid integration above is executed with credentials you supply. The charge is for an API call to a service you already pay for. For a hands-on example, see [how to send form email notifications with Resend](/form-email-notifications) on your own key — and the [docs](/docs) cover self-hosting if you want to own the whole stack.
 
-**Encryption at rest**: Every API key is encrypted with AES-256-GCM before hitting the database. The encryption key lives in the environment, not the database. If someone dumps your MongoDB, they get ciphertext.
+## Where Else BYOK Matters
 
-**Never logged**: Decrypted credentials are used in memory and discarded. They don't appear in logs, error messages, or any persistent storage.
+The form backend is just one instance of a pattern worth demanding wherever your data and credentials are involved:
 
-**Scoped OAuth**: The Google Sheets integration requests only `drive.file` scope — access to files you explicitly designate, not your entire Drive.
+- **AI features** — tools that run on your own OpenAI or Anthropic key, so inference cost and prompt data stay on your account, not the vendor's.
+- **Email and messaging** — Resend, Postmark, Twilio: bring the key, pay the provider, skip the per-message markup.
+- **Analytics and storage** — pipe events and files into infrastructure you control rather than a silo you rent.
 
-> "The code is open source. You don't have to trust our description of how your keys are handled — you can read the implementation."
+The test is simple: if a tool charges you for something that runs on a credential you provide, ask why. BYOK isn't a novel idea — infrastructure tooling has worked this way for years. It's just honest, and it's worth choosing the tools that do it.
 
-## Open Source as a Trust Signal
+OSForms is built entirely on this model. The integrations are free because they cost us nothing to run — you bring the key, you bear the provider cost — and the code is [open source](https://github.com/hawkeye-sama/osforms) so you can verify every word of that.
 
-osforms is fully open source on [GitHub](https://github.com/hawkeye-sama/osforms). You can audit exactly how credentials are stored, encrypted, and used. There's no black box.
-
-If you want to self-host — run osforms on your own infrastructure with your own MongoDB — you can. The same codebase that powers the hosted version is the codebase you can inspect, fork, and deploy yourself.
-
-This matters for teams with strict data policies. If you can't send form submissions through a third-party service, run osforms yourself. That's not a theoretical option; it's how the project is designed.
-
-## The Comparison Nobody Wants to Have
-
-| Feature | osforms | Formspree | FormBold |
-|---------|---------|-----------|----------|
-| Email forwarding | Free (BYOK) | $15/mo | $9/mo |
-| Google Sheets | Free (BYOK) | $15/mo | $9/mo |
-| Webhooks | Free | $9/mo | $9/mo |
-| Open source | Yes | No | No |
-| Self-hostable | Yes | No | No |
-
-These are published prices. The integration features in every competitor's paid plan are, in every case, executed using credentials you supply. The charge is for the API call — an API call to a service you already pay for.
-
-## The osforms Take
-
-We didn't build osforms to compete on features. We built it because the pricing model of existing form backends is backwards.
-
-When you supply the integration credentials, the integration cost should accrue to your provider account — not to the form backend's margin. Charging for integrations in this model is a tax on developer convenience, not a reflection of the value delivered.
-
-The BYOK form backend model isn't novel — it's just honest. Infrastructure tooling has worked this way for years. Form backends adopted the SaaS playbook instead: lock integrations behind paid tiers, call them "advanced features," and collect the delta between your API key's actual cost and what developers will tolerate paying.
-
-osforms exists because that model is worth refusing. The integrations are free because they cost us nothing to provide — you bring the key, you bear the provider cost. Our only legitimate revenue is on submission volume, which scales with actual usage.
-
-That's the architecture. The code is public. The model is transparent.
-
-If you want to try it: [osforms.com/signup](https://osforms.com/signup) — free, no card required. Or browse the code first: [github.com/hawkeye-sama/osforms](https://github.com/hawkeye-sama/osforms).
-
----
-
-## FAQ
-
-**What integrations does osforms support?**
-Currently: Resend (email notifications), Google Sheets (row append on each submission), and custom webhooks with HMAC-SHA256 signatures. All three run on your credentials. All three are free.
-
-**How does osforms make money without charging for integrations?**
-Submission volume. The free tier is 100 submissions/month. Heavy users can upgrade. The integrations are never gated — only the volume.
-
-**Can I really self-host the entire thing?**
-Yes. Clone the repo, point it at your own MongoDB, set your environment variables, deploy anywhere. The docs cover self-hosting. Nothing in the codebase requires the hosted version.
-
-**How is the credential encryption key managed?**
-It lives in the `ENCRYPTION_KEY` environment variable — 64 hex characters (32 bytes). You generate it; we never see it. In the hosted version, it's a deployment secret. In self-hosted, it's yours entirely.
-
-**What happens if I delete my osforms account?**
-All submissions and encrypted credentials are deleted. There's no vendor lock-in on your data because the data format is standard JSON and you can export at any time before deletion.
-
-**Is this different from just building a serverless function to call Resend?**
-Yes, in two ways. First, you'd still need to write, deploy, and maintain that function. osforms replaces the function — you just change your form's `action` attribute. Second, osforms gives you submission storage, a dashboard, integration logs, and spam protection as part of the deal. A single serverless function gives you one email per submission with no audit trail.
+Try it free, no card required: [osforms.com/signup](https://osforms.com/signup).
