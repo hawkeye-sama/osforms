@@ -40,7 +40,7 @@
     "motion": "^12.29.2",
     "nanoid": "^5.1.6",
     "next": "16.1.5",
-    "next-mdx-remote": "^6.0.0",
+    "next-mdx-remote-client": "^2.1.11",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-syntax-highlighter": "^16.1.0",
