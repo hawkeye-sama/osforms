@@ -96,7 +96,7 @@ export function getPostBySlug(slug: string): BlogPost | null {
  * site default OG image if a post hasn't had a cover generated yet.
  */
 export function getCoverUrl(
-  post: Pick<BlogPost, 'slug' | 'coverImage'>,
+  post: Pick<BlogPost, 'slug' | 'coverImage'>
 ): string {
   return post.coverImage ?? '/og-image.png';
 }

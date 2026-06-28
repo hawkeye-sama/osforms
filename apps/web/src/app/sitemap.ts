@@ -15,10 +15,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   const staticEntries: MetadataRoute.Sitemap = [
-    { url: SITE_URL, lastModified: now, changeFrequency: 'weekly', priority: 1 },
+    {
+      url: SITE_URL,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 1,
+    },
     {
       url: `${SITE_URL}/blog`,
-      lastModified: posts[0] ? new Date(posts[0].dateModified ?? posts[0].date) : now,
+      lastModified: posts[0]
+        ? new Date(posts[0].dateModified ?? posts[0].date)
+        : now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },

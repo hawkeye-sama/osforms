@@ -14,7 +14,11 @@ export const metadata: Metadata = {
   openGraph: { type: 'website' },
 };
 
-export default function BlogLayout({ children }: { children: React.ReactNode }) {
+export default function BlogLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="dark bg-background text-foreground relative min-h-screen">
       <div className="bg-grid-glow pointer-events-none fixed inset-0" />

@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     new Set([
       ...(post.focusKeyphrase ? [post.focusKeyphrase] : []),
       ...post.tags,
-    ]),
+    ])
   );
 
   return {
@@ -136,8 +136,18 @@ function JsonLd({ post, slug }: { post: BlogPost; slug: string }) {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Blog', item: `${BASE_URL}/blog` },
-      { '@type': 'ListItem', position: 2, name: post.title, item: `${BASE_URL}/${slug}` },
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Blog',
+        item: `${BASE_URL}/blog`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: post.title,
+        item: `${BASE_URL}/${slug}`,
+      },
     ],
   };
 
@@ -274,10 +284,7 @@ export default async function BlogPostPage({ params }: Props) {
                 <span className="bg-foreground/60 h-px w-8" />
                 <span>FAQ</span>
               </div>
-              <h2
-                id="faq-heading"
-                className="sr-only"
-              >
+              <h2 id="faq-heading" className="sr-only">
                 Frequently Asked Questions
               </h2>
               <div className="border-border border-t">

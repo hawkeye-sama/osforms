@@ -138,10 +138,19 @@ body {
   margin-bottom: 0.75rem;
 }
 
-.blog-content h1 { font-size: 1.875rem; }
-.blog-content h2 { font-size: 1.5rem; margin-top: 2.5rem; }
-.blog-content h3 { font-size: 1.25rem; }
-.blog-content h4 { font-size: 1.125rem; }
+.blog-content h1 {
+  font-size: 1.875rem;
+}
+.blog-content h2 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+}
+.blog-content h3 {
+  font-size: 1.25rem;
+}
+.blog-content h4 {
+  font-size: 1.125rem;
+}
 
 .blog-content p {
   margin-bottom: 1.25rem;
@@ -173,8 +182,12 @@ body {
   margin-bottom: 1.25rem;
 }
 
-.blog-content ul { list-style-type: disc; }
-.blog-content ol { list-style-type: decimal; }
+.blog-content ul {
+  list-style-type: disc;
+}
+.blog-content ol {
+  list-style-type: decimal;
+}
 
 .blog-content li {
   margin-bottom: 0.4rem;

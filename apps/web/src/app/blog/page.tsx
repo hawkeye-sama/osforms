@@ -31,9 +31,9 @@ export default function BlogPage() {
   const categories = Array.from(
     posts.reduce(
       (m, p) => m.set(p.category, (m.get(p.category) ?? 0) + 1),
-      new Map<string, number>(),
+      new Map<string, number>()
     ),
-    ([name, count]) => ({ name, count }),
+    ([name, count]) => ({ name, count })
   );
 
   const blogJsonLd = {
