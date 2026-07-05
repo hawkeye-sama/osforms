@@ -14,13 +14,13 @@ coverTitle: 'Formspree Alternative'
 coverSubtitle: 'Open-source, bring-your-own-key, no integration paywall'
 faq:
   - question: 'What is the best free Formspree alternative?'
-    answer: 'OSForms gives you 100 free submissions a month (double Formspree''s 50) with every integration included: email notifications and auto-replies through your own Resend key, Google Sheets through your own Google account, and signed webhooks. Nothing is tier-gated, and submissions never expire. If you outgrow the hosted tier, the platform is open source and self-hostable.'
+    answer: "OSForms gives you 100 free submissions a month (double Formspree's 50) with every integration included: email notifications and auto-replies through your own Resend key, Google Sheets through your own Google account, and signed webhooks. Nothing is tier-gated, and submissions never expire. If you outgrow the hosted tier, the platform is open source and self-hostable."
   - question: 'Why does Formspree charge for integrations OSForms gives away?'
     answer: 'Different business models. Formspree runs integrations on its own infrastructure and credentials, so it prices them into plan tiers: Google Sheets from $15/month, webhooks and auto-response from $30/month (as of July 2026). OSForms routes submissions through API keys you bring, so the integration layer costs OSForms almost nothing to run, and it charges you nothing for it.'
   - question: 'Do I need to change my form code to switch from Formspree?'
-    answer: 'Only one attribute. Both services work by receiving a POST from your form, so switching means replacing the formspree.io URL in your form''s action with your OSForms endpoint URL. Field names, validation, and the rest of your markup stay exactly as they are.'
+    answer: "Only one attribute. Both services work by receiving a POST from your form, so switching means replacing the formspree.io URL in your form's action with your OSForms endpoint URL. Field names, validation, and the rest of your markup stay exactly as they are."
   - question: 'Is OSForms really open source?'
-    answer: 'Yes, the full platform: the submission endpoint, the dashboard, the integration handlers, and the encryption code are all public on GitHub. That is different from Formspree, whose original open-source repository was archived in July 2023; the README states the current hosted product''s source code is not available.'
+    answer: "Yes, the full platform: the submission endpoint, the dashboard, the integration handlers, and the encryption code are all public on GitHub. That is different from Formspree, whose original open-source repository was archived in July 2023; the README states the current hosted product's source code is not available."
   - question: 'What happens to my old Formspree submissions when I switch?'
     answer: 'Export them from Formspree before you cancel (submission export is available on its paid plans). On the free plan, submissions older than 30 days are already gone, which is one of the reasons people switch. Once you are on OSForms, submissions are stored with no expiry and you can export everything to CSV at any time, on any tier.'
 ---
@@ -70,9 +70,9 @@ Formspree and OSForms share the same integration surface: a URL your form POSTs 
 ```html
 <!-- Before -->
 <form action="https://formspree.io/f/xyzabcde" method="POST">
-
-<!-- After -->
-<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+  <!-- After -->
+  <form action="https://osforms.com/api/v1/f/abc123xyz" method="POST"></form>
+</form>
 ```
 
 Everything else stays. Field names carry over because both services store whatever your inputs are named. AJAX submissions work the same way: POST JSON to the endpoint and you get `{ "success": true }` back; plain HTML forms can set a redirect URL and get a 303 to your thank-you page instead. The [two-minute setup guide](/form-backend-setup) walks through creating the endpoint and wiring the integrations.
