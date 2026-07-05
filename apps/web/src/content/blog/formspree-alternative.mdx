@@ -1,0 +1,94 @@
+---
+title: 'The Best Open-Source Formspree Alternative'
+description: "Looking for a Formspree alternative? Here's why an open-source, bring-your-own-key form backend beats the paywalled integrations and monthly submission caps."
+date: '2026-07-05'
+dateModified: '2026-07-05'
+author: 'Bahroze Ali'
+tags: ['formspree alternative', 'open source', 'form backend', 'byok']
+readingTime: '8 min read'
+category: 'Compare'
+seoTitle: 'The Best Open-Source Formspree Alternative'
+focusKeyphrase: 'formspree alternative'
+coverImage: '/content/images/formspree-alternative-cover.png'
+coverTitle: 'Formspree Alternative'
+coverSubtitle: 'Open-source, bring-your-own-key, no integration paywall'
+faq:
+  - question: 'What is the best free Formspree alternative?'
+    answer: 'OSForms gives you 100 free submissions a month (double Formspree''s 50) with every integration included: email notifications and auto-replies through your own Resend key, Google Sheets through your own Google account, and signed webhooks. Nothing is tier-gated, and submissions never expire. If you outgrow the hosted tier, the platform is open source and self-hostable.'
+  - question: 'Why does Formspree charge for integrations OSForms gives away?'
+    answer: 'Different business models. Formspree runs integrations on its own infrastructure and credentials, so it prices them into plan tiers: Google Sheets from $15/month, webhooks and auto-response from $30/month (as of July 2026). OSForms routes submissions through API keys you bring, so the integration layer costs OSForms almost nothing to run, and it charges you nothing for it.'
+  - question: 'Do I need to change my form code to switch from Formspree?'
+    answer: 'Only one attribute. Both services work by receiving a POST from your form, so switching means replacing the formspree.io URL in your form''s action with your OSForms endpoint URL. Field names, validation, and the rest of your markup stay exactly as they are.'
+  - question: 'Is OSForms really open source?'
+    answer: 'Yes, the full platform: the submission endpoint, the dashboard, the integration handlers, and the encryption code are all public on GitHub. That is different from Formspree, whose original open-source repository was archived in July 2023; the README states the current hosted product''s source code is not available.'
+  - question: 'What happens to my old Formspree submissions when I switch?'
+    answer: 'Export them from Formspree before you cancel (submission export is available on its paid plans). On the free plan, submissions older than 30 days are already gone, which is one of the reasons people switch. Once you are on OSForms, submissions are stored with no expiry and you can export everything to CSV at any time, on any tier.'
+---
+
+If you're searching for a Formspree alternative, you've probably hit one of three walls: the 50-submission monthly cap on the free plan, the 30-day submission expiry, or the discovery that the integration you want lives on a paid tier. This post makes the case for OSForms, the open-source alternative I built: you bring your own API keys, so email, Google Sheets, and webhooks are all free, on a 100-submission monthly tier where nothing is feature-gated. Your submissions never expire, and if you ever outgrow the hosted version, you can self-host the entire platform.
+
+I'll be upfront about the bias: OSForms is my project. So instead of vague claims, this post sticks to specifics you can check, quotes Formspree's own published plan data (as of July 2026), and ends with the cases where staying on Formspree is genuinely the right call.
+
+## Why Look for a Formspree Alternative
+
+Formspree is a solid product. It has been around for over a decade, the docs are mature, and the core experience (point your form at a URL, get email) works exactly as advertised. People don't leave because it's broken. They leave because of where the pricing model puts the walls.
+
+The walls, from Formspree's own plans page:
+
+- **50 submissions a month free.** Fine for a portfolio site, tight for anything with real visitors. One busy week and your form starts bouncing.
+- **Submissions vanish after 30 days** on the free plan. Miss a notification email during a vacation and the lead can be gone before you read it.
+- **Google Sheets costs $15 a month.** The plugin requires the Personal plan, which also only raises your cap to 200 submissions.
+- **Webhooks cost $30 a month.** Forwarding a submission to your own endpoint, one HTTP POST, sits on the Professional plan alongside Zapier, Stripe, and auto-response emails.
+- **The code went closed.** Formspree began as a beloved open-source project, but the repo was archived in July 2023 and the README now says the hosted product's source "is not available." You can't audit it, and you can't run it yourself.
+
+None of these is an accident or a flaw. They're a business model. Which is worth understanding before you pick a replacement, because the alternative I'm about to pitch runs on a different one.
+
+## Where Formspree Falls Short: You Pay Rent on Your Own Integrations
+
+Here's the thing that bugged me enough to build a competitor. When Formspree forwards a submission to Google Sheets, the actual API call is free. Google doesn't charge for it. When it sends you a notification email, delivery costs a fraction of a cent. The $15 to $30 a month isn't paying for the integration; it's paying for the privilege of Formspree operating it on your behalf, forever, with their credentials.
+
+That model has a real cost beyond the subscription: the credentials are theirs, so the integration is theirs. Your form data flows through accounts you don't control, your export options depend on your plan, and if the pricing changes (hosted tools do this), your only moves are pay up or rebuild.
+
+The alternative model is bring your own key. You paste in your own Resend API key for email and connect your own Google account for Sheets. The form backend becomes a thin router: it stores the submission, then forwards it using credentials that belong to you. There's no markup to charge because there's nothing to resell. I've written a longer explanation of [how the bring-your-own-key model works](/bring-your-own-key) if the idea is new to you.
+
+## The Open-Source Formspree Alternative: OSForms
+
+OSForms is an open-source form backend built on exactly that model. The hosted free tier is 100 submissions a month, twice Formspree's, and it includes everything:
+
+- **Email notifications and auto-replies** through your own Resend key. Resend's free tier covers 3,000 emails a month, so a 100-submission form doesn't come close to paying anyone anything.
+- **Google Sheets** through your own Google account, using the narrow `drive.file` OAuth scope, so OSForms can only see spreadsheets it created. New form fields become new columns automatically.
+- **Webhooks** to any URL, with an optional HMAC-SHA256 signature so your endpoint can verify the sender.
+- **Spam protection** with a honeypot field (you choose its name, so bots can't pattern-match it) plus reCAPTCHA or hCaptcha with your own keys.
+- **No expiry.** Submissions stay until you delete them, and CSV export is always available.
+
+Your keys are encrypted at rest with AES-256-GCM, decrypted only at the moment an integration runs, and never sent to the browser. Because [the whole platform is open source](https://github.com/hawkeye-sama/osforms), you don't have to take my word for any of that; the encryption code is public.
+
+### Switching takes one attribute
+
+Formspree and OSForms share the same integration surface: a URL your form POSTs to. So a migration is genuinely this:
+
+```html
+<!-- Before -->
+<form action="https://formspree.io/f/xyzabcde" method="POST">
+
+<!-- After -->
+<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+```
+
+Everything else stays. Field names carry over because both services store whatever your inputs are named. AJAX submissions work the same way: POST JSON to the endpoint and you get `{ "success": true }` back; plain HTML forms can set a redirect URL and get a 303 to your thank-you page instead. The [two-minute setup guide](/form-backend-setup) walks through creating the endpoint and wiring the integrations.
+
+Two migration notes worth doing in order. First, export your existing submissions from Formspree before cancelling; on the free plan anything older than 30 days is already unrecoverable. Second, reconnect your integrations on the OSForms side before you swap the URL, so nothing falls through during the cutover. Both are minutes, not hours.
+
+And if the hosted tier ever stops fitting, the exit isn't a rewrite. Self-hosting runs the same codebase (Next.js and MongoDB) on your own infrastructure, with no submission cap at all. That's the part no hosted competitor can match: the escape hatch is the product.
+
+## When Formspree Is Still Fine
+
+An honest alternative post has to include this section, so here's where I'd tell you to stay put:
+
+- **You collect files.** OSForms does not store uploads. Multipart posts are accepted, but a file arrives in your submission as a placeholder string, not a download link. Formspree's paid plans include real file storage, 1GB to 10GB depending on tier. If your form takes resumes or images, that decides it.
+- **You live on one-click plugins.** Formspree's catalog covers Stripe, Mailchimp, Slack, and more. OSForms has three integration types (email, Sheets, webhooks), and while a webhook can reach anything with an HTTP endpoint, that's wiring you do yourself.
+- **You want high volume, hosted, with support.** 20,000 submissions a month on Formspree's Business plan is a service level the OSForms hosted free tier doesn't pretend to offer. If self-hosting is off the table for your team and volume is high, paying for that is reasonable.
+
+If none of those three describes you, the math is hard to argue with: the features Formspree tiers at $15 to $30 a month are free on OSForms because your own keys power them, you get double the free submissions, and your data has no expiration date.
+
+For the wider landscape beyond these two tools, including the DIY route and when it makes sense, see [how to handle form submissions without a backend](/handle-form-submissions). And if you'd rather just try it, creating a form and pointing your `action` at it takes about two minutes; the free tier needs no card and includes everything above.

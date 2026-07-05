@@ -50,3 +50,7 @@ apps/playground/
 
 # Local blog-cover generator — authoring tool, kept out of the open-source tree
 apps/web/scripts/
+
+# Blog drafts — unpublished posts + their cover images; move to
+# src/content/blog/ + public/content/images/ (and bump dates) to publish
+apps/web/src/content/drafts/

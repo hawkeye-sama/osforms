@@ -1,0 +1,138 @@
+---
+title: 'How to Set Up a Form Backend in 2 Minutes'
+description: 'This form backend setup takes two minutes: create an endpoint, paste the URL into your form, and start receiving submissions. No server, no config needed.'
+date: '2026-07-02'
+dateModified: '2026-07-02'
+author: 'Bahroze Ali'
+tags: ['tutorial', 'form backend', 'quickstart', 'html']
+readingTime: '5 min read'
+category: 'Build'
+seoTitle: 'Form Backend Setup in 2 Minutes'
+focusKeyphrase: 'form backend setup'
+coverImage: '/content/images/form-backend-setup-cover.png'
+coverTitle: 'Form Backend Setup'
+coverSubtitle: 'From HTML form to stored submission in two minutes'
+faq:
+  - question: 'Do I need to write any server code?'
+    answer: 'No. The whole point of a hosted form backend is that OSForms is the server. You create an endpoint in the dashboard, set its URL as your form action, and submissions are received, stored, and routed for you. There is nothing to deploy.'
+  - question: 'What does the endpoint return after a submission?'
+    answer: 'By default it returns a JSON body of { "success": true }. That is what you want for fetch or AJAX calls. For a plain HTML form, set a redirect URL in the form settings so the browser lands on a real thank-you page instead of raw JSON.'
+  - question: 'Does this work with React, Vue, or Next.js?'
+    answer: 'Yes. Any stack that can send a POST request works. Use a standard HTML form tag, or POST JSON with fetch or axios. The endpoint accepts application/x-www-form-urlencoded, multipart/form-data, and application/json.'
+  - question: 'How many submissions are free?'
+    answer: 'The free tier is 100 submissions per month, with every integration included. Each form also has a per-IP rate limit (10 requests per minute by default) that you can adjust in the form settings.'
+  - question: 'Can I add email or Google Sheets later?'
+    answer: 'Yes. The endpoint stores every submission on its own. Integrations are optional and run in the background after the submission is saved, so you can add email, a webhook, or Google Sheets whenever you are ready without touching your form markup.'
+---
+
+A form backend setup should not take an afternoon. With OSForms it takes about two minutes: create an endpoint in the dashboard, paste its URL into your form's `action`, and your next submission is stored and ready to route. No server to deploy, no request parsing, no database to wire up. This walks through the whole thing, from an empty form to a submission you can see in a dashboard, and then shows where that data can go next.
+
+The reason it is fast is that the hard part already exists. You are not building a backend. You are pointing your form at one.
+
+## What a Form Backend Setup Actually Involves
+
+Do it yourself and the checklist is long. Stand up a server. Add a route that accepts POST. Parse the body, and remember that a browser form sends `application/x-www-form-urlencoded` while your `fetch` call sends JSON, so you handle both. Store the submission somewhere, which means a database. Then the real work starts: email yourself on each submission, block spam bots, set CORS so the endpoint only answers your own site, rate-limit abusive IPs, and keep it all running.
+
+That is a day of plumbing for a contact form. Every project repeats it.
+
+A hosted form backend collapses that checklist into a URL. OSForms runs the server, the parser, the storage, and the spam and rate-limit checks. Your form backend setup becomes three steps: create an endpoint, wire it into your form, decide where submissions go. Here is each one.
+
+## Create Your First Endpoint
+
+Sign in to OSForms and hit **New Form**. Give it a name, like "Contact Form," and that is the whole creation step. You get a unique endpoint URL back immediately:
+
+```bash
+https://osforms.com/api/v1/f/abc123xyz
+```
+
+The random part is a 12-character ID, so the URL is unguessable but safe to put directly in your HTML. There is nothing else to configure to start receiving data. The form works the moment it exists, with sensible defaults already applied: a 10-requests-per-minute rate limit per IP, and open CORS until you decide to lock it to specific origins.
+
+You will need a free [OSForms account](https://osforms.com/signup) to get your endpoint. No card required, and the free tier covers 100 submissions a month with every integration included.
+
+## Wire It Into Your Form
+
+Set the endpoint as your form's `action` and use `method="POST"`. That is the entire integration for plain HTML:
+
+```html
+<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+  <label for="name">Name</label>
+  <input type="text" id="name" name="name" required />
+
+  <label for="email">Email</label>
+  <input type="email" id="email" name="email" required />
+
+  <label for="message">Message</label>
+  <textarea id="message" name="message" rows="4" required></textarea>
+
+  <button type="submit">Send</button>
+</form>
+```
+
+Each input's `name` becomes a key in the stored submission, so `name`, `email`, and `message` land as fields you can read later. Submit the form and the data is saved.
+
+One thing to know about the response. If you have not set a redirect, the endpoint replies with a JSON body:
+
+```json
+{ "success": true, "message": "Submission received" }
+```
+
+That is exactly right for a `fetch` or AJAX submission. But a plain HTML form navigates to the response, so your visitor would stare at raw JSON. To fix it, open the form settings and set a **redirect URL** (for example `/thank-you`). With a redirect set, an HTML post returns a 303 to that page while API-style calls still get the JSON. Best of both.
+
+Not writing HTML? Post JSON from any framework and read the result yourself:
+
+```js
+await fetch('https://osforms.com/api/v1/f/abc123xyz', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name, email, message }),
+});
+```
+
+The endpoint accepts `application/x-www-form-urlencoded`, `multipart/form-data`, and `application/json`, so the same URL serves your HTML form, your React app, and a `curl` command without any change.
+
+## Connect Your Favorite Framework
+
+Because the endpoint is just a URL that takes a POST, your framework barely matters. Here is how to connect the same contact form from React, with a controlled submit handler:
+
+```jsx
+function ContactForm() {
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.currentTarget));
+    await fetch('https://osforms.com/api/v1/f/abc123xyz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" required />
+      <input type="email" name="email" required />
+      <textarea name="message" required />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+One tip for any programmatic post: send `application/json`. When you do, the endpoint always replies with the JSON `{ "success": true }` body, even if the form has a redirect URL set for browser submissions. That keeps your `fetch` response predictable.
+
+Next.js is the case where the endpoint saves you the most work. Normally you would add a route handler at `app/api/contact/route.ts`, or write a server action, just to receive the post. You can skip both. Drop the same `handleSubmit` into a client component and POST straight to the endpoint. There is no server code to write and nothing extra to deploy on Vercel. The same pattern carries over to Vue, Svelte, Astro, and anything else that can call `fetch`: bind your inputs however that framework prefers, then post the values to the one URL.
+
+## Where Your Submissions Go Next
+
+Storage is automatic. Every submission is written to a dashboard you control, with its fields plus metadata like IP, user agent, and origin. You can read submissions, export them, and see a per-submission log of anything that ran. That alone is a working form backend.
+
+The routing is where the two-minute setup pays off later. After a submission is stored, OSForms fires your integrations in the background, so the visitor's request returns instantly and never waits on a third party. Three integration types are available today:
+
+- **Email** via your own [Resend](https://resend.com) key: notifications to your team and a custom auto-reply to the submitter. See the walkthrough for [form email notifications with Resend](/form-email-notifications).
+- **Webhook**: forward each submission to your own service, signed with HMAC-SHA256 so you can verify it came from OSForms.
+- **Google Sheets**: append every submission as a row in a sheet on your own Google account.
+
+All three run on **your** API keys, which is the BYOK part. Your keys are encrypted at rest with AES-256-GCM and only decrypted in memory when a submission arrives. You pay your provider directly at their price, with no per-integration tier to pay for. For the reasoning behind that model, read [what bring your own key actually means](/bring-your-own-key).
+
+You can skip integrations entirely at first. The endpoint stores submissions on its own, and you can add email or a sheet later without touching your form markup.
+
+That is the setup: name a form, paste a URL, receive submissions. If you want the wider picture of the options for receiving form data without a server, start with [how to handle form submissions without a backend](/handle-form-submissions). When you are ready, [create your first endpoint](https://osforms.com/signup) and time it. Two minutes is generous.
