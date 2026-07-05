@@ -1,44 +1,40 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * Markdown content negotiation for AI agents / LLM ingestion.
- * - `/<slug>.md`            → clean Markdown of that blog post
- * - `Accept: text/markdown` → same, at the canonical `/<slug>` URL (Vary: Accept)
+ * Markdown for Agents — site-wide content negotiation.
+ * - `/<path>.md`            → Markdown of that page
+ * - `Accept: text/markdown` → Markdown at the canonical URL (Vary: Accept),
+ *   while browsers (Accept: text/html) keep getting HTML.
  *
- * Both rewrite to the prerendered `/api/md/<slug>` route. Non-post slugs 404 there.
+ * Everything is routed to `/api/md-render`, which serves a blog post's source
+ * Markdown or converts any other page's HTML.
  */
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
-  // /<slug>.md  → markdown
-  if (pathname.endsWith('.md')) {
-    const slug = pathname.slice(1, -3);
-    if (slug && !slug.includes('/')) {
-      const url = req.nextUrl.clone();
-      url.pathname = `/api/md/${slug}`;
-      return NextResponse.rewrite(url);
-    }
-  }
-
-  // Accept: text/markdown on a root-level slug → markdown at the same URL
   const accept = req.headers.get('accept') || '';
-  if (accept.includes('text/markdown')) {
-    const slug = pathname.slice(1);
-    if (slug && !slug.includes('/') && !slug.includes('.')) {
-      const url = req.nextUrl.clone();
-      url.pathname = `/api/md/${slug}`;
-      const res = NextResponse.rewrite(url);
-      res.headers.set('Vary', 'Accept');
-      return res;
-    }
+
+  const wantsMarkdown =
+    pathname.endsWith('.md') || accept.includes('text/markdown');
+  if (!wantsMarkdown) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  const targetPath = pathname.endsWith('.md')
+    ? pathname.slice(0, -3)
+    : pathname;
+  const url = req.nextUrl.clone();
+  url.pathname = '/api/md-render';
+  url.search = '';
+  url.searchParams.set('path', targetPath || '/');
+
+  const res = NextResponse.rewrite(url);
+  res.headers.set('Vary', 'Accept');
+  return res;
 }
 
 export const config = {
-  // Skip Next internals, the API, .well-known, and static asset/file extensions
-  // (so .txt/.xml discovery files and images are untouched). `.md` is NOT excluded.
+  // Skip Next internals, the API, .well-known, and static asset extensions
+  // (so .txt/.xml discovery files and images are untouched). `.md` is allowed.
   matcher: [
     '/((?!api|_next|\\.well-known|.*\\.(?:xml|txt|ico|png|jpg|jpeg|gif|svg|webp|css|js|map|woff2?)$).*)',
   ],
