@@ -101,6 +101,30 @@ export function getCoverUrl(
   return post.coverImage ?? '/og-image.png';
 }
 
+/**
+ * Renders a post as a clean, self-contained Markdown document for AI ingestion
+ * (served at /{slug}.md and via `Accept: text/markdown`). FAQ lives in
+ * frontmatter, so it's appended here to keep the markdown complete.
+ */
+export function postToMarkdown(post: BlogPost, baseUrl: string): string {
+  const faq =
+    post.faq && post.faq.length > 0
+      ? '\n\n## FAQ\n\n' +
+        post.faq.map((f) => `### ${f.question}\n\n${f.answer}`).join('\n\n')
+      : '';
+
+  return `# ${post.title}
+
+> ${post.description}
+
+Source: ${baseUrl}/${post.slug}
+Published: ${post.date}${post.dateModified ? ` · Updated: ${post.dateModified}` : ''}
+Author: ${post.author}
+
+${post.content}${faq}
+`;
+}
+
 export function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
