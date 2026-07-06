@@ -1,7 +1,13 @@
+import path from 'path';
+
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // Emit a self-contained server build for Docker/self-hosting. The tracing
+  // root is the monorepo root so workspace deps (@osforms/react) are included.
+  output: 'standalone',
+  outputFileTracingRoot: path.join(__dirname, '../../'),
   serverExternalPackages: ['mongoose', 'googleapis'],
   async rewrites() {
     return [

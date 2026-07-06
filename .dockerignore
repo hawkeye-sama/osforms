@@ -1,0 +1,17 @@
+# Keep the build context small. All workspace package.json files MUST stay (pnpm --frozen-lockfile resolves every workspace package), so only ignore build artifacts, deps, and non-app material
+
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/.git
+.git
+.claude/
+marketing/
+.plans/
+**/_.log
+**/.env
+**/.env._
+!\*\*/.env.example
+Dockerfile
+.dockerignore

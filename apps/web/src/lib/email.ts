@@ -1,8 +1,6 @@
 import crypto from 'crypto';
 
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { getResend } from '@/lib/utils/resend';
 
 /**
  * Generate a cryptographically secure 6-digit OTP code
@@ -169,7 +167,7 @@ Questions? Contact us at support@osforms.com
   `.trim();
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'osforms <noreply@osforms.com>',
       to: email,
       subject: 'Verify your osforms account',
@@ -227,7 +225,7 @@ Bahroze
   `.trim();
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'Bahroze from OSForms <bahroze@osforms.com>',
       to: email,
       subject: 'Quick hello from the founder of OSForms',
@@ -267,7 +265,7 @@ export async function forwardEmail(data: {
   `.trim();
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'OSForms Forwarder <forwarder@osforms.com>',
       to: 'jattali12@gmail.com',
       subject: `[FWD] ${data.subject}`,
@@ -490,7 +488,7 @@ Questions? Contact us at support@osforms.com
   `.trim();
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'osforms Alerts <alerts@osforms.com>',
       to: userEmail,
       subject: `⚠️ Integration failed for "${formName}"`,

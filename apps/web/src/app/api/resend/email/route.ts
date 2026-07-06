@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 
 import { forwardEmail } from '@/lib/email';
+import { getResend } from '@/lib/utils/resend';
 
 interface ReceivedEmailData {
   from: string;
@@ -11,7 +11,6 @@ interface ReceivedEmailData {
   html?: string;
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const SIGNING_SECRET = process.env.RESEND_EMAIL_SIGNING_SECRET;
 
 export async function POST(req: NextRequest) {
@@ -40,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     // Verify the webhook signature
     // The resend SDK provides a built-in webhook verification helper
-    const payload = resend.webhooks.verify({
+    const payload = getResend().webhooks.verify({
       payload: rawBody,
       headers: {
         id: svixId,

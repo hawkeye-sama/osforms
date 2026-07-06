@@ -1,3 +1,13 @@
+# Self-host OSForms with Docker.
+#
+# One-time setup:
+#   cp .env.docker.example .env      # then generate secrets + edit .env
+#   docker compose up
+#
+# The web container reads its config from .env (see env_file below), so no
+# secrets live in this file. MONGODB_URI defaults to the bundled mongo service,
+# so you normally only set the two secrets in .env to get running.
+
 services:
   mongodb:
     image: mongo:7
@@ -6,6 +16,36 @@ services:
       - '27017:27017'
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* is inlined into the client bundle at build time, so it's
+        # read here (from .env) rather than only at runtime. Change it for your
+        # domain in .env, then rebuild with `docker compose up --build`.
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - '3000:3000'
+    # All runtime config (secrets + optional integration keys) comes from .env.
+    # Copy .env.docker.example to .env first, or Compose will stop here.
+    env_file:
+      - .env
+    environment:
+      # Compose owns the DB wiring: point at the bundled mongo service by
+      # default. Override in .env (e.g. a MongoDB Atlas URI) if you want.
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/osforms}
 
 volumes:
   mongo_data:

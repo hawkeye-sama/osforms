@@ -1,11 +1,43 @@
 # Self-Hosting OSForms
 
-Run your own OSForms instance with no submission limits. This guide goes from a fresh fork to a deployed app, end to end. Two paths:
+Run your own OSForms instance with no submission limits. This guide goes from a fresh fork to a deployed app, end to end. Three paths:
 
-- **[Local](#local-development)** — run it on your machine for development.
+- **[Docker](#run-with-docker)** — the fastest way to run the whole stack.
+- **[Local](#local-development)** — run it from source on your machine for development.
 - **[Production](#deploy-to-production)** — deploy to Vercel + MongoDB Atlas (what osforms.com runs on).
 
-OSForms is a standard Next.js app, so anywhere Next.js runs (Vercel, Railway, Render, a VPS, Docker) works. This guide uses Vercel because the background integration system relies on Vercel's `waitUntil`; on other hosts, integrations still run, but review the [background execution notes](#background-execution-limits).
+OSForms is a standard Next.js app, so anywhere Next.js runs (Docker, a VPS, Railway, Render, Vercel) works.
+
+---
+
+## Run with Docker
+
+If you have Docker, this is the whole thing:
+
+```bash
+git clone https://github.com/hawkeye-sama/osforms.git
+cd osforms
+
+# 1. Create your env file from the template
+cp .env.docker.example .env
+
+# 2. Generate the two required secrets (run twice, paste into .env)
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# 3. Start it
+docker compose up
+```
+
+Compose builds the app, starts MongoDB, wires them together, and serves OSForms at [http://localhost:3000](http://localhost:3000).
+
+Your config lives in `.env`, not in `docker-compose.yml`, so no secrets sit in a tracked file. Set `JWT_SECRET` and `ENCRYPTION_KEY` (the two generated values) and you're running. `MONGODB_URI` defaults to the bundled mongo service, so you only touch it to point at an external database like Atlas. If you skip step 1, Compose stops with an "env file .env not found" error.
+
+Two more things:
+
+- **Your domain.** For a real deployment set `NEXT_PUBLIC_APP_URL` in `.env` to your URL, then rebuild so it's baked into the client bundle: `docker compose up --build`.
+- **Email needs a key.** Signup sends a 6-digit OTP via Resend. Without `RESEND_API_KEY` set, grab the code from the logs instead: `docker compose logs -f web`.
+
+Integrations run correctly under Docker. They execute in the background after each submission is stored, in the long-running Node process — see [background execution](#background-execution-limits) for why that differs from the serverless setup.
 
 ---
 
@@ -123,12 +155,13 @@ No setup or keys required — users add a webhook URL per form in the dashboard.
 
 ### Background execution limits
 
-Integrations run after the submission is stored, via Vercel's `waitUntil`:
+Integrations run after the submission is stored, so the form POST returns immediately. How long the background work is allowed to run depends on where you host:
 
-- **Hobby plan:** ~10 seconds of background execution after the response is sent.
-- **Pro plan:** up to 60 seconds.
+- **Docker / VPS / any long-running Node server:** no cap. The process stays alive, so the integration promise just completes on the event loop. `waitUntil` is a harmless no-op here; the work runs regardless. This is the fire-and-forget setup.
+- **Vercel Hobby:** ~10 seconds of background execution after the response is sent.
+- **Vercel Pro:** up to 60 seconds.
 
-If an integration is slow (a sluggish webhook endpoint, a large Sheets append), the Hobby window can cut it off. Use Pro for heavier workloads, or self-host on a platform without that cap.
+On Vercel, a slow integration (a sluggish webhook endpoint, a large Sheets append) can be cut off by the serverless window. Use Pro for heavier workloads, or self-host on a platform without that cap.
 
 ---
 

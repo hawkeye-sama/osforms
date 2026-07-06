@@ -145,9 +145,18 @@ All variables live in `apps/web/.env` (copy from [apps/web/.env.example](apps/we
 
 ## Deploy / Self-Host
 
-OSForms runs anywhere Next.js runs. The hosted version is on Vercel + MongoDB Atlas. Full step-by-step (MongoDB, Google OAuth, Resend, Vercel settings) is in **[SELF_HOSTING.md](SELF_HOSTING.md)**.
+The fastest way to run the whole stack yourself is Docker:
 
-Background integrations use Vercel's `waitUntil`, which is capped at ~10s on the Hobby plan and up to 60s on Pro.
+```bash
+git clone https://github.com/hawkeye-sama/osforms.git
+cd osforms
+cp .env.docker.example .env          # then generate the two secrets it lists
+docker compose up
+```
+
+That builds the app, starts MongoDB, and serves OSForms at [http://localhost:3000](http://localhost:3000). Config lives in `.env` (secrets stay out of tracked files); `MONGODB_URI` defaults to the bundled mongo service. Full walkthrough — generating secrets, your domain, integrations, and deploying to Vercel + MongoDB Atlas (what osforms.com runs on) — is in **[SELF_HOSTING.md](SELF_HOSTING.md)**.
+
+OSForms runs anywhere Next.js runs. On a long-running server (Docker, a VPS) background integrations run in-process with no time cap. On Vercel they use `waitUntil`, capped at ~10s on Hobby and up to 60s on Pro.
 
 ## Forking & staying in sync
 
