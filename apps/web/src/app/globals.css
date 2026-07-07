@@ -110,6 +110,12 @@
 }
 
 body {
+  /* Rebind the theme font vars here, where next/font's --font-geist-* are in
+     scope (they're defined on <body>). Declaring them at :root/@theme scope
+     resolves to nothing and silently falls back to Arial. These inherit down,
+     which also fixes every var(--font-mono) usage in the tree. */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
