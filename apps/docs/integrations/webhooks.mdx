@@ -33,13 +33,13 @@ osforms sends a `POST` request with `Content-Type: application/json`:
 
 ## Verifying signatures
 
-Every request includes an `X-osforms-Signature` header:
+Every request includes an `X-osforms-Signature` header with the raw hex digest (no `sha256=` prefix):
 
 ```
-X-osforms-Signature: sha256=<hex>
+X-osforms-Signature: <hex>
 ```
 
-The signature is computed as `HMAC-SHA256(requestBody, signingSecret)` where `requestBody` is the raw JSON string.
+The signature is computed as `HMAC-SHA256(requestBody, signingSecret)` where `requestBody` is the raw JSON string, and the digest is hex-encoded.
 
 Verify it in your endpoint:
 
@@ -51,16 +51,17 @@ function verifySignature(
   signature: string,
   secret: string
 ): boolean {
-  const expected =
-    'sha256=' +
-    crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex');
 
   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 
 // Express example
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const sig = req.headers['x-osforms-signature-256'] as string;
+  const sig = req.headers['x-osforms-signature'] as string;
   if (!verifySignature(req.body.toString(), sig, process.env.WEBHOOK_SECRET!)) {
     return res.status(401).json({ error: 'Invalid signature' });
   }
