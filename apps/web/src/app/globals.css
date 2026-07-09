@@ -270,10 +270,12 @@ body {
   margin: 2.5rem 0;
 }
 
+/* Tables are wrapped in an overflow-x-auto div (see BlogTable in [slug]/page.tsx),
+   which carries the vertical margin — wide tables scroll instead of breaking the page. */
 .blog-content table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1.5rem 0;
+  margin: 0;
   font-size: 0.9rem;
 }
 

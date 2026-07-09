@@ -93,8 +93,17 @@ function BlogImage({
   );
 }
 
+function BlogTable(props: React.TableHTMLAttributes<HTMLTableElement>) {
+  return (
+    <div className="my-6 overflow-x-auto">
+      <table {...props} />
+    </div>
+  );
+}
+
 const MDX_COMPONENTS = {
   img: BlogImage,
+  table: BlogTable,
 };
 
 function JsonLd({ post, slug }: { post: BlogPost; slug: string }) {
