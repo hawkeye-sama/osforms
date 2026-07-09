@@ -1,0 +1,45 @@
+name: Bug report
+description: Something isn't working as documented
+title: 'bug: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. A clear reproduction gets it fixed much faster.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: 'I pointed my form at my endpoint and expected X, but got Y.'
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a form with ...
+        2. Submit ...
+        3. See error ...
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Where are you running OSForms?
+      options:
+        - Hosted (osforms.com)
+        - Self-hosted (docker compose)
+        - Self-hosted (other)
+        - Local development
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Server logs, browser console, or a screenshot. Redact API keys and secrets.
+    validations:
+      required: false
