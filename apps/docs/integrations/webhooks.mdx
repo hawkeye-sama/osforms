@@ -33,10 +33,10 @@ osforms sends a `POST` request with `Content-Type: application/json`:
 
 ## Verifying signatures
 
-Every request includes an `X-osforms-Signature-256` header:
+Every request includes an `X-osforms-Signature` header:
 
 ```
-X-osforms-Signature-256: sha256=<hex>
+X-osforms-Signature: sha256=<hex>
 ```
 
 The signature is computed as `HMAC-SHA256(requestBody, signingSecret)` where `requestBody` is the raw JSON string.
