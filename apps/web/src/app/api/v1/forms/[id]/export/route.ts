@@ -28,8 +28,30 @@ export async function GET(req: NextRequest, { params }: Params) {
     .sort({ createdAt: -1 })
     .lean();
 
+  const format = req.nextUrl.searchParams.get('format') || 'csv';
+
   if (submissions.length === 0) {
+    if (format === 'json') {
+      return NextResponse.json([], {
+        headers: {
+          'Content-Disposition': `attachment; filename="submissions-${id}.json"`,
+        },
+      });
+    }
     return new NextResponse('No submissions to export', { status: 200 });
+  }
+
+  if (format === 'json') {
+    const payload = submissions.map((sub: ISubmission) => ({
+      id: String(sub._id),
+      createdAt: new Date(sub.createdAt).toISOString(),
+      data: sub.data || {},
+    }));
+    return NextResponse.json(payload, {
+      headers: {
+        'Content-Disposition': `attachment; filename="submissions-${id}.json"`,
+      },
+    });
   }
 
   // Get all unique keys from submission data

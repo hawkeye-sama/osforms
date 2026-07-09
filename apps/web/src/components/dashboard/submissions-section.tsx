@@ -150,10 +150,11 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
     }
   }, [fetchChartData, loading]);
 
-  const handleExport = async () => {
+  const handleExport = async (format: 'csv' | 'json' = 'csv') => {
     setExporting(true);
     try {
-      const res = await fetch(`/api/v1/forms/${formId}/export`);
+      const qs = format === 'json' ? '?format=json' : '';
+      const res = await fetch(`/api/v1/forms/${formId}/export${qs}`);
       if (!res.ok) {
         throw new Error('Failed to export');
       }
@@ -162,12 +163,12 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `submissions-${formId}-${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `submissions-${formId}-${new Date().toISOString().split('T')[0]}.${format}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success('Submissions exported successfully');
+      toast.success(`Submissions exported as ${format.toUpperCase()}`);
     } catch {
       toast.error('Failed to export submissions');
     } finally {
@@ -279,20 +280,31 @@ export function SubmissionsSection({ formId }: SubmissionsSectionProps) {
               Inbox ({submissions.length})
             </button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground"
-            onClick={handleExport}
-            disabled={exporting}
-          >
-            {exporting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 h-4 w-4" />
-            )}
-            Export CSV
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              onClick={() => handleExport('csv')}
+              disabled={exporting}
+            >
+              {exporting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Export as CSV
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              onClick={() => handleExport('json')}
+              disabled={exporting}
+            >
+              Export as JSON
+            </Button>
+          </div>
         </div>
 
         {submissions.length === 0 ? (
