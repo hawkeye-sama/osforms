@@ -1,0 +1,455 @@
+---
+title: 'How to Handle Form Submissions in Next.js'
+description: 'A practical guide to Next.js form submission: server actions, API routes, and when you can skip the backend entirely and post straight to an endpoint.'
+date: '2026-07-10'
+dateModified: '2026-07-10'
+author: 'Bahroze Ali'
+tags: ['nextjs', 'form submission', 'server actions', 'tutorial']
+readingTime: '15 min read'
+category: 'Build'
+seoTitle: 'Handle Form Submissions in Next.js the Easy Way'
+focusKeyphrase: 'next.js form submission'
+coverImage: '/content/images/nextjs-form-submission-cover.png'
+coverTitle: 'Forms in Next.js'
+coverSubtitle: 'Server Actions, Route Handlers, and when to skip both'
+faq:
+  - question: 'Do I need a Route Handler or Server Action to handle a form in Next.js?'
+    answer: 'No. You can post a form straight to a hosted endpoint from a client component with fetch, and skip both. Use a Route Handler or Server Action when you need server-side logic before the data is stored, like custom auth checks or writing to your own database.'
+  - question: 'Should I use a Server Action or an API Route for form submission?'
+    answer: 'Server Actions are the Next.js-native default in the App Router and give you progressive enhancement, so the form works before JavaScript loads. Route Handlers are better when the endpoint is public, called from outside your app, or needs to serve non-Next clients. Both still leave storage, email, and spam for you to solve.'
+  - question: 'How do I send a Next.js form submission to a database?'
+    answer: 'Inside a Server Action or Route Handler you connect to your database and insert the row yourself. A hosted form backend like OSForms removes that step: it stores every submission as JSON in a dashboard you control and you never write the persistence layer.'
+  - question: 'Why not just send email directly from a Next.js Route Handler?'
+    answer: 'You can call an email API from a route, but reliable delivery is the hard part: SPF, DKIM, bounce handling, and warmed-up sending domains. Bringing your own Resend key through a form backend sidesteps self-hosting mail while keeping the cost on your own account.'
+  - question: 'Does posting a form to OSForms work with the Next.js App Router?'
+    answer: 'Yes. Post to the endpoint from a client component with fetch, or call the same URL server-side inside a Server Action. Both work in the App Router and the Pages Router. The @osforms/react component also works, marked with the use client directive.'
+---
+
+Next.js gives you more than one way to receive a form. You can write a Route Handler, you can write a Server Action, or you can skip both and post straight to a hosted endpoint. The right choice for your Next.js form submission depends less on the code and more on what happens after the data arrives: where it gets stored, who gets emailed, and how you keep bots out.
+
+Here is the short answer. If you own the logic that runs on submit, use a Server Action. If the endpoint has to be public and callable from anywhere, use a Route Handler. If all you need is to collect the data, store it, and route it somewhere, you do not need either one. This guide walks all three paths with real code, then shows the parts Next.js does not solve for you and how to stop rebuilding them on every project.
+
+## Next.js Form Submission Options
+
+There are three honest ways to handle a form in a modern Next.js app, and they sit on a spectrum from "you write everything" to "you write almost nothing."
+
+**Route Handlers** are the classic API endpoint. You create a file at `app/api/contact/route.ts`, export a `POST` function, and your client posts JSON to it with `fetch`. This is the mental model most developers carry over from Express or the old `pages/api` routes. It is explicit and familiar.
+
+**Server Actions** are the App Router native. You write an async function marked `'use server'`, pass it directly to a form's `action` prop, and Next.js wires up the network call for you. No route file, no manual `fetch`, and the form degrades gracefully when JavaScript has not loaded yet.
+
+**Going backendless** means the form posts to a URL that already handles receiving, parsing, storing, and routing. You write the markup and a submit handler, and nothing else. This is where a hosted form backend fits, and for a large share of forms it is the correct amount of engineering.
+
+None of these is universally right. A dashboard that writes to your own Postgres wants a Server Action. A public webhook receiver wants a Route Handler. A contact form on a marketing site wants none of the above. Let me show each in code so the tradeoffs are concrete.
+
+### Server Actions vs Route Handlers
+
+The split comes down to who calls the endpoint and whether it needs to work without client JavaScript.
+
+A **Server Action** is coupled to your app. React serializes the call, and Next.js handles the transport. Because the `action` sits on a real `<form>`, the submission works even before hydration, which is genuine progressive enhancement. The downside is that Server Actions are not a general-purpose public API. They are meant to be called from your own components, not from a mobile app or a third-party service.
+
+A **Route Handler** is a plain HTTP endpoint. Anything that speaks HTTP can call it: your React client, a `curl` command, a webhook from Stripe, a native app. That flexibility is the reason to reach for it. The cost is that you write the `fetch` on the client, manage loading and error state by hand, and lose automatic progressive enhancement unless you build it yourself.
+
+A rule of thumb that has held up across projects: reach for a Server Action when the form belongs to your app and its logic is private. Reach for a Route Handler when the endpoint is a product surface other things consume. And when the "logic" is really just "store this and email me," question whether you need server code at all.
+
+## Handling a Form Submission With a Route Handler
+
+Start with the familiar path. A Route Handler in the App Router lives in its own file and exports HTTP-verb functions.
+
+```ts
+// app/api/contact/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(req: NextRequest) {
+  const { name, email, message } = await req.json();
+
+  if (!email || !message) {
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  }
+
+  // Store it. Email it. Block spam. Rate-limit. All still on you.
+
+  return NextResponse.json({ success: true });
+}
+```
+
+On the client you post to it from a component. Mark it `'use client'` because it holds state and an event handler:
+
+```tsx
+'use client';
+import { useState } from 'react';
+
+export function ContactForm() {
+  const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>(
+    'idle'
+  );
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setStatus('sending');
+    const data = Object.fromEntries(new FormData(e.currentTarget));
+
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    setStatus(res.ok ? 'done' : 'error');
+  }
+
+  return (
+    <form onSubmit={onSubmit}>
+      <input name="name" placeholder="Name" required />
+      <input name="email" type="email" placeholder="Email" required />
+      <textarea name="message" placeholder="Message" required />
+      <button type="submit" disabled={status === 'sending'}>
+        {status === 'sending' ? 'Sending…' : 'Send'}
+      </button>
+      {status === 'done' && <p>Thanks, we got it.</p>}
+      {status === 'error' && <p>Something went wrong.</p>}
+    </form>
+  );
+}
+```
+
+This is a working Next.js form submission, and it is also where the comment in the route handler starts to feel heavy. The two lines of real code are the validation and the response. Everything the form actually needs to be useful is hiding behind that comment. We will come back to it.
+
+## Handling a Form Submission With a Server Action
+
+Server Actions collapse the client `fetch` and the route file into one function. In the App Router you write the action, then hand it to the form.
+
+```ts
+// app/contact/actions.ts
+'use server';
+
+export async function submitContact(prevState: unknown, formData: FormData) {
+  const email = formData.get('email');
+  const message = formData.get('message');
+
+  if (!email || !message) {
+    return { ok: false, error: 'Please fill in every field.' };
+  }
+
+  // Store it. Email it. Block spam. Same list as before.
+
+  return { ok: true, error: null };
+}
+```
+
+The form calls the action directly. In its simplest form there is no client component at all, and the submission works without JavaScript:
+
+```tsx
+// app/contact/page.tsx
+import { submitContact } from './actions';
+
+export default function ContactPage() {
+  return (
+    <form action={submitContact}>
+      <input name="name" placeholder="Name" />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+For loading and result state, wrap it with `useActionState`. Next.js 15 ships on React 19, so this is the current hook (it was called `useFormState` in earlier versions):
+
+```tsx
+'use client';
+import { useActionState } from 'react';
+import { submitContact } from './actions';
+
+const initialState = { ok: false, error: null };
+
+export function ContactForm() {
+  const [state, action, pending] = useActionState(submitContact, initialState);
+
+  return (
+    <form action={action}>
+      <input name="name" placeholder="Name" />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit" disabled={pending}>
+        {pending ? 'Sending…' : 'Send'}
+      </button>
+      {state.error && <p>{state.error}</p>}
+      {state.ok && <p>Thanks, we got it.</p>}
+    </form>
+  );
+}
+```
+
+This is cleaner than the Route Handler version for a form that belongs to your app. There is no endpoint URL to manage, no manual `fetch`, and the progressive-enhancement story is real. But notice the comment survived the rewrite. `// Store it. Email it. Block spam.` is still there, in both approaches, no matter how nice the plumbing around it gets.
+
+## Validating a Next.js Form Submission
+
+Whichever path you pick, you validate on the server. The `required` attribute on an input is a UX nicety that a bot posting directly to your endpoint ignores completely. Inside a Server Action or a Route Handler, parse the incoming data against a schema before you trust a single field. Zod is the common choice:
+
+```ts
+// app/contact/actions.ts
+'use server';
+import { z } from 'zod';
+
+const ContactSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Enter a valid email'),
+  message: z.string().min(10, 'Tell us a little more'),
+});
+
+export async function submitContact(prevState: unknown, formData: FormData) {
+  const parsed = ContactSchema.safeParse(Object.fromEntries(formData));
+
+  if (!parsed.success) {
+    return { ok: false, errors: parsed.error.flatten().fieldErrors };
+  }
+
+  // parsed.data is now typed and trusted
+  return { ok: true, errors: {} };
+}
+```
+
+Return the flattened field errors and render them next to each input by reading `state` from `useActionState`. For the submit button's loading state, `useFormStatus` reads the parent form's pending status without prop drilling, as long as it lives in a child component of the form:
+
+```tsx
+'use client';
+import { useFormStatus } from 'react-dom';
+
+export function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending}>
+      {pending ? 'Sending…' : 'Send'}
+    </button>
+  );
+}
+```
+
+Validation is the one piece of "backend" logic a courier endpoint genuinely does not replace, because a hosted backend cannot know your business rules. Even when you post straight to a hosted endpoint, keep a schema like this in front of the submit when the shape matters. Everything else on the checklist can move off your plate. This part stays yours, and that is correct.
+
+## The Same Form in the Pages Router
+
+Not every Next.js app is on the App Router, and Server Actions do not exist in the Pages Router. There the endpoint is an API route at `pages/api/contact.ts` with a different handler signature, but the shape is the same Route Handler idea:
+
+```ts
+// pages/api/contact.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { email, message } = req.body;
+  if (!email || !message) {
+    return res.status(400).json({ error: 'Missing fields' });
+  }
+
+  // Store it. Email it. Block spam. The same list, one router older.
+
+  return res.status(200).json({ success: true });
+}
+```
+
+The client `fetch` is identical to the App Router version, and so is the list hiding under the comment. The backendless option is identical too: a Pages Router component can post straight to the hosted endpoint with the same `fetch`, and you delete the API route. If you are migrating from Pages to App, the form is one of the easier things to move, precisely because posting to an external endpoint does not care which router renders the page.
+
+## The Parts a Route or Action Doesn't Solve
+
+Here is the point of this whole guide. Next.js gives you an excellent way to *receive* a submission. It gives you nothing for what a form is actually for. The endpoint, whether it is a Route Handler or a Server Action, is the easy 10%. The comment is the other 90%.
+
+> "The framework hands you a place to receive the data. What that data needs next is a database, a mail domain, and a spam strategy, and none of those ship with Next.js."
+
+Walk the checklist that lives inside that comment.
+
+**Storage.** A submission that is not saved is gone the instant the function returns. So you provision a database, define a schema, wire up a client, handle connection pooling in a serverless environment (which bites harder than people expect on Vercel), and write the insert. For a contact form. That is a lot of moving parts for "let people email me."
+
+**Email deliverability.** This is the one that quietly ruins afternoons. Calling an email API from your route is one line. Getting the message to actually land is not. You need a verified sending domain, SPF and DKIM records, a plan for bounces, and a sender reputation that is not flagged as spam on day one. Self-hosting mail is a rabbit hole that experienced developers actively warn against. The realistic move is to bring a provider like Resend and let it own deliverability, but you still have to wire the key and template the message.
+
+**Spam.** The moment a form is public, bots find it. A naive endpoint fills your inbox and your database with junk. You want at least a honeypot field and server-side validation, and you do not want to bolt a heavy CAPTCHA onto every visitor to get there.
+
+**CORS and rate limiting.** If the endpoint is a Route Handler that anything can call, you need to decide which origins are allowed and how many requests per minute a single IP gets before you return a 429. Skip this and the same endpoint that accepts your form also accepts an attacker's script running it a thousand times a minute.
+
+**Serverless gotchas.** On Vercel, each of these runs in a serverless function, which adds problems the tutorial version never mentions. Database connections do not pool cleanly across function invocations, so you reach for a serverless driver or a connection pooler to avoid exhausting your database. A user who double-clicks submit sends the request twice, so you need an idempotency key or a disabled button to avoid duplicate rows. A slow email call can push a function toward its execution timeout unless you move that work off the response path. None of this is exotic. It is the normal tax of running your own submission endpoint in a serverless world, and it is exactly the kind of thing a dedicated backend has already handled (OSForms runs integrations in the background after storing, so the response never waits on them).
+
+Every one of these is solvable. The problem is that you solve all of them again on the next project, and the one after that. The receiving code changes shape between Server Actions and Route Handlers, but the list under the comment never does. That repetition is the actual cost of handling forms yourself, and it is the reason to consider not doing it.
+
+## When You Don't Need a Backend Route
+
+Step back and ask what the form genuinely requires. For a contact form, a waitlist signup, a feedback box, or a lead capture form, the honest requirement list is: receive the fields, store them somewhere you can read later, notify someone, and keep bots out. Notice that none of those items is "run custom business logic on the server before the data is saved."
+
+When that is true, the Route Handler and the Server Action are both ceremony. They exist only to forward the data to storage and an email call you have to build anyway. You can delete the middle layer entirely and post the form to an endpoint that already does receiving, parsing, storage, spam filtering, CORS, and rate limiting.
+
+You still want a Server Action or a Route Handler when the submission triggers real server-side logic that is specific to your app. Creating a user account, charging a card, checking a value against your own database, or kicking off a workflow are all good reasons to keep server code in the path. The distinction is simple: keep the route when the server needs to *decide* something. Drop it when the server is only a courier.
+
+Most forms on most sites are courier work. That is not a knock on them. A contact form does not need a bespoke backend any more than an image needs a bespoke CDN. It needs a reliable place to go.
+
+## Posting a Next.js Form to OSForms
+
+[OSForms](https://osforms.com) is that place. It is an open-source, bring-your-own-key form backend: you point a form at an endpoint, it stores every submission, and it routes the data to your own integrations. You do not deploy anything, and for the App Router there is no route file to write.
+
+Create a form in the dashboard and you get a unique endpoint back:
+
+```bash
+https://osforms.com/api/v1/f/abc123xyz
+```
+
+The simplest integration is a client component that posts JSON straight to that URL. No Route Handler, no Server Action:
+
+```tsx
+'use client';
+import { useState } from 'react';
+
+const ENDPOINT = 'https://osforms.com/api/v1/f/abc123xyz';
+
+export function ContactForm() {
+  const [done, setDone] = useState(false);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.currentTarget));
+
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    const json = await res.json(); // { success: true, message: 'Submission received' }
+    setDone(json.success);
+  }
+
+  if (done) return <p>Thanks, we got your message.</p>;
+
+  return (
+    <form onSubmit={onSubmit}>
+      <input name="name" placeholder="Name" required />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+One detail worth knowing about the response. When you send `Content-Type: application/json`, the endpoint always replies with the JSON body `{ "success": true, "message": "Submission received" }`, even if the form has a redirect URL configured for plain HTML submissions. That keeps your `fetch` result predictable in React. A native HTML form without JavaScript, by contrast, gets a `303` redirect to your thank-you page when you set a redirect URL in the form settings. The same endpoint serves both.
+
+If you would rather keep the endpoint call on the server, you can. Call the OSForms URL from inside a Server Action, which also sidesteps CORS entirely because the request originates from your server, not the browser:
+
+```ts
+// app/contact/actions.ts
+'use server';
+
+const ENDPOINT = 'https://osforms.com/api/v1/f/abc123xyz';
+
+export async function submitContact(prevState: unknown, formData: FormData) {
+  const data = Object.fromEntries(formData);
+
+  const res = await fetch(ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) return { ok: false, error: 'Submission failed.' };
+  return { ok: true, error: null };
+}
+```
+
+This is the best of both worlds for an App Router app: you keep the Server Action ergonomics and progressive enhancement, but the storage, spam checks, and integrations all live in the endpoint instead of inside your function. Your action becomes a three-line courier, which is all it ever needed to be.
+
+If you want a richer form UI, the `@osforms/react` package ships a component that renders classic or conversational (one-question-at-a-time) forms. In the App Router it needs the `'use client'` directive because it is interactive:
+
+```tsx
+'use client';
+import { OSForm } from '@osforms/react';
+
+export function Contact() {
+  return (
+    <OSForm
+      formId="abc123xyz"
+      onComplete={() => console.log('submitted')}
+      onError={(err) => console.error(err)}
+    />
+  );
+}
+```
+
+For a plain HTML starting point and the full setup walkthrough, see [how to set up a form backend in 2 minutes](/form-backend-setup). It covers creating the endpoint and the redirect behavior in more depth.
+
+## Adding Email, Sheets, and Webhooks on Your Keys
+
+Storage is automatic. Every submission is written to a dashboard with its fields plus metadata: the IP, the user agent, and the origin. That alone replaces the database step from the DIY checklist. The routing is where the backendless approach earns its keep.
+
+After a submission is stored, OSForms runs your integrations in the background, so the visitor's request returns immediately and never waits on a third-party API. Three integration types are available today, and all three run on your own credentials.
+
+**Email with Resend.** Bring your own [Resend](https://resend.com) key and get a notification on each submission plus a custom auto-reply to the person who submitted. This is the deliverability problem solved by handing it to a provider that owns sending reputation, instead of you standing up a mail domain. The full walkthrough is in [how to send form email notifications with Resend](/form-email-notifications).
+
+**Webhooks.** Forward each submission to your own service, signed with HMAC-SHA256 so you can verify it came from OSForms and not a spoofer. If the receiving service is another Next.js app, verifying the signature in a Route Handler is a few lines:
+
+```ts
+// app/api/osforms-webhook/route.ts
+import crypto from 'crypto';
+
+export async function POST(req: Request) {
+  const raw = await req.text();
+  const signature = req.headers.get('x-osforms-signature') ?? '';
+
+  const expected = crypto
+    .createHmac('sha256', process.env.OSFORMS_SIGNING_SECRET!)
+    .update(raw)
+    .digest('hex');
+
+  const valid =
+    signature.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+
+  if (!valid) return new Response('Invalid signature', { status: 401 });
+
+  const submission = JSON.parse(raw);
+  // handle it
+  return new Response('ok');
+}
+```
+
+The signature arrives as a raw hex digest in the `X-osforms-Signature` header, computed over the JSON payload with your signing secret. Compare it against your own recomputed digest before trusting the body.
+
+**Google Sheets.** Append every submission as a row in a sheet on your own Google account. The OAuth flow requests the narrow `drive.file` scope, so OSForms only touches files it creates, not your whole Drive.
+
+The thread through all three is BYOK. Your keys are encrypted at rest with AES-256-GCM and only decrypted in memory when a submission arrives, never logged. You pay your provider directly at their rate, with no per-integration tier marked up on top of an API you already pay for. That model, and why it matters, is the subject of [what bring your own key actually means](/bring-your-own-key). It is also why every integration is free on the OSForms side: they cost nothing to run when you supply the key.
+
+Worth being straight about the limits, because a copy-paste guide should not oversell. The free tier is 100 submissions per month with every integration included, and each form has a per-IP rate limit (10 requests per minute by default) you can adjust. Spam is handled with a configurable honeypot field plus optional CAPTCHA (your own reCAPTCHA or hCaptcha keys), not a mandatory challenge on every visitor. The honeypot is a hidden field you add to the markup and name in the form settings:
+
+```tsx
+{/* Bots fill hidden fields; humans never see them. */}
+<input
+  type="text"
+  name="_gotcha"
+  tabIndex={-1}
+  autoComplete="off"
+  aria-hidden="true"
+  style={{ position: 'absolute', left: '-9999px' }}
+/>
+```
+
+When a submission arrives with that field filled, the endpoint silently accepts it and stores nothing, so the bot gets no signal it was caught. It only activates once you set the field name, so it never blocks a real visitor by surprise.
+
+## What About File Uploads?
+
+Forms often carry a file: a resume, a screenshot, an attachment. Be clear-eyed here. OSForms is a data backend, not a file host. It accepts a multipart submission, but the uploaded file is not stored. The field is replaced with a short placeholder like `[File: resume.pdf, 48210 bytes]` and the bytes are discarded. Point a file input at it expecting to download the file later and you will be disappointed.
+
+The right pattern in Next.js keeps the file and the form data on separate paths. Upload the file to storage built for files first (Vercel Blob, an S3 bucket, or a service like UploadThing), get back a URL, then submit that URL as an ordinary text field alongside the rest of the form. Your submission stays small and readable, the file lives where files belong, and each backend does the job it is good at. When a form is mostly attachments, a form backend is the wrong tool for it, and a storage-first upload flow is what you want instead.
+
+## Choosing Your Next.js Form Submission Approach
+
+Put the three paths side by side and the decision gets easy.
+
+Reach for a **Server Action** when the form drives logic that belongs to your app and your database: sign-ups, purchases, anything where the server has to decide something before the data is committed. You get progressive enhancement and clean ergonomics, and you accept that storage, email, and spam are yours to build.
+
+Reach for a **Route Handler** when you need a public HTTP endpoint that things outside your Next.js app will call. It is the general-purpose option, and it is the right tool when the endpoint is itself a product surface. Same tradeoff on the plumbing.
+
+Go **backendless** when the form is courier work, which most forms are. Post to an endpoint from a client component, or call it server-side from a thin Server Action, and let storage, spam filtering, CORS, rate limiting, and integrations live in one place you never rebuild. This is the fastest route to a Next.js form submission that is actually done, not just received.
+
+The framework is not the hard part of handling a form, and it never was. Receiving a POST is a solved problem in Next.js three times over. What takes the afternoon is everything after the POST, and that work is identical on every project you ship. Solve it once by pointing the form at a backend you own, and you stop paying that tax.
+
+If you want the wider map of options for receiving form data without standing up a server, start with [how to handle form submissions without a backend](/handle-form-submissions). When you are ready, [create your first endpoint](https://osforms.com/signup) and wire it into a Next.js form in a couple of minutes.

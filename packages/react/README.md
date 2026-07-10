@@ -122,7 +122,7 @@ export default function ContactPage() {
 | `baseUrl`          | `string`                          | `'https://osforms.com'` | Override for self-hosted instances.                                                                           |
 | `mode`             | `'conversational' \| 'classic'`   | schema default          | Override the form's mode.                                                                                     |
 | `theme`            | `Partial<FormTheme>`              | —                       | Theme overrides — merged with schema theme and osforms defaults.                                              |
-| `onComplete`       | `(submissionId?: string) => void` | —                       | Called after a successful submission.                                                                         |
+| `onComplete`       | `() => void`                      | —                       | Called after a successful submission.                                                                         |
 | `onError`          | `(error: Error) => void`          | —                       | Called when a submission fails.                                                                               |
 | `loadingComponent` | `ReactNode`                       | built-in                | Custom loading state while schema fetches.                                                                    |
 | `errorComponent`   | `ReactNode`                       | built-in                | Custom error state on fetch failure.                                                                          |
@@ -282,7 +282,7 @@ function MyCustomForm({ slug }: { slug: string }) {
   const [state, actions] = useFormState(
     schema,
     `https://osforms.com/api/v1/f/${slug}`,
-    (submissionId) => console.log('submitted:', submissionId)
+    () => console.log('submitted')
   );
 
   if (loading) return <p>Loading...</p>;
