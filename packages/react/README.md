@@ -114,18 +114,18 @@ export default function ContactPage() {
 
 ### `<OSForm />`
 
-| Prop               | Type                              | Default                 | Description                                                                                                   |
-| ------------------ | --------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `formId`           | `string`                          | —                       | Form slug from your osforms dashboard. Fetches schema automatically. Either `formId` or `schema` is required. |
-| `schema`           | `FormSchema`                      | —                       | Define schema in code. Requires `endpoint` when used without `formId`.                                        |
-| `endpoint`         | `string`                          | auto                    | Submission URL. Auto-derived from `formId` when omitted.                                                      |
-| `baseUrl`          | `string`                          | `'https://osforms.com'` | Override for self-hosted instances.                                                                           |
-| `mode`             | `'conversational' \| 'classic'`   | schema default          | Override the form's mode.                                                                                     |
-| `theme`            | `Partial<FormTheme>`              | —                       | Theme overrides — merged with schema theme and osforms defaults.                                              |
-| `onComplete`       | `() => void`                      | —                       | Called after a successful submission.                                                                         |
-| `onError`          | `(error: Error) => void`          | —                       | Called when a submission fails.                                                                               |
-| `loadingComponent` | `ReactNode`                       | built-in                | Custom loading state while schema fetches.                                                                    |
-| `errorComponent`   | `ReactNode`                       | built-in                | Custom error state on fetch failure.                                                                          |
+| Prop               | Type                            | Default                 | Description                                                                                                   |
+| ------------------ | ------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `formId`           | `string`                        | —                       | Form slug from your osforms dashboard. Fetches schema automatically. Either `formId` or `schema` is required. |
+| `schema`           | `FormSchema`                    | —                       | Define schema in code. Requires `endpoint` when used without `formId`.                                        |
+| `endpoint`         | `string`                        | auto                    | Submission URL. Auto-derived from `formId` when omitted.                                                      |
+| `baseUrl`          | `string`                        | `'https://osforms.com'` | Override for self-hosted instances.                                                                           |
+| `mode`             | `'conversational' \| 'classic'` | schema default          | Override the form's mode.                                                                                     |
+| `theme`            | `Partial<FormTheme>`            | —                       | Theme overrides — merged with schema theme and osforms defaults.                                              |
+| `onComplete`       | `() => void`                    | —                       | Called after a successful submission.                                                                         |
+| `onError`          | `(error: Error) => void`        | —                       | Called when a submission fails.                                                                               |
+| `loadingComponent` | `ReactNode`                     | built-in                | Custom loading state while schema fetches.                                                                    |
+| `errorComponent`   | `ReactNode`                     | built-in                | Custom error state on fetch failure.                                                                          |
 
 ---
 

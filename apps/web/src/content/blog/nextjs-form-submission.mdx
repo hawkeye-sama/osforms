@@ -256,7 +256,7 @@ The client `fetch` is identical to the App Router version, and so is the list hi
 
 ## The Parts a Route or Action Doesn't Solve
 
-Here is the point of this whole guide. Next.js gives you an excellent way to *receive* a submission. It gives you nothing for what a form is actually for. The endpoint, whether it is a Route Handler or a Server Action, is the easy 10%. The comment is the other 90%.
+Here is the point of this whole guide. Next.js gives you an excellent way to _receive_ a submission. It gives you nothing for what a form is actually for. The endpoint, whether it is a Route Handler or a Server Action, is the easy 10%. The comment is the other 90%.
 
 > "The framework hands you a place to receive the data. What that data needs next is a database, a mail domain, and a spam strategy, and none of those ship with Next.js."
 
@@ -280,7 +280,7 @@ Step back and ask what the form genuinely requires. For a contact form, a waitli
 
 When that is true, the Route Handler and the Server Action are both ceremony. They exist only to forward the data to storage and an email call you have to build anyway. You can delete the middle layer entirely and post the form to an endpoint that already does receiving, parsing, storage, spam filtering, CORS, and rate limiting.
 
-You still want a Server Action or a Route Handler when the submission triggers real server-side logic that is specific to your app. Creating a user account, charging a card, checking a value against your own database, or kicking off a workflow are all good reasons to keep server code in the path. The distinction is simple: keep the route when the server needs to *decide* something. Drop it when the server is only a courier.
+You still want a Server Action or a Route Handler when the submission triggers real server-side logic that is specific to your app. Creating a user account, charging a card, checking a value against your own database, or kicking off a workflow are all good reasons to keep server code in the path. The distinction is simple: keep the route when the server needs to _decide_ something. Drop it when the server is only a courier.
 
 Most forms on most sites are courier work. That is not a knock on them. A contact form does not need a bespoke backend any more than an image needs a bespoke CDN. It needs a reliable place to go.
 
@@ -421,7 +421,9 @@ The thread through all three is BYOK. Your keys are encrypted at rest with AES-2
 Worth being straight about the limits, because a copy-paste guide should not oversell. The free tier is 100 submissions per month with every integration included, and each form has a per-IP rate limit (10 requests per minute by default) you can adjust. Spam is handled with a configurable honeypot field plus optional CAPTCHA (your own reCAPTCHA or hCaptcha keys), not a mandatory challenge on every visitor. The honeypot is a hidden field you add to the markup and name in the form settings:
 
 ```tsx
-{/* Bots fill hidden fields; humans never see them. */}
+{
+  /* Bots fill hidden fields; humans never see them. */
+}
 <input
   type="text"
   name="_gotcha"
@@ -429,7 +431,7 @@ Worth being straight about the limits, because a copy-paste guide should not ove
   autoComplete="off"
   aria-hidden="true"
   style={{ position: 'absolute', left: '-9999px' }}
-/>
+/>;
 ```
 
 When a submission arrives with that field filled, the endpoint silently accepts it and stores nothing, so the bot gets no signal it was caught. It only activates once you set the field name, so it never blocks a real visitor by surprise.
