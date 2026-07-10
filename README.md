@@ -190,3 +190,5 @@ MIT — see [LICENSE](LICENSE).
 - [Documentation](https://osforms.com/docs)
 - [npm: @osforms/react](https://www.npmjs.com/package/@osforms/react)
 - [Report an issue](https://github.com/hawkeye-sama/osforms/issues)
+
+JSON export: [docs/json-export.md](docs/json-export.md).
