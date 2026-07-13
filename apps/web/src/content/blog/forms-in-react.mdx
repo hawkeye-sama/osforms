@@ -1,0 +1,327 @@
+---
+title: 'How to Handle Forms in React'
+description: 'Handling forms in React, end to end: controlled vs uncontrolled inputs, validation, and where to actually send the data without standing up your own backend.'
+date: '2026-07-13'
+dateModified: '2026-07-13'
+author: 'Bahroze Ali'
+tags: ['react', 'forms', 'validation', 'tutorial']
+readingTime: '9 min read'
+category: 'Build'
+seoTitle: 'How to Handle Forms in React (No Backend)'
+focusKeyphrase: 'forms in react'
+coverImage: '/content/images/forms-in-react-cover.png'
+coverTitle: 'Forms in React'
+coverSubtitle: 'Controlled inputs, validation, and where the data actually goes'
+faq:
+  - question: 'Do React forms need controlled inputs?'
+    answer: 'No. Controlled inputs are useful when the UI reacts to every keystroke, like a live character counter or a field that reveals another field. For a plain contact form, uncontrolled inputs plus FormData are less code and fewer re-renders. Pick per field, not per project.'
+  - question: 'Where do I send a React form submission?'
+    answer: 'React only renders the form. The data has to go to an HTTP endpoint you own or a hosted form backend. Options are a serverless function you write, a full API you deploy, or an endpoint that already handles storage, spam, and integrations so you write no server code at all.'
+  - question: 'How do I validate forms in React without a library?'
+    answer: 'Write a validate function that takes the form values and returns an object of field errors, run it on submit, and store the result in state. Keep the same rules on the server, because HTML required attributes and client checks are trivially bypassed by anything posting directly to your endpoint.'
+  - question: 'Can I post a React form straight to an endpoint without a backend route?'
+    answer: 'Yes. A fetch call from the submit handler to a hosted endpoint works from any React app, including Vite and Create React App with no server at all. With OSForms you send JSON to your form URL and get back a JSON response you can branch on.'
+  - question: 'Does OSForms work with React Hook Form or Formik?'
+    answer: 'Yes. Those libraries manage form state and validation in the browser and hand you a plain values object on submit. Post that object as JSON to your OSForms endpoint from the library submit handler. Nothing about the endpoint depends on how you collected the values.'
+---
+
+React has no form primitive. It gives you state, an event system, and a way to render inputs, and then it steps back. That gap is why "how do I handle forms in React" has so many contradictory answers: half of them are about wrangling input state, and the other half quietly skip the part that actually matters, which is where the data goes after submit.
+
+Here is the honest answer, up front. Handling forms in React is two problems wearing one name. Problem one is collecting and validating values in the browser, and React solves that with `useState` (or, in React 19, with a form action) in about twenty lines. Problem two is receiving that data somewhere, storing it, emailing someone, and keeping bots out. React has nothing to say about problem two, and problem two is where the afternoon goes. This guide covers both, with runnable code for each.
+
+## Building the Form in React
+
+Start with the version everyone writes first: controlled inputs. Every field's value lives in state, every keystroke fires `onChange`, and React re-renders.
+
+```tsx
+import { useState } from 'react';
+
+export function ContactForm() {
+  const [values, setValues] = useState({ name: '', email: '', message: '' });
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const { name, value } = e.target;
+    setValues((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    console.log(values); // { name, email, message }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" value={values.name} onChange={handleChange} />
+      <input name="email" type="email" value={values.email} onChange={handleChange} />
+      <textarea name="message" value={values.message} onChange={handleChange} />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+One `handleChange` for the whole form, keyed off the input's `name`. That single generic handler is the trick most tutorials skip, and it scales to twenty fields without twenty setters.
+
+Controlled inputs earn their cost when the UI has to react to a value as it changes: a character counter under a textarea, a submit button that disables until an email looks valid, a field that only appears when a select changes. If none of that is true, you are re-rendering the entire form on every keypress to collect values you could have read once, at the end.
+
+The uncontrolled version reads the values from the DOM on submit and never touches state at all:
+
+```tsx
+export function ContactForm() {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const values = Object.fromEntries(new FormData(e.currentTarget));
+    console.log(values); // { name, email, message }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" required />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit">Send</button>
+    </form>
+  );
+}
+```
+
+That is the whole component. `FormData` walks the form, `Object.fromEntries` turns it into a plain object, and the `name` attributes become the keys. Fewer renders, less state, and the field names in your markup match the field names in your payload, which turns out to matter a lot when you are debugging a submission that landed with a key called `undefined`.
+
+React 19 adds a third option that leans further in the same direction. Pass a function to a form's `action` prop and React calls it with the `FormData` after the form submits, resetting the form for you when it resolves. Pair it with `useActionState` to get pending and result state without writing either:
+
+```tsx
+'use client';
+import { useActionState } from 'react';
+
+async function submitContact(prevState: unknown, formData: FormData) {
+  const values = Object.fromEntries(formData);
+  // send it somewhere (next section)
+  return { ok: true, error: null };
+}
+
+export function ContactForm() {
+  const [state, action, pending] = useActionState(submitContact, {
+    ok: false,
+    error: null,
+  });
+
+  return (
+    <form action={action}>
+      <input name="name" required />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit" disabled={pending}>
+        {pending ? 'Sending...' : 'Send'}
+      </button>
+      {state.error && <p role="alert">{state.error}</p>}
+      {state.ok && <p>Thanks, we got it.</p>}
+    </form>
+  );
+}
+```
+
+This is plain React 19, not a Next.js feature. It works in Vite, in a Remix route, anywhere React 19 runs. If you are on Next.js specifically and wondering whether the action should run on the server, that is a different tradeoff and I covered it in [handling form submissions in Next.js](/nextjs-form-submission).
+
+Pick per field, not per project. Controlled where the UI reacts to typing, uncontrolled everywhere else. Mixing them in one form is fine and usually correct.
+
+## Validating Forms in React
+
+Client-side validation for forms in React does not need a library. It needs a pure function that takes values and returns errors.
+
+```tsx
+type Values = { name: string; email: string; message: string };
+type Errors = Partial<Record<keyof Values, string>>;
+
+function validate(values: Values): Errors {
+  const errors: Errors = {};
+  if (!values.name.trim()) errors.name = 'Name is required';
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.email))
+    errors.email = 'Enter a valid email';
+  if (values.message.trim().length < 10)
+    errors.message = 'Tell us a little more';
+  return errors;
+}
+```
+
+Run it on submit, put the result in state, and render each message next to its input:
+
+```tsx
+const [errors, setErrors] = useState<Errors>({});
+
+function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  const values = Object.fromEntries(new FormData(e.currentTarget)) as Values;
+
+  const found = validate(values);
+  setErrors(found);
+  if (Object.keys(found).length > 0) return;
+
+  send(values);
+}
+```
+
+Two details worth doing properly, because they are the difference between a form that validates and a form that is usable.
+
+**Validate on submit, then re-validate on change.** Showing an error the moment someone focuses out of an empty field they have not filled yet is hostile. Wait for the first submit attempt, and after that, clear each field's error as soon as the user starts fixing it. That is the pattern in the OSForms React renderer: `setAnswer` clears the error for that field on the next keystroke, so the message disappears the moment you address it instead of nagging until you resubmit.
+
+**Wire the errors to the input, not just next to it.** Screen readers ignore a red paragraph that is visually adjacent but semantically unrelated.
+
+```tsx
+<input
+  name="email"
+  type="email"
+  aria-invalid={!!errors.email}
+  aria-describedby={errors.email ? 'email-error' : undefined}
+/>
+{errors.email && (
+  <p id="email-error" role="alert">
+    {errors.email}
+  </p>
+)}
+```
+
+Reach for React Hook Form or a Zod resolver when the form is genuinely complex: many fields, cross-field rules, dynamic arrays, a wizard. For a contact form, twenty lines of `validate()` is less code than the import.
+
+And whichever way you go, remember what client validation is for. It is a UX affordance, not a gate. The `required` attribute and your regex are enforced by a browser you do not control, on a page anyone can bypass with a two-line `curl`. Real validation happens on the receiving end, which brings us to the part React does not do.
+
+## Where Form Data Goes Without a Backend
+
+You have a clean `values` object. Now what?
+
+React cannot answer this. It runs in the browser, and the browser is the last place you want holding an email API key or writing to a database. So the data has to leave, and there are exactly three destinations.
+
+**Write a server yourself.** An Express route, a Fastify app, a serverless function. You own an endpoint, and then you own everything behind it: a database to persist submissions, an email provider with a verified sending domain, SPF and DKIM records, a spam strategy, CORS rules, rate limiting, and a deploy target that stays up. For a contact form on a marketing site, this is a real amount of infrastructure to run so that somebody can say hello.
+
+**Use a third-party form service.** Point the form at a hosted endpoint and let it store the data. This is the right shape, and it is what most people should do. The catch is what the hosted tools charge for: the useful integrations (Google Sheets, webhooks) sit behind paid tiers on Formspree, Basin, and Web3Forms, even though it is your Google account and your endpoint doing the work. You pay a subscription for the privilege of connecting services you already own.
+
+**Bring your own keys.** Same shape as the hosted service, different economics. The endpoint stores your submissions, and the integrations run on credentials you supply, so nobody marks up an API you are already paying for. That is the model OSForms is built on, and the reasoning behind it is in [what bring your own key actually means](/bring-your-own-key).
+
+The wider survey of every option, including `mailto:` links and serverless functions, lives in [how to handle form submissions without a backend](/handle-form-submissions). For the rest of this guide I will wire the React form we just built to an endpoint and show what the response actually looks like.
+
+## Wiring React Forms to OSForms
+
+Create a form in the [OSForms](https://osforms.com) dashboard and you get an endpoint:
+
+```bash
+https://osforms.com/api/v1/f/abc123xyz
+```
+
+The submit handler posts JSON to it. There is no SDK required for this, no server route, and nothing to deploy. A Vite app with no backend at all can do this:
+
+```tsx
+import { useState } from 'react';
+
+const ENDPOINT = 'https://osforms.com/api/v1/f/abc123xyz';
+
+export function ContactForm() {
+  const [status, setStatus] = useState<'idle' | 'sending' | 'done'>('idle');
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const values = Object.fromEntries(new FormData(e.currentTarget));
+
+    setStatus('sending');
+    setError(null);
+
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values),
+    });
+
+    const json = await res.json();
+
+    if (!res.ok) {
+      setStatus('idle');
+      setError(json.error); // e.g. "Too many submissions. Please try again later."
+      return;
+    }
+
+    setStatus('done'); // json = { success: true, message: 'Submission received' }
+  }
+
+  if (status === 'done') return <p>Thanks, we got your message.</p>;
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" required />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <button type="submit" disabled={status === 'sending'}>
+        {status === 'sending' ? 'Sending...' : 'Send'}
+      </button>
+      {error && <p role="alert">{error}</p>}
+    </form>
+  );
+}
+```
+
+The response contract is worth knowing, because it is what your React code branches on. Send `Content-Type: application/json` and you always get JSON back, `{ "success": true, "message": "Submission received" }` on success, even when the form has a redirect URL configured for plain HTML submissions. Failures come back as `{ "error": "..." }` with a status code you can act on:
+
+| Status | Means | What to render |
+| --- | --- | --- |
+| `429` | Rate limited (10 requests/min per IP by default, per form) | "Slow down" message, honor the `Retry-After` header |
+| `403` | Origin not in the form's allowed list, or the monthly limit is reached | A generic failure; this one is your problem, not the visitor's |
+| `400` | Body could not be parsed, or a CAPTCHA check failed | Ask them to retry |
+| `404` | Form slug is wrong or the form is inactive | Fix the endpoint URL |
+
+The keys in the stored submission are the `name` attributes from your markup, which is the second reason to keep them tidy. Whatever you post is what shows up in the dashboard, and in your Google Sheet, and in your webhook payload.
+
+Two limits to be straight about, since a copy-paste tutorial should not oversell. The free tier is 100 submissions a month with every integration included. And files are not stored: a multipart submission is accepted, but the file is replaced with a placeholder like `[File: resume.pdf, 48210 bytes]` and the bytes are discarded. If your React form takes a resume, upload it to storage built for files (S3, Vercel Blob, UploadThing) and post the resulting URL as an ordinary text field.
+
+Spam is handled with a honeypot rather than a CAPTCHA on every visitor. You name a hidden field in the form settings and add it to your JSX:
+
+```tsx
+<input
+  type="text"
+  name="_gotcha"
+  tabIndex={-1}
+  autoComplete="off"
+  aria-hidden="true"
+  style={{ position: 'absolute', left: '-9999px' }}
+/>
+```
+
+Bots fill every field they find, humans never see it. When a submission arrives with that field populated, the endpoint returns success and stores nothing, so the bot gets no signal it was caught. It stays off until you set the field name, so it cannot surprise a real visitor.
+
+## Dropping in the React Component
+
+If you would rather not hand-roll the markup, `@osforms/react` renders the whole form from a schema you build in the dashboard.
+
+```bash
+npm install @osforms/react
+```
+
+```tsx
+import { OSForm } from '@osforms/react';
+
+export function Contact() {
+  return (
+    <OSForm
+      formId="abc123xyz"
+      mode="classic"
+      onComplete={() => console.log('submitted')}
+      onError={(err) => console.error(err.message)}
+    />
+  );
+}
+```
+
+`formId` is the same slug as the endpoint. The component fetches the schema, renders the fields, validates them, posts the JSON, and handles the loading, error, and thank-you states. `mode="classic"` gives a standard single-page form; pass `conversational` for a one-question-at-a-time flow with keyboard navigation. Omit the prop and the component uses whichever mode the form was saved with in the dashboard. A `theme` prop overrides colors and fonts, and `baseUrl` points the component at a self-hosted instance instead of osforms.com.
+
+One signature detail, since it is easy to guess wrong: `onComplete` takes no argument. It fires after a successful post, and if you need the submitted values, you already have them in your own state. `onError` receives a real `Error`, and its message is the server's error string when there was one.
+
+Already using React Hook Form or Formik? Keep them. They hand you a values object on submit, and that object goes into the same `fetch` as above. The endpoint does not care how you collected the values.
+
+## What React Forms Still Cost You
+
+Everything above gets a form from empty component to stored submission. What it does not do is tell you a submission arrived, which is the actual job.
+
+> "The form is never the hard part. The hard part is everything that happens in the ninety seconds after someone clicks Send."
+
+That is where bring-your-own-key stops being a philosophy and starts being a feature. Connect your own [Resend](https://resend.com) key and every submission emails you, with an auto-reply to the sender if you want one. Connect Google Sheets through OAuth (the narrow `drive.file` scope, so it only touches files it creates) and each submission appends a row to a spreadsheet on your account. Add a webhook and every submission is POSTed to your service, signed with HMAC-SHA256 so you can verify it. All three run in the background after the submission is stored, so your visitor's `fetch` returns immediately and never waits on a third-party API. Your keys are encrypted at rest with AES-256-GCM and never shipped to the browser, which is exactly where an API key should not be.
+
+Those integrations cost nothing on the OSForms side because they run on your credentials. That is the whole trick, and it is the opposite of the tiered model where a form tool charges you monthly to connect the Google account you already own.
+
+So: React gives you `useState`, `FormData`, and a submit handler, and that is genuinely all you need to build forms in React. It gives you nothing for storage, delivery, or spam, and it is not supposed to. Point the form at an endpoint that already solved those, and the component you ship is the one you actually wrote on purpose. If you want the full walkthrough of creating that endpoint, [setting up a form backend takes about two minutes](/form-backend-setup).
