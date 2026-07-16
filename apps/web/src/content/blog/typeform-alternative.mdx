@@ -1,0 +1,215 @@
+---
+title: 'The Best Open-Source Typeform Alternative'
+description: "Looking for a Typeform alternative? Typeform's pricing starts at $39/mo with no free plan. This one's open source: conversational forms in React, data you own."
+date: '2026-07-16'
+dateModified: '2026-07-16'
+author: 'Bahroze Ali'
+tags: ['typeform alternative', 'conversational forms', 'react', 'open source']
+readingTime: '10 min read'
+category: 'Compare'
+seoTitle: 'The Best Open-Source Typeform Alternative'
+focusKeyphrase: 'typeform alternative'
+coverImage: '/content/images/typeform-alternative-cover.png'
+coverTitle: 'Typeform Alternative'
+coverSubtitle: 'Open-source conversational forms you drop into React'
+faq:
+  - question: 'What is the best open-source Typeform alternative?'
+    answer: "OSForms. It stores submissions you own, gives you 100 free per month with every integration included, and ships a React component (@osforms/react) with a conversational, one-question-at-a-time mode that looks and behaves like Typeform. The whole platform is on GitHub and self-hostable, so there is no response cap you cannot lift."
+  - question: 'Is OSForms cheaper than Typeform?'
+    answer: "Typeform's pricing page has no free plan; the cheapest tier is Basic at $39 a month for 100 responses (confirm current pricing at typeform.com/pricing). OSForms gives you 100 submissions a month for free, with email, Google Sheets, and webhooks all included on your own keys. If you self-host the open-source version, the submission cap is whatever your database can hold."
+  - question: 'Can I build a one-question-at-a-time form without Typeform?'
+    answer: "Yes. The @osforms/react package ships a conversational renderer: one field per screen, animated transitions, a progress bar, keyboard navigation (Enter to advance), and auto-advance on choice fields. You add it with a single <OSForm /> component and a form slug."
+  - question: 'Does OSForms have logic jumps like Typeform?'
+    answer: "Partly. OSForms supports conditional logic that shows or hides fields based on earlier answers (equals, contains, greater-than, and so on). It does not yet have Typeform's full branch-to-a-different-question logic jumps, calculator, or answer piping. If your form depends on complex branching, Typeform is still stronger there."
+  - question: 'Where does my form data live with OSForms versus Typeform?'
+    answer: "With Typeform, responses live on Typeform's servers under its account. With OSForms, submissions are stored as JSON you can export to CSV at any time, on any tier, and routed to your own Resend, Google Sheets, or webhook. You can also self-host the entire stack so the data never leaves your infrastructure."
+  - question: 'Do I need React to use OSForms?'
+    answer: "No. React gets you the conversational component. Any plain HTML form can POST to the same OSForms endpoint, and the JSON API works from any language. React is the nicest way to get the Typeform-style flow, not a requirement."
+---
+
+Typeform makes the best-looking forms on the web. That is not up for debate. The one-question-at-a-time flow, the smooth transitions, the way it nudges people to actually finish. It works. The problem shows up on the pricing page and the day you want your data somewhere else. If you are looking for a Typeform alternative that keeps the conversational feel but loses the paywall and the lock-in, the short answer is an open-source form backend with a React component: OSForms plus `@osforms/react`, which ships a conversational renderer you drop into your app with one `<OSForm />` tag, on a form whose submissions you actually own.
+
+I build OSForms, so treat this as a biased source and check the specifics. This post covers what Typeform costs at scale, where Typeform is genuinely still the better call, and then the part most comparison posts skip: real code that stands up a conversational form in a React project, with the responses landing in your own storage and integrations.
+
+## Why Look for a Typeform Alternative
+
+People rarely leave Typeform because the product is bad. They leave because of the shape of the deal. Three walls come up again and again.
+
+The first is the **price of entry**. Typeform's pricing page has no free plan on it. The cheapest tier, Basic, is $39 a month, and that is where the ladder starts. There is no free option to launch on and grow out of. The moment you want to collect a single response, you are on a paid plan. For a marketing team running one flagship survey, $39 is a rounding error. For a developer who wants a decent contact form on a side project, or anyone testing an idea before it has traction, paying $39 a month to receive form fills is a strange place to start.
+
+The second is **where the data lives**. Every answer sits on Typeform's servers, under Typeform's account, exported on Typeform's terms. That is fine until you need the raw responses in your own database, or a client asks where their leads are stored, or a GDPR question lands on your desk and the honest answer is "a vendor has it."
+
+The third is **the embed**. Typeform's React SDK drops an iframe or a hosted widget into your page. It renders, it works, and it is still their form running inside your site. You do not control the markup, the submission handling, or what happens to the payload after someone hits submit.
+
+None of these is a bug. They are the business model of a hosted form builder. Which is worth naming clearly, because the alternative runs on a different model, and that difference is the whole point.
+
+## The Cost of Typeform at Scale
+
+Here is the pricing as it stands in July 2026, on monthly billing. Confirm it on [typeform.com/pricing](https://www.typeform.com/pricing/) before you quote it anywhere, since these numbers drift.
+
+- **Basic:** $39 per month (around $28 a month if you prepay for the year), 100 responses, 1 user.
+- **Plus:** $79 per month, 1,000 responses, 3 users.
+- **Business:** $129 per month, 10,000 responses, 5 users.
+
+There is no free row on that page. The entry point is $39 a month, and the Basic plan's cap of 100 responses is exactly what OSForms hands you for free. From there the response allowances stay metered all the way up. For a marketing team running one flagship survey a quarter, $39 is nothing. For a developer who wants a nice contact form on a portfolio, or an agency that needs a lead form on forty client sites, the math gets ugly fast. Forty client sites at the entry tier is over $1,500 a month just to receive form submissions.
+
+And the meter never stops. Typeform prices on responses collected, so a form that suddenly does well costs you more precisely when it is working. That is the opposite of how infrastructure should behave. The better your form performs, the more you pay to keep receiving the results.
+
+Compare that to OSForms: 100 submissions a month free with every integration included, and if you outgrow the hosted tier, you self-host the open-source version and the cap becomes your own database. No per-response meter. No plan that gates the ability to send an email when someone fills out your form.
+
+## Where Typeform Is Still the Right Choice
+
+An honest comparison has to say where the competitor wins, so here it is plainly. Typeform is the better pick in three cases, and if you are in any of them, stop reading and go pay them.
+
+**You are not a developer.** Typeform's builder is genuinely excellent. You design the whole form in a browser, no code, and non-technical teammates can edit it later. OSForms has a dashboard builder too, but the conversational component shines brightest when you are comfortable in a React codebase. If nobody on the team writes code, Typeform (or Tally) removes a real barrier.
+
+**You need complex branching.** Typeform's Logic feature can jump a respondent to a completely different question based on an answer, run calculations, and pipe earlier answers into later question text. OSForms supports conditional logic that shows or hides fields based on previous answers, which covers a lot of real cases, but it is not full branch-to-another-path logic yet. If your survey is a decision tree, Typeform is stronger.
+
+**You want the template gallery and the polish out of the box.** Typeform has years of design work, a large template library, and integrations with hundreds of tools through its own directory. OSForms gives you three integrations that matter (email, Sheets, webhooks) on your own keys, plus a clean default theme. If you want to pick a pre-made quiz template and launch in ten minutes with zero code, that is Typeform's home turf.
+
+If none of those describe you, and you are a developer who wants the conversational feel without renting it, keep going.
+
+## An Open-Source Conversational Form
+
+The reason a form backend can replace Typeform at all is `@osforms/react`. It is a small React package that renders a full form from a schema, and its default mode is conversational: one field per screen, animated transitions with Framer Motion, a progress bar across the top, and keyboard navigation so people can answer and press Enter without touching the mouse.
+
+It gives you the pieces that make Typeform feel like Typeform:
+
+- **One question at a time** with forward and back navigation, the same focused flow that lifts completion rates.
+- **Auto-advance** on choice fields. Pick a radio option or a star rating and it moves to the next question on its own. Text fields wait for Enter.
+- **A welcome screen and a thank-you screen**, both optional, both configured in the schema.
+- **A progress bar and keyboard hints** ("Press Enter"), toggleable through settings.
+- **Field types** for the real cases: `text`, `email`, `textarea`, `select`, `radio`, `checkbox`, `rating`, `scale` (NPS-style), `date`, and `statement` blocks for copy between questions.
+- **Theming** through a single `theme` prop: colors, font, border radius, button style.
+
+And one mode switch flips the whole thing from Typeform-style to a standard single-page layout, same schema, same backend, which I will show in a second.
+
+> "Typeform rents you a beautiful form. An open-source conversational form is one you own outright: the code, the responses, and the keys behind every integration."
+
+## Dropping a Conversational Form Into React
+
+Start by installing the package.
+
+```bash
+npm install @osforms/react
+```
+
+Create a form in your OSForms dashboard to get a slug (the endpoint is `https://osforms.com/api/v1/f/{slug}`). The simplest integration is one line: pass the slug as `formId` and the component fetches the schema and renders it.
+
+```tsx
+import { OSForm } from '@osforms/react';
+
+export default function Contact() {
+  // Renders in conversational mode by default, one question at a time.
+  return <OSForm formId="your-form-slug" />;
+}
+```
+
+That is the whole thing. The component fetches your form's schema, renders the conversational flow, posts answers to your endpoint, and stores the submission. Conversational is the default mode, so you get the Typeform-style experience without setting anything.
+
+If you would rather define the form in code instead of the dashboard builder, pass a `schema` and an `endpoint` directly. This is the path most developers prefer, because the form lives in your repo next to everything else.
+
+```tsx
+import { OSForm } from '@osforms/react';
+import type { FormSchema } from '@osforms/react';
+
+const schema: FormSchema = {
+  mode: 'conversational',
+  fields: [
+    { id: 'name', type: 'text', label: "What's your name?", required: true },
+    {
+      id: 'email',
+      type: 'email',
+      label: 'Where should we reach you?',
+      required: true,
+    },
+    {
+      id: 'plan',
+      type: 'radio',
+      label: 'Which plan fits you best?',
+      required: true,
+      options: [
+        { id: 'a', label: 'Free', value: 'free' },
+        { id: 'b', label: 'Pro', value: 'pro' },
+        { id: 'c', label: 'Not sure yet', value: 'unsure' },
+      ],
+    },
+    {
+      id: 'message',
+      type: 'textarea',
+      label: 'Anything else you want us to know?',
+      required: false,
+    },
+  ],
+  welcomeScreen: {
+    enabled: true,
+    title: 'Two quick questions',
+    buttonLabel: 'Start',
+  },
+  thankYouScreen: {
+    enabled: true,
+    title: 'Got it, thanks.',
+  },
+};
+
+export default function Waitlist() {
+  return (
+    <OSForm
+      schema={schema}
+      endpoint="https://osforms.com/api/v1/f/your-form-slug"
+      fullScreen
+      onComplete={() => {
+        // Fires after a successful submission. Redirect, fire analytics, etc.
+        window.location.href = '/thanks';
+      }}
+    />
+  );
+}
+```
+
+A few things worth calling out in that snippet, because they are the details that make it feel finished:
+
+The `radio` field **auto-advances**. As soon as someone picks Free, Pro, or Not sure, the form moves to the next question. The text and email fields wait for Enter, which is exactly the Typeform rhythm. You can override this per field with `config: { autoAdvance: false }` if you want a choice field to show a confirm button instead.
+
+`fullScreen` renders the form fixed over the whole viewport, the standalone experience Typeform uses when you send someone a link. Drop it and the form renders inline inside whatever container you put it in.
+
+`onComplete` runs after the submission succeeds. Note it takes no arguments: the server responds with `{ success: true }`, so the callback is your hook for a redirect, a confetti burst, or an analytics event, not a place to read a submission ID.
+
+Validation is built in from the schema. Mark a field `required` or add a `validation` block with `minLength`, `pattern`, and the rest, and the renderer blocks advancing past an invalid answer and shows the error inline. You are not wiring up a validation library by hand.
+
+### Same schema, classic layout
+
+Not every form should be one question at a time. A checkout or a settings page usually wants every field visible at once. You do not need a second tool for that. Change one value:
+
+```tsx
+<OSForm formId="your-form-slug" mode="classic" />
+```
+
+`classic` renders all fields on a single page in one column, same schema, same endpoint, same storage. This is the part a hosted builder cannot match: the form is a component in your app, so switching its entire presentation is a prop, not a migration.
+
+### Theming it to match your site
+
+The default theme is clean and neutral. To make it yours, pass a `theme` object. Everything merges over the defaults, so you only set what you want to change.
+
+```tsx
+<OSForm
+  formId="your-form-slug"
+  theme={{
+    colors: { primary: '#6d28d9', background: '#0a0a0a', text: '#fafafa' },
+    borderRadius: 'lg',
+    buttonVariant: 'solid',
+  }}
+/>
+```
+
+If you want the deeper mechanics (custom renderers, the `useFormState` hook, conditional logic between fields), the component reference in the [docs](/docs) goes further than a comparison post should. For getting a good-looking conversational form live, the snippets above are the whole job. If you are new to wiring form state in React generally, the walkthrough in [how to handle forms in React](/blog/forms-in-react) covers the fundamentals the component handles for you.
+
+## Own the Responses and the Keys
+
+Here is what actually changed when you did that. The form still looks conversational. But every answer now posts to an endpoint you control, gets stored as JSON you can export to CSV whenever you like, and routes to integrations running on your own credentials. Want an email on every submission? Add your Resend key. Want rows in a spreadsheet? Connect your own Google account. Want it in your database? Point a signed webhook at your API. None of that sits behind a plan tier, because OSForms is not reselling you access to those services. You brought the keys. That is what [bring your own key](/blog/bring-your-own-key) means in practice, and it is why the integrations are free.
+
+The response cap question also just disappears if you want it to. The hosted tier is 100 submissions a month, which is plenty for most forms. But the platform is open source, so when a form takes off, you clone the repo, point it at your own MongoDB, and the only limit is your infrastructure. Try lifting Typeform's response cap by reading its source. You cannot, because you cannot see it.
+
+This is the same argument I make for [any form backend versus a hosted tool](/blog/handle-form-submissions): the tool that owns your data and hides its code is the tool you are renting from, on terms that can change. A conversational form does not have to be one of those. You can have the flow that makes people finish the form and keep the responses, the code, and the keys.
+
+If you want the Typeform feel without the Typeform deal, the fastest path is to create a form, install `@osforms/react`, and render it. Ten minutes, and the data is yours.
