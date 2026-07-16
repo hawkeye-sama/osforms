@@ -14,17 +14,17 @@ coverTitle: 'Typeform Alternative'
 coverSubtitle: 'Open-source conversational forms you drop into React'
 faq:
   - question: 'What is the best open-source Typeform alternative?'
-    answer: "OSForms. It stores submissions you own, gives you 100 free per month with every integration included, and ships a React component (@osforms/react) with a conversational, one-question-at-a-time mode that looks and behaves like Typeform. The whole platform is on GitHub and self-hostable, so there is no response cap you cannot lift."
+    answer: 'OSForms. It stores submissions you own, gives you 100 free per month with every integration included, and ships a React component (@osforms/react) with a conversational, one-question-at-a-time mode that looks and behaves like Typeform. The whole platform is on GitHub and self-hostable, so there is no response cap you cannot lift.'
   - question: 'Is OSForms cheaper than Typeform?'
     answer: "Typeform's pricing page has no free plan; the cheapest tier is Basic at $39 a month for 100 responses (confirm current pricing at typeform.com/pricing). OSForms gives you 100 submissions a month for free, with email, Google Sheets, and webhooks all included on your own keys. If you self-host the open-source version, the submission cap is whatever your database can hold."
   - question: 'Can I build a one-question-at-a-time form without Typeform?'
-    answer: "Yes. The @osforms/react package ships a conversational renderer: one field per screen, animated transitions, a progress bar, keyboard navigation (Enter to advance), and auto-advance on choice fields. You add it with a single <OSForm /> component and a form slug."
+    answer: 'Yes. The @osforms/react package ships a conversational renderer: one field per screen, animated transitions, a progress bar, keyboard navigation (Enter to advance), and auto-advance on choice fields. You add it with a single <OSForm /> component and a form slug.'
   - question: 'Does OSForms have logic jumps like Typeform?'
     answer: "Partly. OSForms supports conditional logic that shows or hides fields based on earlier answers (equals, contains, greater-than, and so on). It does not yet have Typeform's full branch-to-a-different-question logic jumps, calculator, or answer piping. If your form depends on complex branching, Typeform is still stronger there."
   - question: 'Where does my form data live with OSForms versus Typeform?'
     answer: "With Typeform, responses live on Typeform's servers under its account. With OSForms, submissions are stored as JSON you can export to CSV at any time, on any tier, and routed to your own Resend, Google Sheets, or webhook. You can also self-host the entire stack so the data never leaves your infrastructure."
   - question: 'Do I need React to use OSForms?'
-    answer: "No. React gets you the conversational component. Any plain HTML form can POST to the same OSForms endpoint, and the JSON API works from any language. React is the nicest way to get the Typeform-style flow, not a requirement."
+    answer: 'No. React gets you the conversational component. Any plain HTML form can POST to the same OSForms endpoint, and the JSON API works from any language. React is the nicest way to get the Typeform-style flow, not a requirement.'
 ---
 
 Typeform makes the best-looking forms on the web. That is not up for debate. The one-question-at-a-time flow, the smooth transitions, the way it nudges people to actually finish. It works. The problem shows up on the pricing page and the day you want your data somewhere else. If you are looking for a Typeform alternative that keeps the conversational feel but loses the paywall and the lock-in, the short answer is an open-source form backend with a React component: OSForms plus `@osforms/react`, which ships a conversational renderer you drop into your app with one `<OSForm />` tag, on a form whose submissions you actually own.

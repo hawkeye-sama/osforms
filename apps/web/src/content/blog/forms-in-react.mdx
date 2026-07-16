@@ -39,7 +39,9 @@ import { useState } from 'react';
 export function ContactForm() {
   const [values, setValues] = useState({ name: '', email: '', message: '' });
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
     const { name, value } = e.target;
     setValues((prev) => ({ ...prev, [name]: value }));
   }
@@ -52,7 +54,12 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit}>
       <input name="name" value={values.name} onChange={handleChange} />
-      <input name="email" type="email" value={values.email} onChange={handleChange} />
+      <input
+        name="email"
+        type="email"
+        value={values.email}
+        onChange={handleChange}
+      />
       <textarea name="message" value={values.message} onChange={handleChange} />
       <button type="submit">Send</button>
     </form>
@@ -172,12 +179,14 @@ Two details worth doing properly, because they are the difference between a form
   type="email"
   aria-invalid={!!errors.email}
   aria-describedby={errors.email ? 'email-error' : undefined}
-/>
-{errors.email && (
-  <p id="email-error" role="alert">
-    {errors.email}
-  </p>
-)}
+/>;
+{
+  errors.email && (
+    <p id="email-error" role="alert">
+      {errors.email}
+    </p>
+  );
+}
 ```
 
 Reach for React Hook Form or a Zod resolver when the form is genuinely complex: many fields, cross-field rules, dynamic arrays, a wizard. For a contact form, twenty lines of `validate()` is less code than the import.
@@ -259,12 +268,12 @@ export function ContactForm() {
 
 The response contract is worth knowing, because it is what your React code branches on. Send `Content-Type: application/json` and you always get JSON back, `{ "success": true, "message": "Submission received" }` on success, even when the form has a redirect URL configured for plain HTML submissions. Failures come back as `{ "error": "..." }` with a status code you can act on:
 
-| Status | Means | What to render |
-| --- | --- | --- |
-| `429` | Rate limited (10 requests/min per IP by default, per form) | "Slow down" message, honor the `Retry-After` header |
-| `403` | Origin not in the form's allowed list, or the monthly limit is reached | A generic failure; this one is your problem, not the visitor's |
-| `400` | Body could not be parsed, or a CAPTCHA check failed | Ask them to retry |
-| `404` | Form slug is wrong or the form is inactive | Fix the endpoint URL |
+| Status | Means                                                                  | What to render                                                 |
+| ------ | ---------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `429`  | Rate limited (10 requests/min per IP by default, per form)             | "Slow down" message, honor the `Retry-After` header            |
+| `403`  | Origin not in the form's allowed list, or the monthly limit is reached | A generic failure; this one is your problem, not the visitor's |
+| `400`  | Body could not be parsed, or a CAPTCHA check failed                    | Ask them to retry                                              |
+| `404`  | Form slug is wrong or the form is inactive                             | Fix the endpoint URL                                           |
 
 The keys in the stored submission are the `name` attributes from your markup, which is the second reason to keep them tidy. Whatever you post is what shows up in the dashboard, and in your Google Sheet, and in your webhook payload.
 
