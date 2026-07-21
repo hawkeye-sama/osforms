@@ -33,7 +33,7 @@ The DIY route is worth knowing so you can appreciate skipping it. The classic ha
 
 A spreadsheet is the one interface everyone on a team already knows. Send submissions there and your leads are sortable, filterable, chartable, and shareable without anyone logging into another dashboard. For a waitlist, a contact form, or early customer research, a sheet is a perfectly good CRM.
 
-It's also the integration hosted form tools gate hardest. Formspree puts Google Sheets on its paid Personal plan at $15/month, Basin gates it behind its $24/month Growth tier, and Web3Forms holds it for the $18/month Pro plan (prices checked July 2026; confirm on the vendor pages, they drift). The pattern across all three: the connection runs through *your* Google account, and you pay the tool a monthly fee for permission to use it.
+It's also the integration hosted form tools gate hardest. Formspree puts Google Sheets on its paid Personal plan at $15/month, Basin gates it behind its $24/month Growth tier, and Web3Forms holds it for the $18/month Pro plan (prices checked July 2026; confirm on the vendor pages, they drift). The pattern across all three: the connection runs through _your_ Google account, and you pay the tool a monthly fee for permission to use it.
 
 That pattern is why this integration is free in OSForms. There's no per-seat Google API cost for us to recover. You authorize your own account, Google's quota is yours, and the data never belongs to anyone but you. If the reasoning behind that model is new to you, [what bring your own key actually means](/bring-your-own-key) covers it in full.
 
@@ -71,9 +71,9 @@ Here's the part that usually breaks in DIY setups: keeping columns in sync with 
 
 Say your form posts `name`, `email`, and `message`. On the first submission to an empty sheet, OSForms writes this header row, then the data:
 
-| Submission ID | Submitted At | name | email | message |
-| --- | --- | --- | --- | --- |
-| 6650f2... | 2026-07-21T14:32:08.000Z | Ada | ada@example.com | Hi there |
+| Submission ID | Submitted At             | name | email           | message  |
+| ------------- | ------------------------ | ---- | --------------- | -------- |
+| 6650f2...     | 2026-07-21T14:32:08.000Z | Ada  | ada@example.com | Hi there |
 
 `Submission ID` and `Submitted At` are system columns added on every row: the ID links back to the submission in your dashboard, and the timestamp is ISO 8601, which Sheets sorts and filters cleanly.
 
@@ -92,7 +92,7 @@ Timing-wise, none of this happens while your visitor waits. The endpoint stores 
 
 ## Why BYOK Beats a Paid Integration
 
-Compare the two models directly. With a hosted tool's paid tier, you pay monthly for a connection that runs on your own Google account, your data sits behind their export button, and canceling the plan kills the pipeline. With BYOK, the OAuth grant is yours, the spreadsheet is born in your Drive, and "exporting your data" isn't a feature you request. The sheet *is* the export, live and always current.
+Compare the two models directly. With a hosted tool's paid tier, you pay monthly for a connection that runs on your own Google account, your data sits behind their export button, and canceling the plan kills the pipeline. With BYOK, the OAuth grant is yours, the spreadsheet is born in your Drive, and "exporting your data" isn't a feature you request. The sheet _is_ the export, live and always current.
 
 > "The Google Sheets integration competitors charge $15 a month for runs on your account either way. The fee is for permission to use your own credentials."
 

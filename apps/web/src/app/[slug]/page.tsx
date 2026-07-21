@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { MDXRemote } from 'next-mdx-remote-client/rsc';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { MDXRemote } from 'next-mdx-remote-client/rsc';
 import rehypePrettyCode from 'rehype-pretty-code';
 import remarkGfm from 'remark-gfm';
 
