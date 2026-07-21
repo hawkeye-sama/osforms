@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
+import { MDXRemote } from 'next-mdx-remote-client/rsc';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { MDXRemote } from 'next-mdx-remote-client/rsc';
 import rehypePrettyCode from 'rehype-pretty-code';
 import remarkGfm from 'remark-gfm';
 
@@ -206,7 +206,7 @@ export default async function BlogPostPage({ params }: Props) {
       <LandingNavbar />
 
       <div className="relative px-6 pt-28 pb-24">
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-3xl">
           {/* ── Top bar ─────────────────────────── */}
           <div className="mb-12 flex items-center justify-between">
             <Link

@@ -1,0 +1,101 @@
+---
+title: 'How to Send Form Submissions to Google Sheets'
+description: 'Connect a form to Google Sheets without paying for it. Use your own Google account via OAuth so every submission lands in a spreadsheet you own and control.'
+date: '2026-07-21'
+dateModified: '2026-07-21'
+author: 'Bahroze Ali'
+tags: ['tutorial', 'google-sheets', 'integrations', 'byok']
+readingTime: '6 min read'
+category: 'Integrate'
+seoTitle: 'Send Form Submissions to Google Sheets Free'
+focusKeyphrase: 'form to google sheets'
+coverImage: '/content/images/form-to-google-sheets-cover.png'
+coverTitle: 'Form to Google Sheets'
+coverSubtitle: 'Every submission in a sheet you own'
+faq:
+  - question: 'Can I connect an existing spreadsheet instead of creating a new one?'
+    answer: 'No. OSForms creates a fresh spreadsheet in your Drive when you connect. That is a side effect of the narrow drive.file permission it requests: OSForms can only see files it created itself, so it cannot browse your Drive to attach a sheet that already exists. You can share, move, or rename the created spreadsheet freely.'
+  - question: 'Does OSForms get access to my whole Google Drive?'
+    answer: 'No. The OAuth connection requests the drive.file scope, which only grants access to files the app created. Your other spreadsheets, documents, and folders are invisible to OSForms. It also reads your email address and name, purely to label the integration in your dashboard.'
+  - question: 'What happens if I add a new field to my form later?'
+    answer: 'The column appears automatically. On every submission, OSForms compares your form fields against the header row and appends any missing ones to the end. Existing columns and data are untouched.'
+  - question: 'Can I reorder columns or add my own columns to the sheet?'
+    answer: 'Yes. Values are matched to columns by header name, not position, so you can reorder columns and add your own (notes, status, owner) without breaking anything. Avoid renaming a header that came from a form field, though: the original field name will be re-added as a new column on the next submission.'
+  - question: 'What happens if the Google Sheets call fails?'
+    answer: 'Nothing is lost. The submission is stored in OSForms before any integration runs, so a failed append only means the row is missing from the sheet. The failure is recorded in the integration log with the exact error, and you get an in-app notification so you can fix the connection.'
+---
+
+Google Sheets is still the most requested destination for form data, and the one most form backends make you pay for. To send a form to Google Sheets you need three things: an endpoint that receives the POST, an OAuth connection to a Google account, and code that appends each submission as a row. OSForms handles all three. You point your form at an endpoint, click **Connect with Google**, and every submission lands in a spreadsheet created in your own Drive, on your own account. It's included in the free tier, because the integration runs on your Google credentials, not ours.
+
+The DIY route is worth knowing so you can appreciate skipping it. The classic hack is a Google Apps Script bound to a sheet: write a `doPost(e)` handler, deploy it as a web app, fight with `e.parameter`, and redeploy every time the script changes. The grown-up route is the Sheets API with a service account: create a Google Cloud project, enable the API, generate a JSON key, share the sheet with the service account's email, then write and host server code that formats and appends rows. Both work. Both are a lot of machinery for "put the form in a spreadsheet."
+
+## Why Send a Form to Google Sheets
+
+A spreadsheet is the one interface everyone on a team already knows. Send submissions there and your leads are sortable, filterable, chartable, and shareable without anyone logging into another dashboard. For a waitlist, a contact form, or early customer research, a sheet is a perfectly good CRM.
+
+It's also the integration hosted form tools gate hardest. Formspree puts Google Sheets on its paid Personal plan at $15/month, Basin gates it behind its $24/month Growth tier, and Web3Forms holds it for the $18/month Pro plan (prices checked July 2026; confirm on the vendor pages, they drift). The pattern across all three: the connection runs through *your* Google account, and you pay the tool a monthly fee for permission to use it.
+
+That pattern is why this integration is free in OSForms. There's no per-seat Google API cost for us to recover. You authorize your own account, Google's quota is yours, and the data never belongs to anyone but you. If the reasoning behind that model is new to you, [what bring your own key actually means](/bring-your-own-key) covers it in full.
+
+## Connecting Your Own Google Account
+
+You'll need a free [OSForms account](https://osforms.com/signup) and any Google account. The whole setup is three steps.
+
+**1. Create a form and wire up your endpoint.** In the dashboard, hit **New Form** and you get a unique URL. Set it as your form's `action`:
+
+```html
+<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+  <input type="text" name="name" required />
+  <input type="email" name="email" required />
+  <textarea name="message" rows="4" required></textarea>
+  <button type="submit">Send</button>
+</form>
+```
+
+Plain HTML shown here, but the endpoint accepts `application/x-www-form-urlencoded` and `application/json`, so `fetch` from React, Vue, or anywhere else works the same. If this part is new, the [form backend setup guide](/form-backend-setup) walks through it in two minutes.
+
+**2. Connect Google.** Open your form's **Integrations** tab, choose **Google Sheets**, and click **Connect with Google**. You'll see Google's standard consent screen. Approve it and OSForms creates a new spreadsheet in your Drive named after your form ("Contact Form Submissions"), links it to the integration, and drops you back in the dashboard with a direct link to the sheet.
+
+Two details in that consent screen matter more than they look:
+
+- **The scope is `drive.file`**, the narrowest Drive permission Google offers. It grants access only to files the app created. OSForms cannot list, read, or touch anything else in your Drive.
+- **The refresh token is encrypted at rest** with AES-256-GCM before it's stored, and only decrypted in memory when a submission needs writing. The code is [open source](https://github.com/hawkeye-sama/osforms) if you want to read exactly how.
+
+**3. Submit something.** Fill your form out once and open the sheet. The row is there, and so are the headers: OSForms wrote them for you on first contact.
+
+From the dashboard you can rename the integration, pause it with a toggle, or disconnect it entirely. The spreadsheet is yours either way; disconnecting removes OSForms's access, not your data.
+
+## Mapping Form Fields to Columns
+
+Here's the part that usually breaks in DIY setups: keeping columns in sync with a form that changes. OSForms handles the mapping automatically on every submission.
+
+Say your form posts `name`, `email`, and `message`. On the first submission to an empty sheet, OSForms writes this header row, then the data:
+
+| Submission ID | Submitted At | name | email | message |
+| --- | --- | --- | --- | --- |
+| 6650f2... | 2026-07-21T14:32:08.000Z | Ada | ada@example.com | Hi there |
+
+`Submission ID` and `Submitted At` are system columns added on every row: the ID links back to the submission in your dashboard, and the timestamp is ISO 8601, which Sheets sorts and filters cleanly.
+
+Now add a `budget` field to your form. On the next submission, OSForms compares the incoming fields against the header row, notices `budget` is missing, and appends it as a new column. No re-configuration, no broken rows, and everything already in the sheet stays put.
+
+The mapping is by **header name, not column position**, which makes the sheet safe to treat as a working document:
+
+- Reorder columns however you like; values still land under the right header.
+- Add your own columns (a `status` or `notes` column for triage); OSForms leaves them alone.
+- A field the form didn't send this time just gets an empty cell.
+- Nested values (arrays, objects from JSON submissions) are stored as JSON strings rather than `[object Object]`.
+
+The one thing to avoid is renaming a header that came from a form field. The mapping would no longer find it, so the original field name gets re-added as a fresh column on the next submission.
+
+Timing-wise, none of this happens while your visitor waits. The endpoint stores the submission and responds immediately, then runs integrations in the background. Every append is recorded in the submission's integration log: success, or the exact error Google returned. If a write fails (revoked access, deleted sheet), you get an in-app notification, and the submission itself is safe in OSForms regardless.
+
+## Why BYOK Beats a Paid Integration
+
+Compare the two models directly. With a hosted tool's paid tier, you pay monthly for a connection that runs on your own Google account, your data sits behind their export button, and canceling the plan kills the pipeline. With BYOK, the OAuth grant is yours, the spreadsheet is born in your Drive, and "exporting your data" isn't a feature you request. The sheet *is* the export, live and always current.
+
+> "The Google Sheets integration competitors charge $15 a month for runs on your account either way. The fee is for permission to use your own credentials."
+
+This is the thesis behind everything OSForms does, and it's most visible right here, on the integration people want most. If you're weighing tools right now, the [Formspree comparison](/formspree-alternative) shows the same pattern across the whole feature list.
+
+Connecting a form to Google Sheets should be a two-minute OAuth flow, not a line item. Create the endpoint, click connect, and let the rows write themselves. And if you're still deciding how to handle the form itself, start with the wider picture: [how to handle form submissions without a backend](/handle-form-submissions).
