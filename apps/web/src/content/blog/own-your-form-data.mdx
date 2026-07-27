@@ -1,0 +1,98 @@
+---
+title: "Why Your Form Tool Shouldn't Own Your Data"
+description: "Your form submissions live on someone else's servers, under their retention rules. Here's why you should own your data, and what it costs you when you don't."
+date: '2026-07-27'
+dateModified: '2026-07-27'
+author: 'Bahroze Ali'
+tags: ['data-ownership', 'byok', 'open-source', 'form-backend']
+readingTime: '7 min read'
+category: 'BYOK Files'
+seoTitle: "Why Your Form Tool Shouldn't Own Your Data"
+focusKeyphrase: 'own your data'
+coverImage: '/content/images/own-your-form-data-cover.png'
+coverTitle: 'Own Your Form Data'
+coverSubtitle: "Submissions shouldn't live on someone else's terms"
+faq:
+  - question: 'Can I export all my submissions from OSForms?'
+    answer: 'Yes. Every form has an export endpoint (GET /api/v1/forms/{id}/export) that returns every submission as CSV, with a column for every field that was ever submitted. JSON export is on the roadmap; CSV is available today.'
+  - question: 'What happens to submissions when I delete a form?'
+    answer: 'They are permanently deleted. Deleting a form removes every submission and every integration config attached to it in the same request. There is no soft-delete archive kept on our side.'
+  - question: 'Do I have to self-host OSForms to own my data?'
+    answer: 'No. On the hosted version your integrations already run on your own API keys, your submissions export in full, and deletion is real. Self-hosting goes one step further and puts the database itself on your infrastructure: clone the repo, set two secrets in .env, and run docker compose up.'
+  - question: 'What does BYOK have to do with data ownership?'
+    answer: 'BYOK (bring your own key) means integrations run on credentials you control. Email notifications go through your Resend account and sheet rows land in your Google account, so the copies of your data that flow onward live in accounts you can access without the form tool.'
+  - question: 'Is OSForms actually open source?'
+    answer: 'Yes, MIT-licensed at github.com/hawkeye-sama/osforms. You can read the storage, export, and deletion code instead of taking our word for any of this.'
+---
+
+A form submission is a person handing you their name, their email, and a reason to talk to them. On most hosted form tools, you never actually receive that data. You get to view it, through their dashboard, under their retention rules, for as long as your plan allows. Formspree's free plan keeps submissions for 30 days, then they're gone.
+
+The case to own your data is not philosophical. To own your data means three concrete things: you can export all of it whenever you want, deleting it actually deletes it, and you keep collecting it even if the vendor raises prices, pivots, or disappears. Most hosted form tools fail at least one of those tests, and the failure only shows up when you need the data most.
+
+I ran forms for client sites for years before building OSForms, and this post is the argument I wish someone had made to me earlier.
+
+## Who Really Owns Your Form Data
+
+Legally, the submissions are yours. Every form tool's terms of service will tell you so. Practically, ownership is decided by much more boring things: whose database the rows sit in, what the export button produces, and how long the data survives on your plan.
+
+Run the test on whatever you use today:
+
+1. **Can you get everything out?** Not the last page of the dashboard. Every submission, every field, in one export.
+2. **Does delete mean delete?** Or does "delete" hide the row in your UI while it stays in their database?
+3. **If you stop paying, what survives?** Downgrade to free and check what happens to last year's submissions.
+
+The answers are worse than most people expect. Formspree's free tier keeps a 30-day archive; a lead from six weeks ago is unrecoverable. Web3Forms' free tier forwards each submission to your inbox and stores it for 30 days with no CSV export, so your lasting archive is whatever your email search can dig up. These aren't hidden gotchas, they're in the pricing tables. But nobody reads a pricing table asking "who holds my data in two years?"
+
+The pattern underneath is the same one I wrote about in [what BYOK actually means](/bring-your-own-key): the tool sits between you and your own stuff, and the space between is where the pricing page lives.
+
+## The Risk of Renting Your Data Layer
+
+Renting is fine for things you can re-buy. Form submissions are not one of those things. A missed lead doesn't come back. A user's bug report, a waitlist signup from launch day, a support request from a customer about to churn: each of those exists exactly once.
+
+That's what makes the form tool different from most SaaS in your stack. Your form is the top of your funnel, and everything below it depends on what gets caught there.
+
+> "Renting the top of your funnel on a 30-day retention window is a strange bet to make to save $15 a month."
+
+And the terms of that rental change without your input. Typeform gutted its free tier in early 2026; today its [pricing page](https://www.typeform.com/pricing/) starts at Basic, $39 a month. Getform rebranded to [Forminit](https://forminit.com/) in January 2026; that one worked out fine for users, but it's a reminder that the company holding your data layer can change identity, pricing, or direction any quarter. When the change comes, your options are pay up or lose the pipe, because the migration cost sits entirely on your side.
+
+There's a compliance edge to this too. If you collect personal data through a form, you're the data controller under GDPR, whether you feel like one or not. When someone asks you to hand over or erase everything you hold on them, "it's in a third-party dashboard, partly expired, exportable one page at a time" is a bad position to answer from. You can delegate storage; you can't delegate the obligation.
+
+Agency work made all of this vivid for me. A client asks a simple question: "Can you pull every lead since the site launched?" The honest answer, on a hosted form tool with a retention window, is "I can pull the last 30 days." That conversation is what pushed me toward wanting the data somewhere I could query without permission.
+
+## What It Means to Own Your Data
+
+Ownership is a set of behaviors you can check, not a line on a landing page. Here's the same three-part test applied to OSForms, including the part that isn't finished.
+
+To be clear about what the free tier does limit: 100 submissions a month on the hosted version. Volume is the one thing we meter, because it's the one thing that costs us money. Export, deletion, and every integration are never the paywall.
+
+**Export everything, any time.** Every form has an export endpoint:
+
+```
+GET /api/v1/forms/{id}/export
+```
+
+One click on the dashboard's export button, and it returns every submission as CSV. The columns are built from the union of every field name that ever appeared in your data, plus the submission ID and timestamp, so a field you renamed eight months ago still comes out. No pagination, no date window, no export fee. One honest caveat: it's CSV only for now. JSON export is tracked and coming, but I won't document it until it ships.
+
+**Delete means delete.** Deleting a form cascade-deletes every submission and every integration config attached to it, in the same request. There's no soft-delete archive sitting on our side afterward. You can read the handler yourself; it's a `deleteMany` on submissions, not a status flag.
+
+**Leaving is a real option.** OSForms is MIT-licensed. If the hosted service ever stops making sense for you, `git clone`, copy the env example, set two secrets, and:
+
+```bash
+docker compose up
+```
+
+That starts the same web app and a MongoDB container on your own machine or server. From that point the database rows are literally yours, on your disk, and the ownership question stops being about trust at all.
+
+## How BYOK Gives Ownership Back
+
+Storage is only half of where form data lives. The other half is the copies that flow onward: the notification email, the row appended to a spreadsheet, the webhook call into your own API. On a bring-your-own-key backend, every one of those copies lands in an account you control.
+
+Email notifications go out through your Resend key, so the messages sit in your sending history. Sheet rows are appended to a spreadsheet in your Google account, through an OAuth grant scoped to `drive.file` (files the app created, not your whole Drive). Webhooks post to your endpoint, signed with HMAC-SHA256 so you can verify each request. Revoke the Resend key or the Google grant and OSForms' access ends that second, without a support ticket.
+
+That's the quiet, structural difference between BYOK and the standard hosted model. Even if you never export a CSV and never self-host, a working copy of your submissions is accumulating in a Google Sheet you own and an inbox you own, from day one. The form tool becomes a router you can swap out, not a vault you have to negotiate with. It's also why the integrations cost nothing here while [Formspree charges $15 a month](/formspree-alternative) for the same Google Sheets connection running on your account either way.
+
+## Own Your Data From the First Submission
+
+You don't need to self-host, audit source code, or think about any of this daily. You just need to pick a tool where the defaults point the right way: full export, real deletion, integrations on your own keys, and an exit that doesn't cost you your history. Choose that on day one and you'll never have to explain to anyone why the leads older than 30 days are gone.
+
+If you're still deciding how to receive submissions at all, start with the wider picture in [how to handle form submissions without a backend](/handle-form-submissions). Whatever you pick, own your data from the first submission, because that's the only one you can't go back for.
