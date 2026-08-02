@@ -1,0 +1,143 @@
+---
+title: 'How to Build a Contact Form in Plain HTML'
+description: 'Build a working HTML contact form with no backend and no framework. Just a form action that receives, stores, and emails every submission straight to you.'
+date: '2026-08-02'
+dateModified: '2026-08-02'
+author: 'Bahroze Ali'
+tags: ['tutorial', 'html', 'contact-form', 'no-backend']
+readingTime: '7 min read'
+category: 'Build'
+seoTitle: 'How to Build an HTML Contact Form (No Backend)'
+focusKeyphrase: 'html contact form'
+coverImage: '/content/images/html-contact-form-cover.png'
+coverTitle: 'HTML Contact Form'
+coverSubtitle: 'No framework, no server, no JavaScript'
+faq:
+  - question: 'Can an HTML contact form work without any JavaScript?'
+    answer: 'Yes. A form with a method="POST" and an action pointing at an endpoint submits natively, the same way forms worked before JavaScript frameworks existed. The browser serializes every named field as application/x-www-form-urlencoded and navigates to whatever the endpoint returns. You only need JavaScript if you want to stay on the page and show your own success state.'
+  - question: 'Why does my form show raw JSON after submitting?'
+    answer: 'Because no redirect URL is set. A plain HTML form navigates to the response, and with no redirect configured the OSForms endpoint answers with {"success":true,"message":"Submission received"}. Set a Redirect URL in the form settings and the endpoint returns a 303 redirect to your thank-you page instead.'
+  - question: 'How do I stop spam without adding a captcha?'
+    answer: 'Use a honeypot. Pick a field name in your form settings, add a hidden input with that exact name to your markup, and any submission that arrives with it filled in is discarded. Bots fill every field they find; real visitors never see it. No challenge, no third-party script, no friction for the people you actually want to hear from.'
+  - question: 'Can visitors attach a file to the contact form?'
+    answer: 'Not today. The endpoint accepts multipart/form-data, so a file input will not break the submission, but the file itself is not stored. It is replaced with a placeholder string like [File: resume.pdf, 48120 bytes] so you can see something was attached. If attachments matter, ask for a link instead.'
+  - question: 'Do I need a domain or hosting for the form to work?'
+    answer: 'No. The form endpoint is an absolute URL, so the markup works from a static host, a CDN, a local file, or a page you have not deployed yet. The one thing worth checking is the Allowed Origins setting: leave it empty during development, then lock it to your production origin once the site is live.'
+---
+
+A contact form in plain HTML is about ten lines of markup. The part that stops people is one attribute: `action` needs a URL that accepts a POST, and a static site does not have one. So to build an HTML contact form with no backend, you write the markup, point `action` at a hosted endpoint, and let that endpoint store the submission and email it to you. No framework, no server, no JavaScript, no build step. The form works from a plain `.html` file opened off a CDN.
+
+The workarounds people try first all have the same shape. `mailto:` hands the job to the visitor's mail client, which on most machines is either unconfigured or a webmail tab the browser cannot open, so the message silently never gets sent and you never learn it happened. PHP's `mail()` needs a server and lands in spam folders because shared hosting IPs have terrible sending reputation. A serverless function works, but now you have a repo, a deploy pipeline, SMTP credentials, CORS headers, and a database decision, all to receive "hi, are you taking clients?"
+
+## The Bare HTML Contact Form
+
+Start with the markup, because this part has not changed in twenty years:
+
+```html
+<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+  <label for="name">Name</label>
+  <input id="name" type="text" name="name" required />
+
+  <label for="email">Email</label>
+  <input id="email" type="email" name="email" required />
+
+  <label for="message">Message</label>
+  <textarea id="message" name="message" rows="5" required></textarea>
+
+  <button type="submit">Send message</button>
+</form>
+```
+
+Three details in there carry most of the weight.
+
+**The `name` attribute is the entire data contract.** The browser builds the request body from named fields, so an input without a `name` is not sent at all. Whatever you type into `name` becomes the key in your dashboard, in the email, and in the spreadsheet column if you connect one later. Use lowercase keys you would be happy to see in a CSV header, and skip the fancy characters.
+
+**`for` and `id` pair a label to its input.** That gives you a bigger click target, screen reader support, and correct autofill behavior. It costs one attribute per field, and placeholder-only forms fail all three.
+
+**Native validation is free.** `required` blocks an empty submit, `type="email"` demands an `@`, and `minlength`, `max`, and `pattern` cover most of the rest. The browser handles the error bubbles and focus management for you. Just be clear about what it is: a UX convenience that runs in the visitor's browser, which anyone can bypass with `curl`. Treat it as a nicety, never as your only defense.
+
+Two structural things worth knowing before you go further. If you repeat a `name` across several inputs (a checkbox group, say), the values arrive as an array rather than the last one overwriting the rest, so `<input type="checkbox" name="topics" value="pricing">` next to `value="support"` gives you `topics: ["pricing", "support"]`. And a headless endpoint does not care what you send. There is no field list to keep in sync, so adding a `budget` select to the markup means the next submission simply has a `budget` key.
+
+## Making the HTML Contact Form Submit Somewhere
+
+Everything above works on any static host. The `action` URL is the piece that needs to exist somewhere.
+
+Sign up at [osforms.com](https://osforms.com/signup), click **New Form**, name it, and you get an endpoint immediately:
+
+```text
+https://osforms.com/api/v1/f/abc123xyz
+```
+
+Paste that into `action` and the form is live. The [form backend setup guide](/form-backend-setup) covers the dashboard side in more detail, but there is genuinely nothing else to configure to start receiving submissions.
+
+What happens when someone hits submit: the browser serializes the named fields as `application/x-www-form-urlencoded` and POSTs them. The endpoint looks up the form by its slug, checks the origin and the rate limit, parses the body, stores the submission, and responds. Integrations run afterward in the background, so the response is not waiting on an email to send. The submission is written to the database before any integration fires, which means a broken email key costs you a notification, never the data.
+
+You can point a `fetch` call at the same URL with a JSON body if you want to stay on the page, and that is what the React and Next.js versions of this tutorial do. For a plain HTML page, the native POST is the whole point. No client-side code means nothing to hydrate, nothing to break when a script fails to load, and nothing to maintain.
+
+## What the Browser Does With the Response
+
+Here is the one behavior that surprises people, and the reason a lot of "no-backend form" tutorials quietly skip this section.
+
+A native form POST navigates. The browser leaves your page and renders whatever came back. With no redirect configured, the OSForms endpoint answers with JSON, so your visitor lands on a white page reading:
+
+```json
+{ "success": true, "message": "Submission received" }
+```
+
+Technically correct, and a terrible thank-you page.
+
+The fix takes ten seconds. Open the form's **Settings** dialog and fill in **Redirect URL (after submission)** with something like `https://yoursite.com/thank-you`. The endpoint then answers a successful submission with a `303` redirect and the browser follows it to your own page. Write that page yourself, in the same plain HTML, and the flow feels like a real site.
+
+The endpoint decides between the two by looking at the request. If the caller asks for JSON (an `Accept: application/json` header, or a JSON `Content-Type`, which is what `fetch` sends), it always gets JSON back even when a redirect URL exists. A browser form post asks for HTML, so it gets the redirect. One endpoint, both behaviors, no configuration flag.
+
+Know the rest of the response codes before you ship, since without JavaScript your visitor sees them raw:
+
+| Code  | What happened                                                           |
+| ----- | ----------------------------------------------------------------------- |
+| `200` | Stored. JSON body, because no redirect URL is set or JSON was requested |
+| `303` | Stored, redirecting to your thank-you page                              |
+| `400` | The body could not be parsed, or a required CAPTCHA token was missing   |
+| `403` | Origin not in your allowed list, or the monthly submission cap is hit   |
+| `404` | No active form with that slug (check the URL, check the Active toggle)  |
+| `429` | Rate limited. Ships a `Retry-After` header with the seconds remaining   |
+
+That `403` origin case deserves a second of setup. **Allowed Origins** is empty by default, which accepts posts from anywhere, including a file you opened locally. Once the site is live, put your production origin in there and the endpoint rejects browser posts from anywhere else. Browsers send an `Origin` header on cross-origin form posts, so this works for plain HTML, not just `fetch`. It is a browser-level guard rather than a hard lock: a request that sends no `Origin` header at all, like `curl`, still gets through. Pair it with the honeypot and the rate limit.
+
+## Adding Email and Spam Protection
+
+Storage alone is not what you want from a contact form. You want to know a message arrived.
+
+Open the form's **Integrations** tab, pick **Email**, and paste your own [Resend](https://resend.com) API key. Every submission then emails you at whatever address you set, and you can turn on an auto-reply so the sender gets a confirmation too. The key is encrypted at rest with AES-256-GCM and decrypted only in memory when a submission needs sending. Because you brought the key, there is no per-email fee on our side and no plan tier gating the feature. The [Resend notifications walkthrough](/form-email-notifications) covers the templates and the auto-reply setup.
+
+Then spam, which finds any public form within days of it being indexed.
+
+The frictionless defense is a honeypot: a field real people never see and bots fill in anyway. Pick the name in **Settings → Honeypot Field Name** (`_gotcha` is the placeholder, but any name works, and picking your own means bots cannot pattern-match it), then add a matching input to your markup:
+
+```html
+<input
+  type="text"
+  name="_gotcha"
+  tabindex="-1"
+  autocomplete="off"
+  aria-hidden="true"
+  style="display:none"
+/>
+```
+
+`tabindex="-1"` keeps it out of keyboard navigation, `aria-hidden` keeps it out of screen readers, and `autocomplete="off"` stops a password manager from helpfully filling it for a real human. When a submission arrives with that field populated, the endpoint returns the same success response a real visitor gets and stores nothing at all. The bot logs a win, moves on, and your inbox stays clean.
+
+If a honeypot is not enough, forms also support reCAPTCHA and hCaptcha with your own site keys. Be aware of two current limits before you plan around it: the CAPTCHA secret is set on the form record through the API rather than the Settings dialog today, and Cloudflare Turnstile tokens are accepted but not verified correctly yet, tracked in [issue #17](https://github.com/hawkeye-sama/osforms/issues/17). Stick to reCAPTCHA or hCaptcha, or just the honeypot, which handles the overwhelming majority of drive-by bots on a small site.
+
+There is also a rate limit running whether you configure anything or not: 10 submissions per minute per IP per form by default. A human filling out a contact form will never notice it. A script hammering the endpoint gets a `429`.
+
+## From Static HTML to a Real Inbox
+
+Put together, the finished thing is one file with a `form` in it and three settings toggled in a dashboard. No repo, no deploy, no server to patch, no database to back up. When a message arrives you get an email, and the submission sits in a dashboard you can export to CSV whenever you want.
+
+> The HTML part of a contact form has not changed since 1995. Everything that made it hard lives on the other side of the POST.
+
+Two honest limits before you build on this. The free tier is 100 submissions per month across your account, which is more than most portfolio and small business sites see, but it is a real ceiling. And file uploads are not stored: the endpoint accepts `multipart/form-data`, so a file input will not break anything, but the file is replaced with a placeholder like `[File: resume.pdf, 48120 bytes]`. If your form needs attachments, ask for a link.
+
+What you get in exchange is that the pieces belong to you. The email runs on your Resend key, a Google Sheets connection runs on your Google account, and a webhook goes wherever you point it, none of them gated behind a paid tier because they cost us nothing to run on your credentials. That model is the whole argument, laid out in [what bring your own key actually means](/bring-your-own-key).
+
+An HTML contact form should take ten minutes and stay working for years. Write the markup, set the action, set a redirect, and add a honeypot. If you are weighing this against a serverless function or one of the hosted tools, [how to handle form submissions without a backend](/handle-form-submissions) compares every option side by side.
