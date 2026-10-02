@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 
+import RateLimitCounter from './models/rate-limit-counter';
+
 interface Entry {
   count: number;
   resetAt: number;
@@ -43,6 +45,47 @@ export function checkRateLimit(
     allowed: entry.count <= limit,
     remaining: Math.max(0, limit - entry.count),
     resetAt: entry.resetAt,
+  };
+}
+
+/**
+ * Fixed-window rate limit backed by MongoDB, so the count holds across
+ * serverless instances (the in-memory limiter above is per instance).
+ * Caller must have run connectDB().
+ */
+export async function checkSharedRateLimit(
+  key: string,
+  limit: number,
+  windowMs = 60_000
+): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
+  const windowStart = Math.floor(Date.now() / windowMs) * windowMs;
+  const resetAt = windowStart + windowMs;
+  const id = `${key}:${windowStart}`;
+
+  const increment = () =>
+    RateLimitCounter.findOneAndUpdate(
+      { _id: id },
+      { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(resetAt) } },
+      { upsert: true, returnDocument: 'after' }
+    ).lean();
+
+  let counter;
+  try {
+    counter = await increment();
+  } catch (err) {
+    // Two concurrent upserts on a fresh window: one loses with E11000. Retry
+    // once; the document now exists so the second attempt is a plain update.
+    if ((err as { code?: number }).code !== 11000) {
+      throw err;
+    }
+    counter = await increment();
+  }
+
+  const count = counter?.count ?? 1;
+  return {
+    allowed: count <= limit,
+    remaining: Math.max(0, limit - count),
+    resetAt,
   };
 }
 

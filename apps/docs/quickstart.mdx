@@ -5,23 +5,29 @@ description: 'Get your form backend running in 2 minutes'
 
 ## 1. Create an account
 
-Sign up at [osforms.com](https://osforms.com/signup). You'll receive a 6-digit OTP by email — enter it to verify your account.
+Sign up at [osforms.com](https://osforms.com/signup). You'll get a 6-digit code by email. Enter it to verify your account.
 
 ## 2. Complete onboarding
 
-Three quick steps:
+Onboarding walks you through five steps:
 
-1. **Profile** — name, website, role
-2. **Integrations** — connect Resend, Google Sheets, or webhooks
-3. **Test** — submit a test form to verify everything works
+1. **About You**: name, website, company, role
+2. **Create Form**: your first form and its endpoint
+3. **Connect Resend**: optional email notifications
+4. **Google Sheets**: optional spreadsheet sync
+5. **Implementation**: copy a code sample and send a test submission
 
-## 3. Create a form
+You can skip the optional steps and set them up later.
 
-From your dashboard click **New Form**. You'll get a unique endpoint URL:
+## 3. Get your endpoint
+
+Every form has a unique endpoint URL, shown in the form's **Setup** tab. Create more forms from the dashboard with **New Form**.
 
 ```
 https://osforms.com/api/v1/f/abc123def456
 ```
+
+The last part (`abc123def456`) is the form's slug.
 
 ## 4. Point your HTML form at the endpoint
 
@@ -34,33 +40,33 @@ https://osforms.com/api/v1/f/abc123def456
 </form>
 ```
 
-On success the user is redirected to your form's redirect URL (configurable in form settings). For JSON clients, returns `{ "success": true }`.
+Set a **Redirect URL** in the Setup tab to send people to your own thank-you page. Without one, the endpoint responds with JSON: `{ "success": true, "message": "Submission received" }`.
 
 ## 5. Configure integrations
 
-Go to **Integrations** in your form and connect:
+Open the form's **Integrations** tab and connect:
 
 <CardGroup cols={3}>
   <Card title="Resend" icon="envelope" href="/docs/integrations/resend">
-    Email notifications on every submission
+    Email notifications and auto-replies
   </Card>
   <Card
     title="Google Sheets"
     icon="table"
     href="/docs/integrations/google-sheets"
   >
-    Auto-append rows to a spreadsheet
+    A new row for every submission
   </Card>
   <Card title="Webhook" icon="webhook" href="/docs/integrations/webhooks">
     POST to any URL with HMAC signing
   </Card>
 </CardGroup>
 
-All integrations run in parallel in the background — users get an instant response regardless.
+Integrations run in parallel in the background, so the person submitting gets an instant response.
 
 ## 6. (Optional) Use the React SDK
 
-For embedded or conversational forms:
+The SDK renders forms you design in the form's **Builder** tab:
 
 ```bash
 npm install @osforms/react
@@ -81,7 +87,8 @@ export default function ContactPage() {
 }
 ```
 
-<Note>
-  `framer-motion` is automatically installed as a dependency of
-  `@osforms/react`.
-</Note>
+`formId` is the form's slug. The form needs a schema saved in the Builder tab; a form without one renders nothing.
+
+## 7. (Optional) Pull submissions into your platform
+
+Create an API key in **Settings → API Keys** and read submissions from your server. See [Pull Submissions](/docs/api-reference/pull-submissions).

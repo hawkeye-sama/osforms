@@ -36,15 +36,15 @@ const [state, actions] = useFormState(schema, endpoint, onComplete, onError);
 
 ### FormStateActions
 
-| Field           | Type                          | Description                                                               |
-| --------------- | ----------------------------- | ------------------------------------------------------------------------- |
-| `setAnswer`     | `(fieldId, value) => void`    | Update a field's value and clear its error                                |
-| `advance`       | `(overrideValue?) => boolean` | Validate current field and advance. Returns `false` if validation failed. |
-| `back`          | `() => void`                  | Move to the previous field                                                |
-| `submit`        | `() => Promise<void>`         | Validate all fields and POST to the endpoint                              |
-| `startForm`     | `() => void`                  | Dismiss the welcome screen                                                |
-| `visibleFields` | `FormField[]`                 | Fields visible based on current answers and conditional logic             |
-| `currentField`  | `FormField \| undefined`      | The field at `state.currentIndex`                                         |
+| Field           | Type                          | Description                                                                                                                                                          |
+| --------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setAnswer`     | `(fieldId, value) => void`    | Update a field's value and clear its error                                                                                                                           |
+| `advance`       | `(overrideValue?) => boolean` | Validate the current field (or `overrideValue`) and move to the next one. Returns `false` if validation failed. On the last field it doesn't submit; call `submit()` |
+| `back`          | `() => void`                  | Move to the previous field                                                                                                                                           |
+| `submit`        | `() => Promise<void>`         | Validate all visible fields and POST to the endpoint. On a validation error it moves `currentIndex` to the first invalid field                                       |
+| `startForm`     | `() => void`                  | Dismiss the welcome screen                                                                                                                                           |
+| `visibleFields` | `FormField[]`                 | Fields visible based on current answers and conditional logic                                                                                                        |
+| `currentField`  | `FormField \| undefined`      | The field at `state.currentIndex`                                                                                                                                    |
 
 ### Example: custom renderer
 
@@ -66,6 +66,8 @@ function MyForm({ formSlug }: { formSlug: string }) {
   const field = actions.currentField;
   if (!field) return null;
 
+  const isLast = state.currentIndex === actions.visibleFields.length - 1;
+
   return (
     <div>
       <label>{field.label}</label>
@@ -74,17 +76,32 @@ function MyForm({ formSlug }: { formSlug: string }) {
         onChange={(e) => actions.setAnswer(field.id, e.target.value)}
       />
       {state.errors[field.id] && <p>{state.errors[field.id]}</p>}
-      <button onClick={() => actions.advance()}>Next</button>
+      {isLast ? (
+        <button onClick={() => actions.submit()} disabled={state.isSubmitting}>
+          Submit
+        </button>
+      ) : (
+        <button onClick={() => actions.advance()}>Next</button>
+      )}
     </div>
   );
 }
 ```
 
+<Note>
+  `showWelcome` is set from the schema on the hook's first render. If the schema
+  loads later (as with `useFormSchema`), the welcome screen won't show. Render
+  the component that calls `useFormState` only once the schema has loaded if you
+  need the welcome screen.
+</Note>
+
+The submission is JSON keyed by field `id`, covering visible non-statement fields. Unanswered fields are sent as `""`, and `settings.source` (if set) is sent as `_source`.
+
 ---
 
 ## useFormSchema
 
-Fetches a form schema from the osforms API.
+Fetches a form schema from the OSForms API.
 
 ```tsx
 import { useFormSchema } from '@osforms/react';
@@ -97,12 +114,12 @@ const { schema, formName, redirectUrl, loading, error } = useFormSchema(
 
 ### Return value
 
-| Field         | Type                 | Description                               |
-| ------------- | -------------------- | ----------------------------------------- |
-| `schema`      | `FormSchema \| null` | Parsed form schema. `null` while loading. |
-| `formName`    | `string`             | Display name of the form                  |
-| `redirectUrl` | `string`             | Redirect URL configured in form settings  |
-| `loading`     | `boolean`            | `true` while the fetch is in flight       |
-| `error`       | `string \| null`     | Error message if the fetch failed         |
+| Field         | Type                 | Description                                                                          |
+| ------------- | -------------------- | ------------------------------------------------------------------------------------ |
+| `schema`      | `FormSchema \| null` | Parsed form schema. `null` while loading, and also for forms with no builder schema. |
+| `formName`    | `string`             | Display name of the form                                                             |
+| `redirectUrl` | `string \| null`     | Redirect URL configured in form settings                                             |
+| `loading`     | `boolean`            | `true` while the fetch is in flight                                                  |
+| `error`       | `string \| null`     | Error message if the fetch failed                                                    |
 
-Fetches from: `{baseUrl}/api/v1/f/{formId}/schema`
+Fetches from: `{baseUrl}/api/v1/f/{formId}/schema`. Passing an empty `formId` skips the fetch and leaves `loading` as `true`.

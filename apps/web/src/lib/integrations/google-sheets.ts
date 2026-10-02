@@ -12,6 +12,21 @@ import type {
   IntegrationResult,
 } from './base';
 
+const RECONNECT_MESSAGE =
+  "Google access expired or was revoked. Open the form's Integrations tab and click Reconnect on Google Sheets. Your existing spreadsheet is kept.";
+
+/** Refresh token rejected: revoked, expired, or the OAuth app is in testing mode. */
+function isInvalidGrant(err: unknown): boolean {
+  const e = err as {
+    message?: string;
+    response?: { data?: { error?: string } };
+  };
+  return (
+    e.response?.data?.error === 'invalid_grant' ||
+    Boolean(e.message?.includes('invalid_grant'))
+  );
+}
+
 export const googleSheetsIntegration: IntegrationHandler = {
   type: 'GOOGLE_SHEETS',
 
@@ -42,6 +57,9 @@ export const googleSheetsIntegration: IntegrationHandler = {
           range: `${c.sheetName}!1:1`,
         });
       } catch (err: unknown) {
+        if (isInvalidGrant(err)) {
+          return { success: false, message: RECONNECT_MESSAGE };
+        }
         const error = err as { message?: string; code?: number };
         return {
           success: false,
@@ -145,6 +163,9 @@ export const googleSheetsIntegration: IntegrationHandler = {
         message: `Row added to sheet "${c.sheetName}" (${appendRes.data.updates.updatedRows} row(s) updated)`,
       };
     } catch (err: unknown) {
+      if (isInvalidGrant(err)) {
+        return { success: false, message: RECONNECT_MESSAGE };
+      }
       const error = err as { message?: string };
       return {
         success: false,

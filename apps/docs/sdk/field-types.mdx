@@ -36,6 +36,12 @@ type FieldType =
   | 'divider';
 ```
 
+<Warning>
+  `date`, `file`, and `divider` exist in the type but **the SDK doesn't render
+  them yet**: they're skipped on screen. Don't use them in forms you render with
+  `@osforms/react`. The other 12 types are fully supported.
+</Warning>
+
 ## FormField
 
 ```ts
@@ -73,10 +79,10 @@ interface FieldValidation {
   maxLength?: number; // text, textarea
   min?: number; // number, scale, rating
   max?: number; // number, scale, rating
-  pattern?: string; // regex (text, email, tel)
+  pattern?: string; // regex
   patternError?: string; // custom error on pattern mismatch
-  fileTypes?: string[]; // file: e.g. ['image/*', '.pdf']
-  maxFileSize?: number; // file: bytes (default 10_485_760 = 10 MB)
+  fileTypes?: string[]; // not enforced yet
+  maxFileSize?: number; // not enforced yet
 }
 ```
 
@@ -88,7 +94,7 @@ Type-specific configuration options.
 interface FieldConfig {
   // rating
   maxRating?: number;
-  ratingIcon?: 'star' | 'heart' | 'thumb';
+  ratingIcon?: 'star' | 'heart' | 'thumb'; // not applied yet: always stars
 
   // scale
   scaleMin?: number;
@@ -97,23 +103,23 @@ interface FieldConfig {
   scaleHighLabel?: string; // e.g. "Very likely"
 
   // textarea
-  rows?: number; // default: 4
+  rows?: number; // default: 4 in classic, 3 in conversational
 
   // select
-  searchable?: boolean;
+  searchable?: boolean; // not applied yet: native <select>
 
   // checkbox / radio
-  layout?: 'vertical' | 'horizontal' | 'grid';
+  layout?: 'vertical' | 'horizontal' | 'grid'; // not applied yet: always vertical
 
   // conversational mode: auto-advance after selection
-  // default: true for radio, rating, and scale
+  // default: true for radio, rating, and scale. select always advances.
   autoAdvance?: boolean;
 }
 ```
 
 ---
 
-## Building a Headless Form
+## Building a form from a local schema
 
 ```tsx
 import { OSForm } from '@osforms/react';
@@ -145,6 +151,7 @@ const schema: FormSchema = {
       id: 'role_other',
       type: 'text',
       label: 'Please specify',
+      required: false,
       conditionalLogic: {
         action: 'show',
         match: 'all',
@@ -155,6 +162,7 @@ const schema: FormSchema = {
       id: 'nps',
       type: 'scale',
       label: 'How likely are you to recommend us?',
+      required: false,
       config: {
         scaleMin: 0,
         scaleMax: 10,

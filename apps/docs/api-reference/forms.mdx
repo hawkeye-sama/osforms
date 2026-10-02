@@ -3,7 +3,14 @@ title: 'Forms'
 description: 'Manage forms via the REST API'
 ---
 
-All endpoints require authentication via JWT cookie or `Authorization: Bearer <token>` header.
+These endpoints are what the dashboard uses. They require your login session: the `ff_token` cookie, or the same JWT sent as `Authorization: Bearer <token>`. See [Auth](/docs/api-reference/auth).
+
+<Note>
+  To read submissions from your own server, use the [Pull
+  Submissions](/docs/api-reference/pull-submissions) API with an API key
+  instead. It's read-only, scoped to the forms you choose, and doesn't expire
+  like a login session.
+</Note>
 
 ## List forms
 
@@ -11,7 +18,28 @@ All endpoints require authentication via JWT cookie or `Authorization: Bearer <t
 GET /api/v1/forms
 ```
 
-Returns all forms for the authenticated user.
+Returns all your forms with submission counts, plus this month's usage.
+
+```json
+{
+  "forms": [
+    {
+      "_id": "671fa2b3c4d5e6f7a8b9c0aa",
+      "name": "Contact Form",
+      "slug": "UNKMzY8jm18x",
+      "active": true,
+      "submissionCount": 42,
+      "createdAt": "2026-09-01T10:00:00.000Z",
+      "updatedAt": "2026-09-01T10:00:00.000Z"
+    }
+  ],
+  "usage": {
+    "submissionsUsed": 42,
+    "submissionsLimit": 100,
+    "currentMonth": "2026-10"
+  }
+}
+```
 
 ## Create a form
 
@@ -25,11 +53,15 @@ POST /api/v1/forms
 }
 ```
 
+Returns `201` with `{ "form": { ... } }`. The form's `slug` is generated for you and forms its endpoint: `/api/v1/f/{slug}`.
+
 ## Get a form
 
 ```
 GET /api/v1/forms/{id}
 ```
+
+Returns `{ "form": { ..., "submissionCount", "integrationCount" }, "integrations": [...] }`.
 
 ## Update a form
 
@@ -37,7 +69,26 @@ GET /api/v1/forms/{id}
 PATCH /api/v1/forms/{id}
 ```
 
-Updateable fields: `name`, `redirectUrl`, `allowedOrigins`, `rateLimit`, `honeypotField`, `recaptchaSecret`.
+```json
+{
+  "redirectUrl": "https://example.com/thanks",
+  "allowedOrigins": ["https://example.com"],
+  "rateLimit": 20
+}
+```
+
+| Field             | Type     | Description                                                              |
+| ----------------- | -------- | ------------------------------------------------------------------------ |
+| `name`            | string   | Form name, 1 to 100 characters                                           |
+| `active`          | boolean  | Inactive forms reject submissions with `404`                             |
+| `redirectUrl`     | string   | Where HTML form submissions are redirected after success                 |
+| `allowedOrigins`  | string[] | Origins allowed to submit. Empty means any origin                        |
+| `honeypotField`   | string   | Name of the hidden honeypot input                                        |
+| `recaptchaSecret` | string   | reCAPTCHA or hCaptcha secret key. Enables CAPTCHA checks on the endpoint |
+| `rateLimit`       | number   | Submissions per minute per IP, 1 to 1000. Default `10`                   |
+| `formSchema`      | object   | Form builder schema. `null` makes the form headless (accepts any fields) |
+
+`rateLimit` and `recaptchaSecret` can only be set through this endpoint for now. The dashboard's Setup tab covers the other fields.
 
 ## Delete a form
 
@@ -45,16 +96,59 @@ Updateable fields: `name`, `redirectUrl`, `allowedOrigins`, `rateLimit`, `honeyp
 DELETE /api/v1/forms/{id}
 ```
 
+Deletes the form with all its submissions and integrations. It also removes the form from any API key that could read it.
+
 ## List submissions
 
 ```
-GET /api/v1/forms/{id}/submissions?page=1&limit=20
+GET /api/v1/forms/{id}/submissions?page=1&limit=25
+```
+
+`limit` defaults to `25`, maximum `100`. Newest first.
+
+```json
+{
+  "submissions": [
+    {
+      "_id": "6720b3f1c4d5e6f7a8b9c0d1",
+      "formId": "671fa2b3c4d5e6f7a8b9c0aa",
+      "data": { "name": "Jane", "email": "jane@example.com" },
+      "metadata": { "ip": "...", "userAgent": "...", "origin": "..." },
+      "integrationStats": { "success": 2, "failed": 0 },
+      "createdAt": "2026-10-02T09:14:03.120Z"
+    }
+  ],
+  "pagination": { "page": 1, "limit": 25, "total": 42, "totalPages": 2 }
+}
+```
+
+## Integration logs for a submission
+
+```
+GET /api/v1/submissions/{id}/logs
+```
+
+Returns `{ "logs": [{ "status", "message", "createdAt", "integration": { "id", "name", "type" } }] }`.
+
+## Submission stats
+
+```
+GET /api/v1/forms/{id}/stats/submissions?period=30d
+GET /api/v1/stats/submissions?period=30d
+```
+
+Daily submission counts for one form, or across all your forms. `period` is `7d`, `30d` (default), or `90d`.
+
+```json
+{
+  "chartData": [{ "date": "2026-10-01", "submissions": 3 }]
+}
 ```
 
 ## Export submissions
 
 ```
-GET /api/v1/forms/{id}/export?format=csv
+GET /api/v1/forms/{id}/export
 ```
 
-Supported formats: `csv`, `json`.
+Downloads every submission as CSV, with columns `ID`, `Date`, then one column per field. CSV is the only format.

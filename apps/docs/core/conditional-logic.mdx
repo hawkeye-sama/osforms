@@ -3,7 +3,9 @@ title: 'Conditional Logic'
 description: 'Show or hide fields based on user answers'
 ---
 
-Conditional logic lets you show or hide fields based on answers to earlier questions. Rules are evaluated in real time — fields appear and disappear as the user fills out the form.
+Conditional logic lets you show or hide fields based on answers to earlier questions. `@osforms/react` evaluates the rules as the user fills out the form, so fields appear and disappear in real time.
+
+The dashboard builder doesn't have a conditional logic editor yet. Add rules to the field definitions in a local schema, or save them in the form's schema with [`PATCH /api/v1/forms/{id}`](/docs/api-reference/forms#update-a-form).
 
 ## Structure
 
@@ -58,12 +60,14 @@ Each field can have one `conditionalLogic` rule:
 | -------------- | --------------------------------- | --------------------------- |
 | `equals`       | Exact match                       | All types                   |
 | `not_equals`   | Does not match                    | All types                   |
-| `contains`     | Value includes the string         | `text`, `textarea`, `email` |
-| `not_contains` | Value does not include the string | `text`, `textarea`, `email` |
+| `contains`     | Value includes the string         | Text types, `checkbox`      |
+| `not_contains` | Value does not include the string | Text types, `checkbox`      |
 | `greater_than` | Numeric greater than              | `number`, `rating`, `scale` |
 | `less_than`    | Numeric less than                 | `number`, `rating`, `scale` |
-| `is_empty`     | No value entered                  | All types                   |
-| `is_not_empty` | Any value entered                 | All types                   |
+| `is_empty`     | No value entered                  | All types except `checkbox` |
+| `is_not_empty` | Any value entered                 | All types except `checkbox` |
+
+For `checkbox` fields, use `contains` with the option's value. `equals` only matches when exactly that one box is ticked, and an unticked checkbox group doesn't count as empty.
 
 ## Examples
 
@@ -86,9 +90,9 @@ Show a text field only when the user selects "Other" from a radio:
 }
 ```
 
-### Hide a field based on NPS score
+### Show a field based on NPS score
 
-Hide a question unless the NPS score is low:
+Show a question only when the NPS score is low:
 
 ```json
 {
@@ -139,8 +143,8 @@ Show a field if the user selected either "email" or "phone":
 
 ## How It Works
 
-- Conditions reference fields **by ID** — the `id` property on a `FormField`
-- Fields referenced in conditions must appear **before** the conditional field in the `fields` array
-- Hidden fields are **excluded from submission** — their values are not sent
-- In conversational mode, hidden fields are skipped automatically in the navigation sequence
-- The `statement` and `divider` types are always excluded from submissions regardless of visibility
+- Conditions reference fields **by ID** (the `id` property on a `FormField`)
+- Put the fields a condition depends on **before** the conditional field in the `fields` array, so people answer them first
+- Hidden fields are **excluded from the submission**: their values are not sent
+- In conversational mode, hidden fields are skipped in the navigation sequence
+- `statement` fields are never included in submissions

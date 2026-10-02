@@ -4,6 +4,7 @@ import { Loader2, Shield, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { ApiKeysSection } from '@/components/dashboard/api-keys-section';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -150,6 +151,9 @@ export default function SettingsPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* API Keys Section */}
+      <ApiKeysSection />
 
       {/* Security Section */}
       <Card>

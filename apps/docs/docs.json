@@ -77,7 +77,10 @@
         "groups": [
           {
             "group": "Submission",
-            "pages": ["api-reference/submit-form"]
+            "pages": [
+              "api-reference/submit-form",
+              "api-reference/pull-submissions"
+            ]
           },
           {
             "group": "Forms",

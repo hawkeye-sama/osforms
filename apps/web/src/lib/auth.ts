@@ -42,6 +42,36 @@ export function verifyToken(token: string): JWTPayload | null {
   }
 }
 
+// ── Google OAuth state ──────────────────────────────────────
+// Binds the Google Sheets OAuth round-trip to the user and form that started
+// it. Signed with a derived key so a state token never passes as a session JWT.
+
+const OAUTH_STATE_SECRET = `${JWT_SECRET}:google-oauth-state`;
+
+export interface OAuthState {
+  userId: string;
+  formId: string;
+  returnTo?: string;
+  reconnect?: boolean; // refresh the token, keep the existing spreadsheet
+}
+
+export function signOAuthState(state: OAuthState): string {
+  return jwt.sign(state, OAUTH_STATE_SECRET, { expiresIn: '10m' });
+}
+
+export function verifyOAuthState(token: string): OAuthState | null {
+  try {
+    return jwt.verify(token, OAUTH_STATE_SECRET) as OAuthState;
+  } catch {
+    return null;
+  }
+}
+
+/** Same-origin path only: "/x" is fine, "//evil.com" and "@evil.com" are not. */
+export function isSafeReturnPath(path: string): boolean {
+  return /^\/(?![/\\])/.test(path);
+}
+
 // ── Cookie helpers ──────────────────────────────────────────
 
 export async function setAuthCookie(token: string) {

@@ -5,7 +5,7 @@ description: 'Install and configure @osforms/react'
 
 ## Requirements
 
-- React 18 or later
+- `react` and `react-dom` 18 or later (peer dependencies)
 
 ## Install
 
@@ -26,9 +26,7 @@ yarn add @osforms/react
 
 ## TypeScript
 
-Types are bundled — no separate `@types` package needed.
-
-All types from `@osforms/types` are re-exported from `@osforms/react`:
+Types are bundled, so no separate `@types` package is needed. Import them from `@osforms/react`:
 
 ```ts
 import type {
@@ -39,6 +37,8 @@ import type {
   ConditionalLogic,
 } from '@osforms/react';
 ```
+
+Also exported: `FieldConfig`, `FieldOption`, `FieldValidation`, `FormMode`, `WelcomeScreen`, `ThankYouScreen`, `OSFormProps`, `FormState`, and `FormStateActions`.
 
 ## Next.js (App Router)
 
@@ -56,7 +56,7 @@ export default function ContactPage() {
 
 ## Next.js (Pages Router)
 
-No special configuration needed — all files in `pages/` are client-side by default:
+No special configuration needed, and no `'use client'` directive:
 
 ```tsx
 import { OSForm } from '@osforms/react';
@@ -74,5 +74,5 @@ Works without additional configuration.
 
 | What                                      | Size   |
 | ----------------------------------------- | ------ |
-| `@osforms/react` (gzipped)                | ~25 kB |
+| `@osforms/react` (gzipped)                | ~10 kB |
 | `framer-motion` (gzipped, auto-installed) | ~40 kB |

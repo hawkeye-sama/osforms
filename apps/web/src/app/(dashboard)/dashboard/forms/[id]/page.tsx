@@ -108,6 +108,26 @@ export default function FormDetailPage({
     fetchForm();
   }, [fetchForm]);
 
+  // Result of a Google Sheets reconnect, set by the OAuth callback
+  useEffect(() => {
+    const result = searchParams.get('sheets');
+    if (!result) {
+      return;
+    }
+    if (result === 'reconnected') {
+      toast.success(
+        'Google Sheets reconnected. New submissions go to the same spreadsheet.',
+        { id: 'sheets-reconnect' }
+      );
+    } else if (result === 'reconnect_failed') {
+      toast.error(
+        "Couldn't open the original spreadsheet with that Google account. Reconnect with the account shown under Connected Account.",
+        { id: 'sheets-reconnect', duration: 10000 }
+      );
+    }
+    router.replace(`/dashboard/forms/${id}?tab=integrations`);
+  }, [searchParams, router, id]);
+
   function copyText(text: string, label: string) {
     navigator.clipboard.writeText(text);
     setCopied(label);

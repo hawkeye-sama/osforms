@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
+import ApiKey from '@/lib/models/api-key';
 import Form from '@/lib/models/form';
 import Integration from '@/lib/models/integration';
 import Submission from '@/lib/models/submission';
@@ -93,10 +94,12 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Form not found' }, { status: 404 });
   }
 
-  // Cascade delete submissions and integrations
+  // Cascade delete submissions and integrations, and drop the form from
+  // any API key scopes
   await Promise.all([
     Submission.deleteMany({ formId: id }),
     Integration.deleteMany({ formId: id }),
+    ApiKey.updateMany({ userId: user._id }, { $pull: { formIds: form._id } }),
   ]);
 
   return NextResponse.json({ success: true });

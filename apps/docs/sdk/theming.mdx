@@ -3,7 +3,7 @@ title: 'Theming'
 description: 'Customize form appearance in @osforms/react'
 ---
 
-`@osforms/react` exposes the full `FormTheme` type for TypeScript consumers. Theme props are merged with the schema theme and the default dark theme.
+`@osforms/react` exposes the full `FormTheme` type for TypeScript consumers. The `theme` prop is layered over the schema theme and the default dark theme.
 
 ```ts
 import type { FormTheme } from '@osforms/react';
@@ -17,19 +17,21 @@ interface FormTheme {
   fontFamily?: string;
   fontSize?: 'sm' | 'md' | 'lg';
   borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
-  buttonVariant?: 'solid' | 'outline' | 'ghost';
+  buttonVariant?: 'solid' | 'outline' | 'ghost'; // not applied yet: buttons are always solid
 }
 
 interface FormThemeColors {
   background?: string; // main background
   surface?: string; // card / input surface
   primary?: string; // button fill and accents
-  text?: string; // primary text
-  textSecondary?: string; // helper text, labels
+  text?: string; // primary text and labels
+  textSecondary?: string; // descriptions and helper text
   border?: string; // input and card borders
   error?: string; // validation error color
 }
 ```
+
+`fontSize` and `borderRadius` mostly affect classic mode. Conversational mode uses its own fixed sizes.
 
 ## Priority
 
@@ -39,19 +41,27 @@ Theme values are resolved in this order (highest to lowest):
 2. `FormSchema.theme`
 3. Default dark theme
 
+The first two are merged **one level deep**: each top-level key you pass (`colors`, `fontFamily`, `borderRadius`, ...) replaces the schema's value for that key. So `colors` replaces the schema's entire `colors` object, and colors you leave out fall back to the SDK defaults, not to the schema. Pass every color you care about.
+
 ## Passing themes
 
 ```tsx
 <OSForm
-  formId="abc123"
+  formId="abc123def456"
   theme={{
-    colors: { primary: '#6366f1', background: '#ffffff', text: '#111827' },
+    colors: {
+      background: '#ffffff',
+      surface: '#f9fafb',
+      primary: '#6366f1',
+      text: '#111827',
+      textSecondary: '#6b7280',
+      border: '#e5e7eb',
+      error: '#ef4444',
+    },
     borderRadius: 'lg',
   }}
 />
 ```
-
-Only the properties you specify are overridden. All others fall back to the schema theme or default.
 
 ## Light theme example
 
@@ -82,27 +92,54 @@ const lightTheme: FormTheme = {
 Set `fontFamily` to any CSS font-family string. The SDK does not load fonts — ensure the font is loaded in your app (e.g., via Google Fonts or `next/font`):
 
 ```tsx
-// app/layout.tsx
+'use client';
+
 import { Inter } from 'next/font/google';
+import { OSForm } from '@osforms/react';
+
 const inter = Inter({ subsets: ['latin'] });
 
-// In your form component:
-<OSForm formId="abc123" theme={{ fontFamily: inter.style.fontFamily }} />;
+export function ContactForm() {
+  return (
+    <OSForm
+      formId="abc123def456"
+      theme={{ fontFamily: inter.style.fontFamily }}
+    />
+  );
+}
 ```
 
 ## ConversationalRenderer and ClassicRenderer
 
-When using the low-level renderers directly, pass a resolved theme from `resolveTheme`:
+The low-level renderers don't apply defaults. Their `theme` prop needs a complete theme: all 7 colors, plus `fontFamily`, `fontSize` and `borderRadius` as CSS values, and `buttonVariant`. Most apps should use `OSForm` instead.
 
 ```tsx
-import {
-  ConversationalRenderer,
-  useFormState,
-  useFormSchema,
-} from '@osforms/react';
+import { ClassicRenderer } from '@osforms/react';
+import type { FormSchema } from '@osforms/react';
 
-// resolveTheme is not exported — pass theme overrides via OSForm
-// or construct a ResolvedTheme manually for full control
+export function MyForm({ schema }: { schema: FormSchema }) {
+  return (
+    <ClassicRenderer
+      schema={schema}
+      endpoint="https://osforms.com/api/v1/f/abc123def456"
+      theme={{
+        colors: {
+          background: '#0a0a0a',
+          surface: '#171717',
+          primary: '#fafafa',
+          text: '#fafafa',
+          textSecondary: '#a3a3a3',
+          border: '#262626',
+          error: '#ef4444',
+        },
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '16px',
+        borderRadius: '8px',
+        buttonVariant: 'solid',
+      }}
+    />
+  );
+}
 ```
 
 For custom renderer patterns, see [Hooks](/docs/sdk/hooks).

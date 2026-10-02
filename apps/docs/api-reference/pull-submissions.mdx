@@ -1,0 +1,137 @@
+---
+title: 'Pull Submissions'
+description: 'Read form submissions from your own server with an API key'
+---
+
+Use the pull API to sync submissions into your own platform: an admin panel, a CRM, a reporting job. Requests are authenticated with a read-only API key and run server to server.
+
+```bash
+curl "https://osforms.com/api/v1/submissions?formId=YOUR_FORM_SLUG" \
+  -H "Authorization: Bearer $OSFORMS_API_KEY"
+```
+
+## Create an API key
+
+1. Open **Dashboard → Settings → API Keys** and click **Create Key**.
+2. Name the key and select the forms it can read. A key can only read the forms you select.
+3. Copy the key. It starts with `osf_live_` and is shown **once**. OSForms stores only a hash of it.
+
+To pick a form, pass its endpoint slug as `formId`. That's the last part of your submission endpoint: for `https://osforms.com/api/v1/f/UNKMzY8jm18x` the slug is `UNKMzY8jm18x`. The form's internal ID (from the dashboard URL `/dashboard/forms/{id}`) works too.
+
+<Warning>
+  Keep the key on your server, for example in `OSFORMS_API_KEY` in your
+  environment. Never ship it to the browser. The pull API doesn't send CORS
+  headers, so browser requests from other origins are blocked anyway.
+</Warning>
+
+API keys are read-only. They can't create, edit, or delete anything, and the dashboard endpoints don't accept them. To revoke a key, click **Revoke** in Settings. It stops working immediately.
+
+## List submissions
+
+```
+GET /api/v1/submissions?formId={formId}
+```
+
+| Parameter | Default | Description                                                                                      |
+| --------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `formId`  | —       | **Required.** The form's endpoint slug (or its ID). The key must have access to the form.        |
+| `limit`   | `25`    | Results per page, `1`–`100`.                                                                     |
+| `cursor`  | —       | The `nextCursor` value from the previous response.                                               |
+| `since`   | —       | ISO 8601 timestamp, e.g. `2026-10-01T00:00:00Z`. Only returns submissions at or after this time. |
+| `order`   | `desc`  | `desc` (newest first) or `asc` (oldest first).                                                   |
+| `fields`  | all     | Comma-separated field names to return, e.g. `fields=name,company`. Other fields are left out.    |
+
+```json
+{
+  "data": [
+    {
+      "id": "6720b3f1c4d5e6f7a8b9c0d1",
+      "formId": "671fa2b3c4d5e6f7a8b9c0aa",
+      "submittedAt": "2026-10-02T09:14:03.120Z",
+      "fields": {
+        "name": "Jane Smith",
+        "company": "Acme",
+        "message": "Looking for a quote"
+      }
+    }
+  ],
+  "nextCursor": "eyJ0IjoiMjAyNi0xMC0wMlQwOToxNDowMy4xMjBaIiwiaWQiOiI2NzIwYjNmMWM0ZDVlNmY3YThiOWMwZDEifQ",
+  "hasMore": true
+}
+```
+
+- `id` is stable. Use it as the foreign key when you attach your own data (status, notes, assignments) to a submission.
+- `fields` holds exactly what the form submitted. Uploaded files are not stored, so a file field holds a placeholder string like `[File: cv.pdf, 48213 bytes]`.
+- IP address, user agent, and origin are never returned.
+
+Pass `nextCursor` back as `cursor` to get the next page. When `hasMore` is `false`, `nextCursor` is `null` and you've reached the end. Cursors stay valid while new submissions arrive, so paging never skips or repeats rows.
+
+### Return only some fields
+
+If your platform shouldn't hold contact details, ask only for the fields it displays:
+
+```
+GET /api/v1/submissions?formId={formId}&fields=company,budget,message
+```
+
+The other fields never leave OSForms.
+
+## Get one submission
+
+```
+GET /api/v1/submissions/{id}
+```
+
+Accepts the same `fields` parameter. Returns `{ "data": { ...submission } }`, or `404` if the submission doesn't exist or belongs to a form the key can't read.
+
+## Sync new submissions
+
+To keep your copy up to date, remember the newest `submittedAt` you've stored and ask for everything from that point, oldest first:
+
+```ts
+const BASE = 'https://osforms.com/api/v1/submissions';
+
+async function syncNewSubmissions(formId: string, since?: string) {
+  let cursor: string | null = null;
+
+  do {
+    const params = new URLSearchParams({ formId, order: 'asc', limit: '100' });
+    if (since) params.set('since', since);
+    if (cursor) params.set('cursor', cursor);
+
+    const res = await fetch(`${BASE}?${params}`, {
+      headers: { Authorization: `Bearer ${process.env.OSFORMS_API_KEY}` },
+    });
+    if (!res.ok) throw new Error(`OSForms ${res.status}: ${await res.text()}`);
+
+    const page = await res.json();
+    for (const submission of page.data) {
+      await upsertById(submission); // your storage, keyed by submission.id
+    }
+    cursor = page.nextCursor;
+  } while (cursor);
+}
+```
+
+`since` is inclusive, so the last submission from the previous run comes back again. Upsert by `id` and the duplicate is harmless.
+
+## Rate limits
+
+Each API key can make **60 requests per minute**. Every response includes:
+
+| Header                  | Meaning                                    |
+| ----------------------- | ------------------------------------------ |
+| `X-RateLimit-Limit`     | Requests allowed per minute                |
+| `X-RateLimit-Remaining` | Requests left in the current window        |
+| `X-RateLimit-Reset`     | Unix time (seconds) when the window resets |
+
+Over the limit, you get `429` with a `Retry-After` header in seconds. Pulling submissions doesn't count toward your monthly submission limit.
+
+## Errors
+
+| Status | Meaning                                                                       |
+| ------ | ----------------------------------------------------------------------------- |
+| `400`  | Invalid query parameter or cursor. The `details` field says which.            |
+| `401`  | Missing, malformed, or revoked API key.                                       |
+| `404`  | The form or submission doesn't exist, or the key wasn't granted access to it. |
+| `429`  | Rate limit exceeded. Wait `Retry-After` seconds.                              |
