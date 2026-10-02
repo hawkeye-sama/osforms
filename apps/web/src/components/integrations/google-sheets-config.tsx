@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, Loader2, Trash2 } from 'lucide-react';
+import { ExternalLink, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -81,6 +81,11 @@ export function GoogleSheetsConfig({
   function handleConnect() {
     // Redirect to Google OAuth
     window.location.href = `/api/auth/google/login?formId=${formId}`;
+  }
+
+  function handleReconnect() {
+    // Refreshes Google access but keeps writing to the same spreadsheet
+    window.location.href = `/api/auth/google/login?formId=${formId}&reconnect=1`;
   }
 
   async function handleSave() {
@@ -272,6 +277,27 @@ export function GoogleSheetsConfig({
             <p className="text-muted-foreground text-xs">
               Sheet: {status.sheetName}
             </p>
+          </div>
+
+          <div className="border-border bg-card/50 flex items-center justify-between gap-4 rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <p className="text-foreground text-sm font-medium">
+                Reconnect Google
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Submissions not reaching the sheet? Reconnect and sign in with{' '}
+                {status.connectedEmail} to keep using this spreadsheet.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleReconnect}
+              className="shrink-0 gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reconnect
+            </Button>
           </div>
         </>
       )}

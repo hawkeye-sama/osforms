@@ -27,6 +27,18 @@ Column names are your input `name` attributes (HTML forms) or field IDs (forms b
 
 ## Failure handling
 
-If a Sheets API call fails (for example the access was revoked or the sheet was deleted), the integration is logged as failed and you get an in-app notification and an email alert.
+If a Sheets API call fails, the integration is logged as failed and you get an in-app notification and an email alert.
 
-To reconnect, remove the Google Sheets integration from the form and connect again. Reconnecting creates a fresh spreadsheet.
+### Google access expired or was revoked
+
+If the error says Google access expired or was revoked (Google's `invalid_grant`), OSForms can no longer use your Google sign-in. This happens when you remove OSForms' access in your Google account, or when the sign-in hasn't been used for a long time.
+
+Open the form's **Integrations** tab, choose **Google Sheets**, and click **Reconnect**. Sign in with the Google account shown under **Connected Account**. New submissions keep going to the **same spreadsheet**.
+
+Reconnect only works with the account that created the spreadsheet, because OSForms can only open sheets it created for that account. If you sign in with a different account, nothing changes and you're asked to use the original one.
+
+Submissions received while the connection was broken are still stored in OSForms. Download them with **Export** if you need to add them to the sheet.
+
+### Starting over with a new sheet
+
+To use a new spreadsheet (or a different Google account), **Disconnect** the integration and click **Connect with Google** again. This creates a fresh spreadsheet. The old one stays in your Drive.
