@@ -3,10 +3,10 @@ title: 'Introduction'
 description: 'Embed forms directly in your React app with @osforms/react'
 ---
 
-`@osforms/react` is the official React SDK for osforms. It renders forms fetched from the osforms API — or forms you define locally — in two modes:
+`@osforms/react` is the official React SDK for OSForms. It renders forms designed in the dashboard's **Builder** tab, or forms you define locally, in two modes:
 
-- **Conversational** — one field at a time, Typeform-style, with animated transitions
-- **Classic** — all fields on one page, standard form layout
+- **Conversational**: one field at a time, Typeform-style, with animated transitions
+- **Classic**: all fields on one page, standard form layout
 
 ## Installation
 
@@ -31,11 +31,16 @@ export default function ContactPage() {
 }
 ```
 
-The `formId` prop fetches the form schema automatically from `https://osforms.com/api/v1/f/{formId}/schema`.
+`formId` is the form's slug. The schema is fetched from `https://osforms.com/api/v1/f/{formId}/schema`.
 
-## Headless usage
+<Note>
+  The form needs a schema saved in the Builder tab. For a form without one, the
+  schema endpoint returns `schema: null` and `OSForm` renders nothing.
+</Note>
 
-Pass a schema directly — no API fetch required:
+## Local schema
+
+Pass a schema directly. No schema fetch is needed:
 
 ```tsx
 import { OSForm } from '@osforms/react';
@@ -58,14 +63,14 @@ export default function ContactPage() {
 
 ## What's included
 
-| Export                          | Description                                          |
-| ------------------------------- | ---------------------------------------------------- |
-| `OSForm`                        | Main component — renders full form with schema fetch |
-| `ConversationalRenderer`        | Low-level conversational mode renderer               |
-| `ClassicRenderer`               | Low-level classic mode renderer                      |
-| `useFormState`                  | Core state hook — answers, navigation, submission    |
-| `useFormSchema`                 | Schema fetching hook                                 |
-| All types from `@osforms/types` | `FormSchema`, `FormField`, `FormTheme`, etc.         |
+| Export                   | Description                                                                                                                                                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OSForm`                 | Main component. Fetches the schema and renders the form                                                                                                                                                                 |
+| `ConversationalRenderer` | Low-level conversational mode renderer                                                                                                                                                                                  |
+| `ClassicRenderer`        | Low-level classic mode renderer                                                                                                                                                                                         |
+| `useFormState`           | Core state hook: answers, navigation, submission                                                                                                                                                                        |
+| `useFormSchema`          | Schema fetching hook                                                                                                                                                                                                    |
+| Types                    | `FormSchema`, `FormField`, `FieldType`, `FieldConfig`, `FieldOption`, `FieldValidation`, `ConditionalLogic`, `FormMode`, `FormTheme`, `WelcomeScreen`, `ThankYouScreen`, `OSFormProps`, `FormState`, `FormStateActions` |
 
 ## Modes overview
 
@@ -76,10 +81,9 @@ export default function ContactPage() {
 ```
 
 - One field displayed at a time
-- Keyboard navigation (`Enter` to advance, `Backspace` to go back)
-- Animated field transitions (framer-motion, bundled as a dependency)
-- Auto-advances on selection for `radio`, `rating`, and `scale` fields (configurable)
-- Welcome and thank-you screens supported
+- `Enter` to advance (`Cmd/Ctrl+Enter` in a textarea); ↑/↓ buttons to move back and forward
+- Animated field transitions (framer-motion, installed as a dependency)
+- Auto-advances on selection for `radio`, `select`, `rating`, and `scale` fields
 
 ### Classic
 
@@ -90,4 +94,6 @@ export default function ContactPage() {
 - All visible fields on one page
 - Standard form layout
 - Submit button at the bottom
-- Scrolls to first error on validation failure
+- Inline error under each invalid field
+
+Both modes support welcome and thank-you screens. A `stepped` mode exists in the types but currently renders the conversational layout.

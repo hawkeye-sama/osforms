@@ -3,7 +3,12 @@ title: 'Auth'
 description: 'Authentication endpoints'
 ---
 
-osforms uses email/password authentication with OTP verification. JWTs are issued in httpOnly cookies (`ff_token`, 7-day expiry) and also accepted as `Authorization: Bearer <token>` for API usage.
+OSForms uses email and password with a 6-digit email code for verification. Logging in issues a JWT in an httpOnly cookie (`ff_token`, valid for 7 days). Dashboard endpoints also accept the same JWT as `Authorization: Bearer <token>`.
+
+<Note>
+  For server-to-server access to submissions, create an [API
+  key](/docs/api-reference/pull-submissions) instead of using a login session.
+</Note>
 
 ## Sign up
 
@@ -13,16 +18,23 @@ POST /api/auth/signup
 
 ```json
 {
+  "name": "Jane Smith",
   "email": "you@example.com",
-  "password": "your-password"
+  "password": "at-least-8-characters"
 }
 ```
 
-Creates an account and sends a 6-digit OTP to the provided email address. The account is not active until the OTP is verified.
+Creates the account and emails a 6-digit code. The account can't log in until the code is verified.
 
 ```json
-{ "message": "Verification email sent" }
+{ "requiresVerification": true, "email": "you@example.com" }
 ```
+
+| Status | Meaning                                   |
+| ------ | ----------------------------------------- |
+| `201`  | Account created, verification code sent   |
+| `400`  | Validation failed (see `details`)         |
+| `409`  | An account with this email already exists |
 
 ## Verify email
 
@@ -37,12 +49,14 @@ POST /api/auth/verify-email
 }
 ```
 
-Verifies the OTP. On success, issues a JWT in an httpOnly cookie and returns the user object.
+On success, sets the `ff_token` cookie and returns the user:
 
 ```json
 {
+  "success": true,
   "user": {
-    "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
+    "id": "64f1a2b3c4d5e6f7a8b9c0d1",
+    "name": "Jane Smith",
     "email": "you@example.com",
     "isVerified": true,
     "onboardingComplete": false
@@ -50,9 +64,9 @@ Verifies the OTP. On success, issues a JWT in an httpOnly cookie and returns the
 }
 ```
 
-OTPs expire after **30 minutes**. If yours has expired, use the resend endpoint below.
+Codes expire after **30 minutes**. A wrong or expired code returns `400`.
 
-## Resend OTP
+## Resend verification code
 
 ```
 POST /api/auth/resend-otp
@@ -62,7 +76,7 @@ POST /api/auth/resend-otp
 { "email": "you@example.com" }
 ```
 
-Generates a new 6-digit OTP and resends the verification email.
+Sends a new code. You can request one every 60 seconds. Sooner returns `429` with `retryAfter` (seconds) in the body.
 
 ## Log in
 
@@ -77,24 +91,27 @@ POST /api/auth/login
 }
 ```
 
-Returns the authenticated user and sets the `ff_token` JWT cookie.
+Sets the `ff_token` cookie and returns the user:
 
 ```json
 {
   "user": {
-    "_id": "...",
+    "id": "64f1a2b3c4d5e6f7a8b9c0d1",
+    "name": "Jane Smith",
     "email": "you@example.com",
-    "isVerified": true,
-    "onboardingComplete": true
+    "onboardingComplete": true,
+    "isVerified": true
   }
 }
 ```
 
-| Status | Meaning                   |
-| ------ | ------------------------- |
-| `200`  | Login successful          |
-| `401`  | Invalid email or password |
-| `403`  | Email not verified        |
+If the email isn't verified yet, no cookie is set and the response is `{ "requiresVerification": true, "email": "..." }` (status `200`). Verify with the code to finish logging in.
+
+| Status | Meaning                                   |
+| ------ | ----------------------------------------- |
+| `200`  | Logged in, or verification still required |
+| `400`  | Malformed request                         |
+| `401`  | Invalid email or password                 |
 
 ## Log out
 
@@ -110,36 +127,30 @@ Clears the `ff_token` cookie. No body required.
 GET /api/auth/me
 ```
 
-Returns the currently authenticated user from the JWT.
-
 ```json
 {
   "user": {
-    "_id": "...",
-    "email": "you@example.com",
+    "id": "64f1a2b3c4d5e6f7a8b9c0d1",
     "name": "Jane Smith",
+    "email": "you@example.com",
     "isVerified": true,
     "onboardingComplete": true,
-    "monthlySubmissionCount": 42,
-    "monthlySubmissionLimit": 100
+    "fullName": "Jane Smith",
+    "website": "https://example.com",
+    "company": "Acme",
+    "role": "developer"
   }
 }
 ```
 
-Returns `401` if not authenticated.
+Returns `401` if not logged in. For this month's submission usage, see `usage` in [`GET /api/v1/forms`](/docs/api-reference/forms#list-forms).
 
 ## Google OAuth (Google Sheets)
 
-Google OAuth is used to grant access to Google Sheets for the Sheets integration. It is not used for account authentication.
+Google OAuth only connects Google Sheets to a form. It isn't a way to log in to OSForms.
 
 ```
-GET /api/auth/google/login
+GET /api/auth/google/login?formId={formId}
 ```
 
-Redirects to Google's consent screen. After approval, redirects back to:
-
-```
-GET /api/auth/google/callback
-```
-
-Stores the OAuth tokens (encrypted) for use by the Google Sheets integration.
+Redirects to Google's consent screen. Google then redirects to `/api/auth/google/callback`, which creates a spreadsheet for the form and saves the encrypted OAuth token for the Google Sheets integration.

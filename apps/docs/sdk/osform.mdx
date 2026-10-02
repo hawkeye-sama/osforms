@@ -1,59 +1,96 @@
 ---
 title: 'OSForm'
-description: 'Main component — renders a form in conversational or classic mode'
+description: 'Main component. Renders a form in conversational or classic mode'
 ---
 
 ## Props
 
-| Prop               | Type                            | Default               | Description                                                      |
-| ------------------ | ------------------------------- | --------------------- | ---------------------------------------------------------------- |
-| `formId`           | `string`                        | —                     | Form slug from your dashboard. Fetches schema automatically.     |
-| `schema`           | `FormSchema`                    | —                     | Pass a schema directly (headless usage).                         |
-| `endpoint`         | `string`                        | —                     | Submission URL. Required when using `schema` without `formId`.   |
-| `baseUrl`          | `string`                        | `https://osforms.com` | Override for self-hosted instances.                              |
-| `mode`             | `'conversational' \| 'classic'` | schema default        | Override the form's render mode.                                 |
-| `theme`            | `Partial<FormTheme>`            | —                     | Theme overrides merged with schema theme and defaults.           |
-| `fullScreen`       | `boolean`                       | `false`               | Renders the form fixed to the full viewport (`position: fixed`). |
-| `onComplete`       | `() => void`                    | —                     | Called when the form is successfully submitted.                  |
-| `onError`          | `(error: Error) => void`        | —                     | Called when a submission error occurs.                           |
-| `loadingComponent` | `ReactNode`                     | —                     | Custom loading state while schema is fetched.                    |
-| `errorComponent`   | `ReactNode`                     | —                     | Custom error state if schema fetch fails.                        |
+| Prop               | Type                                         | Default                                | Description                                                                                                                          |
+| ------------------ | -------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `formId`           | `string`                                     | —                                      | Form slug from your dashboard. Fetches the schema automatically.                                                                     |
+| `schema`           | `FormSchema`                                 | —                                      | Pass a schema directly instead of fetching it.                                                                                       |
+| `endpoint`         | `string`                                     | `{baseUrl}/api/v1/f/{formId}`          | Submission URL. Required when using `schema` without `formId`.                                                                       |
+| `baseUrl`          | `string`                                     | `https://osforms.com`                  | Override for self-hosted instances.                                                                                                  |
+| `mode`             | `'conversational' \| 'classic' \| 'stepped'` | schema's mode, else `'conversational'` | Override the render mode. `stepped` currently renders conversational.                                                                |
+| `theme`            | `Partial<FormTheme>`                         | —                                      | Theme overrides. See [merging](#theme-merging) below.                                                                                |
+| `fullScreen`       | `boolean`                                    | `false`                                | Renders the form fixed to the full viewport (`position: fixed`).                                                                     |
+| `onComplete`       | `() => void`                                 | —                                      | Called when the form is successfully submitted.                                                                                      |
+| `onError`          | `(error: Error) => void`                     | —                                      | Called when a submission fails. `error.message` is the server's error, e.g. `"Monthly submission limit reached. Resets on the 1st."` |
+| `loadingComponent` | `ReactNode`                                  | —                                      | Custom loading state while the schema is fetched.                                                                                    |
+| `errorComponent`   | `ReactNode`                                  | —                                      | Custom error state if the schema fetch fails.                                                                                        |
+
+## What gets submitted
+
+The SDK posts JSON to the endpoint, keyed by field `id`. Only fields visible at submit time are sent (statements are skipped), and unanswered fields are sent as `""`. If the schema sets `settings.source`, it's sent as `_source`.
+
+## Things to know
+
+- **CAPTCHA**: the SDK doesn't send a CAPTCHA token. If the form has a CAPTCHA secret set, every SDK submission fails with `CAPTCHA verification required`. Use the honeypot or allowed origins instead.
+- **Allowed origins**: if the form restricts origins, pages on other origins can't load the schema and the component shows its error state.
+- **Redirects**: the form's redirect URL is followed only when the thank-you screen is enabled, after its delay (default 3 seconds). Otherwise use `onComplete`.
+
+## Theme merging
+
+Top-level `theme` keys replace the schema's. Nested objects aren't merged: passing `colors` replaces the schema's whole `colors` object, and any color you leave out falls back to the SDK default, not the schema's value. Include every color you want to keep.
 
 ## Examples
 
 ### Full-screen conversational form
 
 ```tsx
-<OSForm
-  formId="abc123"
-  mode="conversational"
-  fullScreen
-  onComplete={() => router.push('/thanks')}
-/>
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { OSForm } from '@osforms/react';
+
+export default function Survey() {
+  const router = useRouter();
+  return (
+    <OSForm
+      formId="abc123def456"
+      mode="conversational"
+      fullScreen
+      onComplete={() => router.push('/thanks')}
+    />
+  );
+}
 ```
 
 ### Embedded classic form
 
 ```tsx
 <OSForm
-  formId="abc123"
+  formId="abc123def456"
   mode="classic"
-  theme={{ colors: { primary: '#6366f1' } }}
+  theme={{
+    colors: {
+      background: '#0a0a0a',
+      surface: '#171717',
+      primary: '#6366f1',
+      text: '#fafafa',
+      textSecondary: '#a3a3a3',
+      border: '#262626',
+      error: '#ef4444',
+    },
+  }}
 />
 ```
 
 ### Error handling
 
 ```tsx
-<OSForm formId="abc123" onError={(err) => toast.error(err.message)} />
+<OSForm
+  formId="abc123def456"
+  onError={(err) => console.error('Submission failed:', err.message)}
+/>
 ```
 
-### Custom loading state
+### Custom loading and error states
 
 ```tsx
 <OSForm
-  formId="abc123"
-  loadingComponent={<Spinner />}
+  formId="abc123def456"
+  loadingComponent={<p>Loading form…</p>}
   errorComponent={<p>Failed to load form.</p>}
 />
 ```

@@ -3,11 +3,13 @@ title: 'Theming'
 description: 'Customize the look and feel of your forms'
 ---
 
-Forms rendered with `@osforms/react` use a theme system built on top of `FormTheme`. You can customize colors, typography, border radius, and button style.
+Forms rendered with `@osforms/react` use a theme system built on top of `FormTheme`. You can customize colors, font, font size, and border radius.
+
+Set a theme with the `theme` prop on `OSForm`, or store it in the form's schema (`formSchema.theme`) through [`PATCH /api/v1/forms/{id}`](/docs/api-reference/forms#update-a-form). The dashboard builder doesn't have a theme editor yet.
 
 ## Default Theme
 
-The default theme is dark, matching the osforms dashboard:
+The default theme is dark, matching the OSForms dashboard:
 
 ```ts
 {
@@ -36,8 +38,8 @@ The default theme is dark, matching the osforms dashboard:
 | `background`    | `#0a0a0a` | Main background color                  |
 | `surface`       | `#212121` | Card / input surface color             |
 | `primary`       | `#fafafa` | Primary button fill and active accents |
-| `text`          | `#fafafa` | Primary text color                     |
-| `textSecondary` | `#a8a8a8` | Helper text, labels, placeholders      |
+| `text`          | `#fafafa` | Primary text and labels                |
+| `textSecondary` | `#a8a8a8` | Descriptions and helper text           |
 | `border`        | `#333333` | Input and card borders                 |
 | `error`         | `#ef4444` | Validation error messages              |
 
@@ -69,13 +71,11 @@ theme={{ fontFamily: '"DM Sans", sans-serif' }}
 | `lg`   | `12px`   | Rounded          |
 | `full` | `9999px` | Pill-shaped      |
 
+`fontSize` and `borderRadius` mostly affect classic mode. Conversational mode uses its own fixed sizes.
+
 ### buttonVariant
 
-| Value     | Description             |
-| --------- | ----------------------- |
-| `solid`   | Filled button (default) |
-| `outline` | Transparent with border |
-| `ghost`   | No border or fill       |
+Accepted (`solid`, `outline`, `ghost`) but not applied yet. Buttons always render solid.
 
 ---
 
@@ -83,7 +83,7 @@ theme={{ fontFamily: '"DM Sans", sans-serif' }}
 
 ### Via `OSForm` prop
 
-Pass a partial theme — only the properties you specify are overridden:
+Each top-level key you pass replaces the schema's value for that key. `colors` is replaced as a whole object, and colors you omit fall back to the defaults above, so pass all of them:
 
 ```tsx
 <OSForm
@@ -101,14 +101,13 @@ Pass a partial theme — only the properties you specify are overridden:
     fontFamily: '"Inter", sans-serif',
     fontSize: 'md',
     borderRadius: 'lg',
-    buttonVariant: 'solid',
   }}
 />
 ```
 
 ### Via FormSchema
 
-Themes can also be embedded in the form schema itself. The `OSForm` `theme` prop overrides the schema theme:
+Themes can also be stored in the form schema. The `OSForm` `theme` prop overrides it key by key, as described above:
 
 ```json
 {
@@ -141,7 +140,6 @@ const lightTheme: FormTheme = {
     error: '#ef4444',
   },
   borderRadius: 'md',
-  buttonVariant: 'solid',
 };
 ```
 
@@ -159,7 +157,6 @@ const brandTheme: FormTheme = {
     error: '#f87171',
   },
   borderRadius: 'lg',
-  buttonVariant: 'solid',
 };
 ```
 
@@ -177,6 +174,5 @@ const minimalTheme: FormTheme = {
     error: '#ef4444',
   },
   borderRadius: 'none',
-  buttonVariant: 'outline',
 };
 ```

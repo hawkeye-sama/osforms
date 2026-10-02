@@ -3,25 +3,29 @@ title: 'Integrations'
 description: 'Manage integrations via the REST API'
 ---
 
-All endpoints require authentication via JWT cookie or `Authorization: Bearer <token>` header.
+These endpoints require your login session: the `ff_token` cookie, or the same JWT sent as `Authorization: Bearer <token>`. Integrations belong to a form, and each form has at most one integration of each type.
 
-## List integrations
+Integration configs are encrypted at rest with AES-256-GCM. Secrets (`apiKey`, webhook `secret`, Google `refreshToken`) are masked as `••••••••` whenever a config is returned.
+
+## List a form's integrations
 
 ```
-GET /api/v1/integrations
+GET /api/v1/integrations?formId={formId}
 ```
-
-Returns all integrations for the authenticated user.
 
 ```json
-[
-  {
-    "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
-    "type": "EMAIL",
-    "enabled": true,
-    "createdAt": "2026-03-01T00:00:00.000Z"
-  }
-]
+{
+  "integrations": [
+    {
+      "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
+      "type": "EMAIL",
+      "name": "Email notifications",
+      "enabled": true,
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z"
+    }
+  ]
+}
 ```
 
 ## Create an integration
@@ -32,37 +36,52 @@ POST /api/v1/integrations
 
 ```json
 {
+  "formId": "671fa2b3c4d5e6f7a8b9c0aa",
   "type": "EMAIL",
+  "name": "Email notifications",
   "config": {
+    "provider": "resend",
     "apiKey": "re_xxxxxxxxxxxx",
-    "fromEmail": "you@yourdomain.com",
-    "toEmail": "you@yourdomain.com",
-    "subject": "New form submission"
+    "from": "forms@yourdomain.com",
+    "to": ["you@yourdomain.com"],
+    "subject": "New Form Submission"
   }
 }
 ```
 
-**Integration types**: `EMAIL`, `WEBHOOK`, `GOOGLE_SHEETS`
+**Types**: `EMAIL`, `WEBHOOK`, `GOOGLE_SHEETS`. Posting a type the form already has replaces that integration's config. Returns `201` with `{ "integration": { "id", "type", "name", "enabled", "createdAt" } }`.
 
 ### EMAIL config
 
-| Field       | Required | Description                                             |
-| ----------- | -------- | ------------------------------------------------------- |
-| `apiKey`    | Yes      | Resend API key (`re_...`)                               |
-| `fromEmail` | Yes      | Sender address on your verified Resend domain           |
-| `toEmail`   | Yes      | Recipient address for submission notifications          |
-| `subject`   | No       | Email subject. Default: `"New submission: {form name}"` |
+| Field       | Required | Description                                                                                        |
+| ----------- | -------- | -------------------------------------------------------------------------------------------------- |
+| `provider`  | Yes      | `"resend"`. (`sendgrid` and `smtp` are accepted but not implemented yet)                           |
+| `apiKey`    | Yes      | Resend API key (`re_...`)                                                                          |
+| `from`      | Yes      | Sender address on your verified Resend domain                                                      |
+| `to`        | Yes      | Array of recipient addresses, at least one                                                         |
+| `subject`   | No       | Default `"New Form Submission"`. The form name is appended: `"{subject} - {form name}"`            |
+| `autoReply` | No       | Confirmation email to the person who submitted. See [Resend](/docs/integrations/resend#auto-reply) |
 
 ### WEBHOOK config
 
-| Field           | Required       | Description                                                   |
-| --------------- | -------------- | ------------------------------------------------------------- |
-| `url`           | Yes            | HTTPS endpoint URL                                            |
-| `signingSecret` | Auto-generated | HMAC-SHA256 signing key — returned on creation, not updatable |
+| Field     | Required | Description                                                                   |
+| --------- | -------- | ----------------------------------------------------------------------------- |
+| `url`     | Yes      | Endpoint URL                                                                  |
+| `method`  | No       | `POST` (default), `PUT`, or `PATCH`                                           |
+| `headers` | No       | Extra request headers, e.g. `{ "Authorization": "Bearer ..." }`               |
+| `secret`  | No       | Your signing secret. When set, requests carry an `X-osforms-Signature` header |
 
 ### GOOGLE_SHEETS config
 
-Google Sheets integrations are configured via OAuth. Use the dashboard UI at `/dashboard/integrations` to connect your Google account.
+Google Sheets is connected through Google OAuth from the form's **Integrations** tab, not with this endpoint. See [Google Sheets](/docs/integrations/google-sheets).
+
+## Get an integration
+
+```
+GET /api/v1/integrations/{id}
+```
+
+Returns `{ "integration": { "_id", "type", "name", "enabled", "config", "createdAt", "updatedAt" } }` with secrets masked.
 
 ## Update an integration
 
@@ -76,9 +95,9 @@ PATCH /api/v1/integrations/{id}
 }
 ```
 
-Updateable fields: `enabled`, `config` (partial updates supported).
+Updatable fields: `name`, `enabled`, `config`.
 
-Config fields are merged, not replaced. Pass only the fields you want to change.
+`config` **replaces** the stored config, so send the complete object. To keep an existing webhook secret without resending it, pass `"secret": "__KEEP_EXISTING__"`.
 
 ## Delete an integration
 
@@ -86,7 +105,7 @@ Config fields are merged, not replaced. Pass only the fields you want to change.
 DELETE /api/v1/integrations/{id}
 ```
 
-Returns `204 No Content`.
+Returns `{ "success": true }`.
 
 ## Test an integration
 
@@ -94,27 +113,23 @@ Returns `204 No Content`.
 POST /api/v1/integrations/{id}/test
 ```
 
-Sends a sample payload through the integration to verify it's configured correctly.
+Runs the integration once with sample data (`Test User`, `test@example.com`, and a few more fields). No submission is created.
 
 ```json
 {
   "success": true,
-  "message": "Test email sent"
+  "message": "Email sent via Resend"
 }
 ```
 
-## Check integration status
+If the integration fails, you get `400` with `{ "error": "Test failed", "message": "<provider error>" }`.
+
+## Integration status
 
 ```
 GET /api/v1/integrations/{id}/status
 ```
 
-```json
-{
-  "status": "healthy",
-  "lastRun": "2026-03-27T10:00:00.000Z",
-  "lastError": null
-}
-```
+Returns `type`, `name`, and `enabled`. For Google Sheets it also returns `connectedEmail`, `spreadsheetId`, `spreadsheetUrl`, and `sheetName`.
 
-**Status values**: `healthy`, `failing`, `never_run`
+Per-submission success or failure is in the [integration logs](/docs/api-reference/forms#integration-logs-for-a-submission).

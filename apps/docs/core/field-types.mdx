@@ -1,11 +1,17 @@
 ---
 title: 'Field Types'
-description: 'All 15 field types supported in osforms forms'
+description: 'The 12 field types available in the form builder and @osforms/react'
 ---
 
-osforms supports 15 field types across input, choice, scale, display, and layout categories.
+The form builder and `@osforms/react` support 12 field types: text inputs, choices, scale and rating, and display-only statements.
 
-## Text Inputs
+<Note>
+  These fields only apply to forms rendered from a schema (the dashboard
+  **Builder** tab or `@osforms/react`). A plain HTML form can post any inputs;
+  each input's `name` becomes a key in the submission.
+</Note>
+
+## Text inputs
 
 ### text
 
@@ -39,51 +45,55 @@ Single-line input with email format validation.
 
 ### tel
 
-Phone number input. No format enforcement — accepts any string.
+Phone number input. No format enforcement: it accepts any string unless you add a `pattern`.
 
 ```json
 {
   "id": "phone",
   "type": "tel",
-  "label": "Phone number"
+  "label": "Phone number",
+  "required": false
 }
 ```
 
 ### url
 
-URL input with format validation.
+URL input. Validated with the browser's URL parser, so it needs a scheme (`https://example.com`, not `example.com`).
 
 ```json
 {
   "id": "website",
   "type": "url",
   "label": "Website URL",
+  "required": false,
   "placeholder": "https://example.com"
 }
 ```
 
 ### number
 
-Numeric input. Supports `min` / `max` validation.
+Numeric input with `min` / `max` validation. The value is submitted as a string (for example `"42"`).
 
 ```json
 {
   "id": "age",
   "type": "number",
   "label": "Age",
+  "required": false,
   "validation": { "min": 18, "max": 120 }
 }
 ```
 
 ### textarea
 
-Multi-line text input. Defaults to 4 rows.
+Multi-line text input. Defaults to 4 rows in classic mode and 3 in conversational mode.
 
 ```json
 {
   "id": "message",
   "type": "textarea",
   "label": "Message",
+  "required": false,
   "config": { "rows": 6 }
 }
 ```
@@ -94,39 +104,39 @@ Multi-line text input. Defaults to 4 rows.
 
 ### select
 
-Dropdown single-select. Supports optional search.
+Dropdown single-select (a native `<select>`). Advances immediately on selection in conversational mode.
 
 ```json
 {
   "id": "country",
   "type": "select",
   "label": "Country",
+  "required": true,
   "options": [
     { "id": "us", "label": "United States", "value": "US" },
     { "id": "gb", "label": "United Kingdom", "value": "GB" }
-  ],
-  "config": { "searchable": true }
+  ]
 }
 ```
 
 ### radio
 
-Single-choice visible option list. Auto-advances in conversational mode.
+Single choice from a visible list of options. Auto-advances in conversational mode.
 
 ```json
 {
   "id": "plan",
   "type": "radio",
   "label": "Which plan are you on?",
+  "required": true,
   "options": [
     { "id": "free", "label": "Free", "value": "free" },
     { "id": "pro", "label": "Pro", "value": "pro" }
-  ],
-  "config": { "layout": "vertical" }
+  ]
 }
 ```
 
-**Layout options**: `vertical` (default), `horizontal`, `grid`
+Options are listed vertically.
 
 ### checkbox
 
@@ -137,6 +147,7 @@ Multi-select option list. Submitted as an array of selected values.
   "id": "interests",
   "type": "checkbox",
   "label": "What are you interested in?",
+  "required": false,
   "options": [
     { "id": "a", "label": "API integrations", "value": "api" },
     { "id": "b", "label": "React SDK", "value": "sdk" },
@@ -145,49 +156,34 @@ Multi-select option list. Submitted as an array of selected values.
 }
 ```
 
-### date
-
-Date picker. Value submitted as `YYYY-MM-DD`.
-
-```json
-{
-  "id": "dob",
-  "type": "date",
-  "label": "Date of birth"
-}
-```
-
 ---
 
-## Scale & Rating
+## Scale and rating
 
 ### rating
 
-Star (or icon) rating. Defaults to 1–5. Auto-advances in conversational mode.
+Star rating, 1 to 5 by default. Auto-advances in conversational mode.
 
 ```json
 {
   "id": "satisfaction",
   "type": "rating",
   "label": "How satisfied are you?",
-  "config": {
-    "maxRating": 5,
-    "ratingIcon": "star"
-  }
+  "required": true,
+  "config": { "maxRating": 5 }
 }
 ```
 
-**Icon options**: `star` (default), `heart`, `thumb`
-
 ### scale
 
-NPS-style numeric scale. Auto-advances in conversational mode.
+NPS-style numeric scale, 1 to 10 by default. Auto-advances in conversational mode.
 
 ```json
 {
   "id": "nps",
   "type": "scale",
   "label": "How likely are you to recommend us?",
+  "required": true,
   "config": {
     "scaleMin": 0,
     "scaleMax": 10,
@@ -199,85 +195,54 @@ NPS-style numeric scale. Auto-advances in conversational mode.
 
 ---
 
-## File Upload
-
-### file
-
-File upload input.
-
-```json
-{
-  "id": "resume",
-  "type": "file",
-  "label": "Upload your resume",
-  "validation": {
-    "fileTypes": [".pdf", ".doc", ".docx"],
-    "maxFileSize": 5242880
-  }
-}
-```
-
-`maxFileSize` is in bytes. Default: `10485760` (10 MB).
-
-`fileTypes` accepts MIME types (`image/*`, `application/pdf`) or extensions (`.pdf`, `.jpg`).
-
----
-
 ## Display
 
 ### statement
 
-Display-only text block. No input collected. Use for instructions, section headers, or legal notices.
+Display-only text. No input is collected. Use it for instructions or notices. Only the `description` is shown; `label` is used in the builder to identify the block.
 
 ```json
 {
   "id": "intro",
   "type": "statement",
-  "label": "Before you continue",
+  "label": "Privacy notice",
+  "required": false,
   "description": "Please read our privacy policy before submitting."
-}
-```
-
-### divider
-
-Visual separator. Supported in `classic` and `stepped` modes only. No input collected.
-
-```json
-{
-  "id": "sep1",
-  "type": "divider",
-  "label": ""
 }
 ```
 
 ---
 
-## Common Field Properties
+## Not supported yet
 
-Every field shares these properties:
+The schema type also lists `date`, `file`, and `divider`. They aren't in the builder and `@osforms/react` doesn't render them, so don't use them yet. File uploads aren't stored by the submission endpoint either.
+
+---
+
+## Common field properties
 
 | Property           | Type               | Required         | Description                                                             |
 | ------------------ | ------------------ | ---------------- | ----------------------------------------------------------------------- |
-| `id`               | `string`           | Yes              | Unique identifier within the form. Used as the key in submissions.      |
-| `type`             | `FieldType`        | Yes              | One of the 15 types above.                                              |
+| `id`               | `string`           | Yes              | Unique within the form. Used as the key in submissions.                 |
+| `type`             | `FieldType`        | Yes              | One of the types above.                                                 |
 | `label`            | `string`           | Yes              | Question text shown to the user.                                        |
+| `required`         | `boolean`          | Yes (TypeScript) | Whether an answer is needed. Treated as `false` if omitted at runtime.  |
 | `description`      | `string`           | No               | Helper text displayed below the label.                                  |
 | `placeholder`      | `string`           | No               | Input placeholder text.                                                 |
-| `required`         | `boolean`          | No               | Default: `false`.                                                       |
 | `options`          | `FieldOption[]`    | For choice types | Array of `{ id, label, value }`.                                        |
 | `validation`       | `FieldValidation`  | No               | See below.                                                              |
 | `conditionalLogic` | `ConditionalLogic` | No               | Show/hide rules. See [Conditional Logic](/docs/core/conditional-logic). |
 | `config`           | `FieldConfig`      | No               | Type-specific config.                                                   |
 
-## Validation Reference
+## Validation reference
 
-| Property       | Types                       | Description                              |
-| -------------- | --------------------------- | ---------------------------------------- |
-| `minLength`    | `text`, `textarea`          | Minimum character count                  |
-| `maxLength`    | `text`, `textarea`          | Maximum character count                  |
-| `min`          | `number`, `scale`, `rating` | Minimum numeric value                    |
-| `max`          | `number`, `scale`, `rating` | Maximum numeric value                    |
-| `pattern`      | `text`, `email`, `tel`      | Regex string for format validation       |
-| `patternError` | `text`, `email`, `tel`      | Custom error message on pattern mismatch |
-| `fileTypes`    | `file`                      | Allowed MIME types or extensions         |
-| `maxFileSize`  | `file`                      | Max file size in bytes                   |
+| Property       | Description                              |
+| -------------- | ---------------------------------------- |
+| `minLength`    | Minimum character count                  |
+| `maxLength`    | Maximum character count                  |
+| `min`          | Minimum numeric value                    |
+| `max`          | Maximum numeric value                    |
+| `pattern`      | Regex string the value must match        |
+| `patternError` | Custom error message on pattern mismatch |
+
+`minLength`/`maxLength` suit text inputs and `min`/`max` suit `number`, `scale` and `rating`, but the validator applies whichever rules you set to any field.

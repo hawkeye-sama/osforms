@@ -1,55 +1,32 @@
 ---
 title: 'Google Sheets'
-description: 'Append each form submission as a new row in a Google Sheet'
+description: 'Add each form submission as a new row in a Google Sheet'
 ---
 
 ## Setup
 
-1. Go to **Integrations** in your osforms dashboard
-2. Click **Connect** next to Google Sheets
-3. Click **Sign in with Google** and authorize access
-4. Paste your Google Sheet URL or Sheet ID
-5. Optionally enter a sheet tab name (defaults to the first tab)
-6. Click **Save**
+1. Open your form in the dashboard and go to the **Integrations** tab
+2. Choose **Google Sheets**
+3. Click **Connect with Google** and approve access
+
+OSForms creates a new spreadsheet in your Google Drive named after the form (for example **"Contact Form Submissions"**) and writes to its `Sheet1` tab. The integration settings show the connected account and a link to the sheet.
+
+OSForms only asks for the `drive.file` scope, so it can access the spreadsheets it creates and nothing else in your Drive.
 
 ## How columns work
 
-osforms reads the header row of your sheet and maps submission fields to matching columns. If a field key doesn't match an existing column, it's automatically appended to the header row on the next submission.
+On the first submission, OSForms writes a header row: `Submission ID`, `Submitted At`, then one column per submitted field.
 
-Two system columns are always appended if not already present:
+| Submission ID | Submitted At             | name       | email            | message |
+| ------------- | ------------------------ | ---------- | ---------------- | ------- |
+| 64f1a...      | 2026-10-02T12:00:00.000Z | Jane Smith | jane@example.com | Hello!  |
 
-| Column          | Value                              |
-| --------------- | ---------------------------------- |
-| `Submission ID` | MongoDB ObjectId of the submission |
-| `Submitted At`  | ISO 8601 timestamp                 |
+When a later submission includes a field that has no column yet, that column is added to the end of the header row. Values are matched to columns by header text, so you can reorder columns freely. If you rename a header, the next submission adds a new column under the field's original name.
 
-## Field key mapping
-
-Column headers match the **field ID** from your form schema (e.g. `full_name`, `email`, `message`). Set field IDs intentionally in the form builder — they become the column names in your sheet.
-
-**Example**: A field with `id: "company_name"` maps to a column titled `company_name`.
-
-## Setting up the sheet
-
-You don't need to pre-create columns. Submit once and osforms will create all the columns for you. After the first submission your sheet will look like:
-
-| name       | email            | message | Submission ID | Submitted At             |
-| ---------- | ---------------- | ------- | ------------- | ------------------------ |
-| Jane Smith | jane@example.com | Hello!  | 64f1a...      | 2026-03-27T12:00:00.000Z |
-
-You can then rename columns — as long as the header text still matches the field ID, mapping continues to work.
-
-## Permissions
-
-The Google account you connect must have **Editor** access to the spreadsheet. Service accounts are not supported — connect a personal or workspace Google account.
+Column names are your input `name` attributes (HTML forms) or field IDs (forms built with the form builder or `@osforms/react`). Arrays and objects are written as JSON text.
 
 ## Failure handling
 
-If the Sheets API call fails (e.g. revoked OAuth token, sheet deleted), the integration is marked as failed and you'll receive an in-app notification and email alert.
+If a Sheets API call fails (for example the access was revoked or the sheet was deleted), the integration is logged as failed and you get an in-app notification and an email alert.
 
-To reconnect, go to **Integrations** and click **Reconnect Google Account**.
-
-<Note>
-  Google Sheets API calls count against your Google account's free quota (500
-  requests/100 seconds). This is rarely a concern for standard form volumes.
-</Note>
+To reconnect, remove the Google Sheets integration from the form and connect again. Reconnecting creates a fresh spreadsheet.

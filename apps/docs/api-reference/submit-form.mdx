@@ -11,6 +11,8 @@ The public submission endpoint. No authentication required.
 POST https://osforms.com/api/v1/f/{slug}
 ```
 
+`{slug}` is the 12-character ID at the end of your form's endpoint URL, shown in the **Setup** tab of the form.
+
 Accepts `application/json`, `application/x-www-form-urlencoded`, and `multipart/form-data`.
 
 ## HTML form usage
@@ -23,7 +25,9 @@ Accepts `application/json`, `application/x-www-form-urlencoded`, and `multipart/
 </form>
 ```
 
-Returns a `303` redirect to your form's redirect URL on success.
+Each input's `name` becomes a key in the stored submission. Repeated names (for example a group of checkboxes) are stored as an array.
+
+If the form has a **Redirect URL** set, the browser gets a `303` redirect there. Without one, the endpoint answers with the JSON below, so set a redirect URL for plain HTML forms.
 
 ## API / JSON usage
 
@@ -37,18 +41,40 @@ curl -X POST https://osforms.com/api/v1/f/{slug} \
 { "success": true, "message": "Submission received" }
 ```
 
+Requests sent as JSON (or with `Accept: application/json`) always get JSON back, even when a redirect URL is set.
+
 ## Response codes
 
-| Status | Meaning                                                  |
-| ------ | -------------------------------------------------------- |
-| `200`  | Submission stored successfully (JSON clients)            |
-| `303`  | Submission stored, redirect to redirect URL (HTML forms) |
-| `403`  | Monthly submission limit reached                         |
-| `422`  | CAPTCHA verification failed                              |
-| `429`  | Rate limit exceeded                                      |
+| Status | Meaning                                                                  |
+| ------ | ------------------------------------------------------------------------ |
+| `200`  | Submission stored (JSON response)                                        |
+| `303`  | Submission stored, redirecting to the form's redirect URL                |
+| `400`  | Body couldn't be parsed, or CAPTCHA token missing or failed verification |
+| `403`  | Origin not in the form's allowed origins, or monthly limit reached       |
+| `404`  | No active form with this slug                                            |
+| `429`  | Rate limit exceeded                                                      |
+
+Errors return `{ "error": "<message>" }`.
+
+## Files
+
+Multipart uploads are accepted, but **files are not stored**. A file field is saved as a placeholder string such as `[File: resume.pdf, 48213 bytes]`. If you need attachments, upload them to your own storage and submit the URL as a text field.
+
+## Spam protection
+
+- **Honeypot**: set a **Honeypot Field Name** in the form's Setup tab (for example `_gotcha`) and add a hidden input with that name. Submissions that fill it get a normal success response but are not stored.
+- **CAPTCHA**: Google reCAPTCHA and hCaptcha are supported. Send the widget's token as `g-recaptcha-response` or `h-captcha-response`. Set the secret key with `PATCH /api/v1/forms/{id}` (`recaptchaSecret`). It isn't in the dashboard UI yet. Tokens are removed before the submission is stored.
+
+## CORS
+
+By default any origin can submit. To restrict it, list origins under **Allowed Origins** in the form's Setup tab. Requests from other origins get `403`.
 
 ## Rate limiting
 
-Default: **10 requests/minute** per IP per form. Configurable per form in settings.
+Default: **10 requests per minute** per IP, per form. You can change it with `PATCH /api/v1/forms/{id}` (`rateLimit`, 1 to 1000). It isn't in the dashboard UI yet.
 
-When rate limited, the response includes a `Retry-After` header with seconds until reset.
+When rate limited, the response includes a `Retry-After` header with the seconds until the limit resets.
+
+## Monthly limit
+
+Each account can store 100 submissions per month (UTC calendar month). Past that, the endpoint returns `403` until the 1st.

@@ -1,6 +1,6 @@
 ---
 title: 'Resend'
-description: 'Forward form submissions to email using your Resend API key'
+description: 'Email each form submission using your own Resend API key'
 ---
 
 ## Prerequisites
@@ -9,45 +9,63 @@ A [Resend](https://resend.com) account with a verified sending domain and an API
 
 ## Setup
 
-1. Go to **Integrations** in your osforms dashboard
-2. Click **Connect** next to Resend
+1. Open your form in the dashboard and go to the **Integrations** tab
+2. Choose **Email (Resend)**
 3. Paste your Resend API key
-4. Enter the **From** address — must use your verified Resend domain (e.g. `forms@yourdomain.com`)
-5. Enter the **To** address where submission notifications should be delivered
-6. Optionally set a custom subject line
-7. Click **Save**
+4. Enter the **From Email**. It must be on your verified Resend domain (e.g. `forms@yourdomain.com`)
+5. Enter one or more **To Email(s)** to receive notifications
+6. Optionally change the subject line
+7. Save
 
 ## What you receive
 
-Each submission triggers an email containing:
+Each submission sends one email with:
 
-- All submitted form fields as a formatted table
-- Submission timestamp
-- Submission ID for cross-referencing in the dashboard
+- Subject `"{your subject} - {form name}"` (default subject: `New Form Submission`)
+- Every submitted field in a table
+- The time it was received
+- The submission ID, to find it in the dashboard
+
+## Auto-reply
+
+Turn on **Auto-Reply** to also send a confirmation to the person who filled in the form. It's sent from your **From Email** with your Resend key.
+
+- **Email Field**: the form field that holds their address. Leave it empty and OSForms looks for a valid address in a field named `email`, `Email`, `e-mail`, `user_email`, `contact_email`, `mail`, or similar. If none is found, the auto-reply is skipped.
+- **Reply Subject** and **Email Template**: HTML with these placeholders:
+
+| Placeholder                  | Replaced with                               |
+| ---------------------------- | ------------------------------------------- |
+| `{{formName}}`               | The form's name                             |
+| `{{submittedAt}}`            | Submission time (ISO 8601)                  |
+| `{{submissionId}}`           | Submission ID                               |
+| `{{anyField}}`               | The submitted value of that field           |
+| `{{#if anyField}}...{{/if}}` | Content shown only if the field has a value |
+
+Values are HTML-escaped. Placeholders with no matching field are removed.
+
+```html
+<p>Hi{{#if name}} {{name}}{{/if}},</p>
+<p>Thanks for contacting {{formName}}. We'll reply soon.</p>
+```
 
 ## Testing
 
-Click **Send Test** in the integration settings to send a sample email and verify your configuration before going live. The test uses sample data and does not create a real submission.
+Once saved, use the test button in the integration settings to send a sample email (`Test User`, `test@example.com`) and confirm your setup. No real submission is created.
 
 ## Configuration reference
 
-| Field       | Required | Description                                             |
-| ----------- | -------- | ------------------------------------------------------- |
-| `apiKey`    | Yes      | Resend API key starting with `re_`                      |
-| `fromEmail` | Yes      | Sender address on your verified Resend domain           |
-| `toEmail`   | Yes      | Delivery address for notification emails                |
-| `subject`   | No       | Email subject. Default: `"New submission: {form name}"` |
+To set this up through the API, see the [EMAIL config](/docs/api-reference/integrations#email-config).
 
 ## Failure handling
 
-If Resend rejects the request (e.g. invalid API key, unverified domain), the integration is marked as failed and you'll receive:
+If Resend rejects the request (for example an invalid API key or unverified domain), the integration is logged as failed and you get:
 
 - An **in-app notification** with the error message
-- An **email alert** at your account email (sent via the system Resend key, not yours)
+- An **email alert** at your account email, sent by OSForms rather than with your key
 
-You can review all integration logs per submission in the dashboard under **Submissions → View Logs**.
+The submission's integration logs in the dashboard show each attempt.
 
 <Note>
-  Resend's free tier includes 100 emails/month. You are billed by Resend
-  directly at their rates — osforms never charges for integrations.
+  Resend bills you directly at [their rates](https://resend.com/pricing),
+  including their free tier. OSForms never charges for integrations.
 </Note>

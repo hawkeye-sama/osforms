@@ -7,13 +7,16 @@ Conditional logic is evaluated automatically by `@osforms/react` as the user fil
 
 ## Types
 
+Only `ConditionalLogic` is exported. Derive the other two types from it:
+
 ```ts
-import type {
-  ConditionalLogic,
-  Condition,
-  ConditionOperator,
-} from '@osforms/react';
+import type { ConditionalLogic } from '@osforms/react';
+
+type Condition = ConditionalLogic['conditions'][number];
+type ConditionOperator = Condition['operator'];
 ```
+
+The shapes:
 
 ```ts
 type ConditionOperator =
@@ -59,22 +62,17 @@ const followUpField: FormField = {
 
 ## How the SDK evaluates conditions
 
-The `@osforms/react` SDK evaluates conditions in real time using the `isFieldVisible` utility:
-
-```ts
-import { isFieldVisible, getVisibleFields } from '@osforms/react';
-// Note: these utils are used internally by useFormState
-```
+Conditions are re-evaluated on every answer. The evaluation helpers are internal; use `actions.visibleFields` from `useFormState` to read the result.
 
 **Evaluation rules**:
 
-- `equals` / `not_equals` — strict string comparison after coercion (`String(value)`)
-- `contains` / `not_contains` — substring check on stringified value
-- `greater_than` / `less_than` — numeric comparison after `Number()` coercion
-- `is_empty` — `undefined`, `null`, or empty string
-- `is_not_empty` — any other value
-- `match: 'all'` — every condition must be true (AND)
-- `match: 'any'` — at least one condition must be true (OR)
+- `equals` / `not_equals`: string comparison after `String(value)`
+- `contains` / `not_contains`: substring check on the stringified value. For checkboxes (an array of values) this checks the comma-joined list, so use `contains` rather than `equals`
+- `greater_than` / `less_than`: numeric comparison after `Number()`
+- `is_empty`: `undefined`, `null`, or `""`. An empty checkbox array (`[]`) does **not** count as empty
+- `is_not_empty`: any other value
+- `match: 'all'`: every condition must be true (AND)
+- `match: 'any'`: at least one condition must be true (OR)
 
 ## Accessing visible fields
 
@@ -83,11 +81,17 @@ When using `useFormState` directly, `visibleFields` reflects the current set of 
 ```tsx
 import { useFormState, useFormSchema } from '@osforms/react';
 
-const { schema } = useFormSchema('form-slug');
-const [state, actions] = useFormState(schema, endpoint);
+function MyForm({ slug }: { slug: string }) {
+  const { schema } = useFormSchema(slug);
+  const [state, actions] = useFormState(
+    schema,
+    `https://osforms.com/api/v1/f/${slug}`
+  );
 
-// actions.visibleFields — fields visible based on current answers
-// actions.currentField  — the field at state.currentIndex
+  // actions.visibleFields: fields visible for the current answers
+  // actions.currentField: the field at state.currentIndex
+  return <p>{actions.visibleFields.length} questions</p>;
+}
 ```
 
 Hidden fields are automatically filtered out of `visibleFields` and are not included in the submission payload.
