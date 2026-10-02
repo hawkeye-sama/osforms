@@ -112,6 +112,33 @@ export const updateIntegrationSchema = z.object({
   enabled: z.boolean().optional(),
 });
 
+// ── API keys & pull API ─────────────────────────────────────
+
+const objectIdSchema = z.string().regex(/^[a-f0-9]{24}$/i, 'Invalid ID');
+
+export const createApiKeySchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(100),
+  formIds: z.array(objectIdSchema).min(1, 'Select at least one form').max(100),
+});
+
+export const listSubmissionsQuerySchema = z.object({
+  // Form ID or the endpoint slug (the part after /api/v1/f/)
+  formId: z
+    .string()
+    .regex(
+      /^[A-Za-z0-9_-]{1,64}$/,
+      'formId must be a form ID or endpoint slug'
+    ),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+  cursor: z.string().max(200).optional(),
+  since: z
+    .string()
+    .datetime({ offset: true, message: 'since must be an ISO 8601 date' })
+    .optional(),
+  order: z.enum(['asc', 'desc']).default('desc'),
+  fields: z.string().max(2000).optional(),
+});
+
 // ── Types ───────────────────────────────────────────────────
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
@@ -126,3 +153,5 @@ export type EmailConfig = z.infer<typeof emailConfigSchema>;
 export type WebhookConfig = z.infer<typeof webhookConfigSchema>;
 export type GoogleSheetsConfig = z.infer<typeof googleSheetsConfigSchema>;
 export type CreateIntegrationInput = z.infer<typeof createIntegrationSchema>;
+export type CreateApiKeyInput = z.infer<typeof createApiKeySchema>;
+export type ListSubmissionsQuery = z.infer<typeof listSubmissionsQuerySchema>;

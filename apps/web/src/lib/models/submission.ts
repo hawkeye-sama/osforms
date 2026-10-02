@@ -39,6 +39,8 @@ const submissionSchema = new Schema<ISubmission>(
 
 // Index for querying recent submissions
 submissionSchema.index({ formId: 1, createdAt: -1 });
+// Cursor pagination for the pull API: (createdAt, _id) is a total order
+submissionSchema.index({ formId: 1, createdAt: -1, _id: -1 });
 // Index for user monthly submission queries
 submissionSchema.index({ userId: 1, createdAt: -1 });
 
