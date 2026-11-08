@@ -4,17 +4,17 @@ The mission of **OSForms** is to provide a headless, developer-first form backen
 
 ## ✅ Shipped
 
-| Feature                   | Notes                                                                                               |
-| :------------------------ | :-------------------------------------------------------------------------------------------------- |
-| **Honeypot & CORS**       | Per-form honeypot field and allowed origins in form settings. Optional reCAPTCHA / hCaptcha (BYOK). |
-| **Webhooks**              | HMAC-SHA256 signed (`X-osforms-Signature`), custom headers, 30s timeout.                            |
-| **Custom Redirects**      | Per-form redirect URL; HTML form posts get a 303 redirect.                                          |
-| **Auto-Responders**       | Optional auto-reply on the Resend email integration, sent with the user's own key.                  |
-| **Submission Dashboard**  | Browse submissions, submission charts, integration logs, in-app notifications.                      |
-| **Data Export (CSV)**     | CSV export per form. JSON export is still open (issue #16).                                         |
-| **API Keys & Pull API**   | Read-only `osf_live_` keys scoped to selected forms; `GET /api/v1/submissions`, 60 req/min per key. |
-| **Visual Code Generator** | Form builder plus copy-paste snippets on the form page and in onboarding.                           |
-| **Self-Hosting Docs**     | `SELF_HOSTING.md` and a one-command `docker compose up` (Dockerfile + bundled MongoDB).             |
+| Feature                   | Notes                                                                                                           |
+| :------------------------ | :-------------------------------------------------------------------------------------------------------------- |
+| **Honeypot & CORS**       | Per-form honeypot field and allowed origins in form settings. Optional reCAPTCHA / hCaptcha / Turnstile (BYOK). |
+| **Webhooks**              | HMAC-SHA256 signed (`X-osforms-Signature`), custom headers, 30s timeout.                                        |
+| **Custom Redirects**      | Per-form redirect URL; HTML form posts get a 303 redirect.                                                      |
+| **Auto-Responders**       | Optional auto-reply on the Resend email integration, sent with the user's own key.                              |
+| **Submission Dashboard**  | Browse submissions, submission charts, integration logs, in-app notifications.                                  |
+| **Data Export (CSV)**     | CSV export per form. JSON export is still open (issue #16).                                                     |
+| **API Keys & Pull API**   | Read-only `osf_live_` keys scoped to selected forms; `GET /api/v1/submissions`, 60 req/min per key.             |
+| **Visual Code Generator** | Form builder plus copy-paste snippets on the form page and in onboarding.                                       |
+| **Self-Hosting Docs**     | `SELF_HOSTING.md` and a one-command `docker compose up` (Dockerfile + bundled MongoDB).                         |
 
 ---
 

@@ -6,7 +6,26 @@ import { NextRequest } from 'next/server';
 import { connectDB } from './db';
 import User from './models/user';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+const DEV_JWT_SECRET = 'dev-secret-change-me';
+
+/**
+ * Resolved lazily (at sign/verify time, not module load) so `next build` works
+ * without runtime secrets. In production a missing JWT_SECRET is a hard error:
+ * falling back to a public default would let anyone forge sessions.
+ */
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (secret) {
+    return secret;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'JWT_SECRET is not set. Set it to a long random string (see SELF_HOSTING.md).'
+    );
+  }
+  return DEV_JWT_SECRET;
+}
+
 const COOKIE_NAME = 'ff_token';
 const TOKEN_EXPIRY = '7d';
 
@@ -31,12 +50,13 @@ export interface JWTPayload {
 }
 
 export function signToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: TOKEN_EXPIRY });
 }
 
 export function verifyToken(token: string): JWTPayload | null {
+  const secret = getJwtSecret();
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    return jwt.verify(token, secret) as JWTPayload;
   } catch {
     return null;
   }
@@ -46,7 +66,7 @@ export function verifyToken(token: string): JWTPayload | null {
 // Binds the Google Sheets OAuth round-trip to the user and form that started
 // it. Signed with a derived key so a state token never passes as a session JWT.
 
-const OAUTH_STATE_SECRET = `${JWT_SECRET}:google-oauth-state`;
+const oauthStateSecret = () => `${getJwtSecret()}:google-oauth-state`;
 
 export interface OAuthState {
   userId: string;
@@ -56,12 +76,13 @@ export interface OAuthState {
 }
 
 export function signOAuthState(state: OAuthState): string {
-  return jwt.sign(state, OAUTH_STATE_SECRET, { expiresIn: '10m' });
+  return jwt.sign(state, oauthStateSecret(), { expiresIn: '10m' });
 }
 
 export function verifyOAuthState(token: string): OAuthState | null {
+  const secret = oauthStateSecret();
   try {
-    return jwt.verify(token, OAUTH_STATE_SECRET) as OAuthState;
+    return jwt.verify(token, secret) as OAuthState;
   } catch {
     return null;
   }

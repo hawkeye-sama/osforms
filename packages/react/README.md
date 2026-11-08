@@ -136,7 +136,7 @@ export default function ContactPage() {
 
 One question at a time with slide animations. Auto-advances on selection for `radio`, `select`, `rating`, and `scale` fields. Press `Enter` to advance (`Cmd/Ctrl+Enter` in a textarea); the on-screen ↑/↓ buttons move back and forward.
 
-The `Enter` listener is attached to the whole window, so in an inline embed, pressing `Enter` anywhere on the page advances or submits the form. For forms inside larger pages, use classic mode.
+Each `Enter` advances exactly one question. The keyboard shortcut only reacts while focus is inside the form (or on the page body, e.g. on a statement screen), so `Enter` in another input on the host page is left alone. A focused button or link handles `Enter` itself.
 
 ```tsx
 <OSForm formId="abc123" mode="conversational" />

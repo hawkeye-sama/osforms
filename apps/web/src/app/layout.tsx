@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'OSForms | The Open-Source Form Backend for Modern Devs',
+    default: 'OSForms: Open-Source Form Backend for HTML & React Forms',
     template: '%s | OSForms',
   },
   description:

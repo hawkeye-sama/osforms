@@ -1,10 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { Github } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
+import { GITHUB_REPO_URL } from '@/lib/structured-data';
 
 export function LandingNavbar() {
   return (
@@ -44,6 +46,22 @@ export function LandingNavbar() {
             <Link href="/docs" target="_blank" rel="noopener noreferrer">
               Docs
             </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="hidden sm:inline-flex"
+          >
+            <a
+              href={GITHUB_REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="OSForms on GitHub"
+            >
+              <Github className="h-4 w-4" />
+              GitHub
+            </a>
           </Button>
           <Button
             variant="ghost"

@@ -245,7 +245,7 @@ Both options can send through the same Resend account. The difference is who hol
 
 The Reply-To row is the one that bites in practice. With your own route, hitting reply in your inbox answers the visitor. With OSForms, the notification is an HTML table of the fields sent from your address, so you copy the visitor's email out of the table. If you answer every message by hand, that matters more than any other row.
 
-The rest of the table tilts the other way. OSForms stores the submission first and runs the email in the background, so a bad key or a Resend outage leaves a stored message and a notification in your dashboard instead of a lost lead. Google Sheets and signed webhooks are integrations you switch on per form, on the [bring-your-own-key model](/bring-your-own-key), and the [form email notifications guide](/form-email-notifications) covers the Resend setup, including auto-replies. The limits: 100 submissions a month on the free tier, no file storage, and CAPTCHA is reCAPTCHA or hCaptcha with your own keys (not Turnstile).
+The rest of the table tilts the other way. OSForms stores the submission first and runs the email in the background, so a bad key or a Resend outage leaves a stored message and a notification in your dashboard instead of a lost lead. Google Sheets and signed webhooks are integrations you switch on per form, on the [bring-your-own-key model](/bring-your-own-key), and the [form email notifications guide](/form-email-notifications) covers the Resend setup, including auto-replies. The limits: 100 submissions a month on the free tier, no file storage, and CAPTCHA is reCAPTCHA, hCaptcha, or Cloudflare Turnstile with your own keys.
 
 > "A server route sends an email. A form backend keeps the message even when the email fails."
 

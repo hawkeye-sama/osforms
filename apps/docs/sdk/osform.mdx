@@ -28,7 +28,7 @@ The SDK posts JSON to the endpoint, keyed by field `id`. Only fields visible at 
 - **CAPTCHA**: the SDK doesn't send a CAPTCHA token. If the form has a CAPTCHA secret set, every SDK submission fails with `CAPTCHA verification required`. Use the honeypot or allowed origins instead.
 - **Allowed origins**: if the form restricts origins, pages on other origins can't load the schema and the component shows its error state.
 - **Redirects**: the form's redirect URL is followed only when the thank-you screen is enabled, after its delay (default 3 seconds). Otherwise use `onComplete`.
-- **Enter key in conversational mode**: the `Enter` listener is attached to the whole window, not the form. In an inline embed, pressing `Enter` anywhere on the page (another input, a search box) advances or submits the form. For forms embedded inside larger pages, use `mode="classic"`.
+- **Enter key in conversational mode**: each `Enter` advances exactly one question. Since 0.1.2 the shortcut only reacts while focus is inside the form (or on the page body, e.g. a statement screen), so `Enter` in another input on the host page is left alone. Versions up to 0.1.1 listened on the whole window; upgrade if you embed the form inline. Short forms inside a larger page usually still look better in `mode="classic"`.
 
 ## Schema settings & screens
 

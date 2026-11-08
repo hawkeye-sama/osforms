@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { runInBackground } from '@/lib/background';
 import { connectDB } from '@/lib/db';
+import {
+  CAPTCHA_TOKEN_FIELDS,
+  findCaptchaToken,
+  verifyFormCaptcha,
+} from '@/lib/form-captcha';
 import { executeIntegrations } from '@/lib/integrations';
 import Form from '@/lib/models/form';
 import Integration from '@/lib/models/integration';
@@ -93,24 +98,23 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   // ── CAPTCHA ──────────────────────────────────────────────
+  // Provider is chosen by the token field the widget posted (see form-captcha.ts)
   if (form.recaptchaSecret) {
-    const token = (data['g-recaptcha-response'] ||
-      data['h-captcha-response'] ||
-      data['cf-turnstile-response']) as string | undefined;
-    if (!token) {
+    const captcha = findCaptchaToken(data);
+    if (!captcha) {
       return error('CAPTCHA verification required', 400, req);
     }
 
-    const valid = await verifyCaptcha(form.recaptchaSecret, token, ip);
+    const valid = await verifyFormCaptcha(captcha, form.recaptchaSecret, ip);
     if (!valid) {
       return error('CAPTCHA verification failed', 400, req);
     }
   }
 
   // Always remove CAPTCHA fields from stored data to keep records clean
-  delete data['g-recaptcha-response'];
-  delete data['h-captcha-response'];
-  delete data['cf-turnstile-response'];
+  for (const field of CAPTCHA_TOKEN_FIELDS) {
+    delete data[field];
+  }
 
   // Remove honeypot from stored data
   if (form.honeypotField) {
@@ -239,24 +243,6 @@ async function parseBody(req: NextRequest): Promise<Record<string, unknown>> {
   } catch {
     return { _raw: text };
   }
-}
-
-async function verifyCaptcha(
-  secret: string,
-  token: string,
-  ip: string
-): Promise<boolean> {
-  const url = secret.startsWith('0x')
-    ? 'https://hcaptcha.com/siteverify'
-    : 'https://www.google.com/recaptcha/api/siteverify';
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ secret, response: token, remoteip: ip }),
-  });
-  const result = await res.json();
-  return result.success === true;
 }
 
 function success(redirectUrl: string, req: NextRequest): NextResponse {

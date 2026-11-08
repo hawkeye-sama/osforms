@@ -20,7 +20,7 @@ faq:
   - question: 'Can I use Astro Actions instead of an external endpoint?'
     answer: 'Yes, if you are willing to run server code. Calling an action from an HTML form action requires the page to be rendered on demand, which means an adapter and a host that executes it. You also still write the email sending, storage, and spam handling yourself. An external endpoint keeps the whole site prerendered.'
   - question: 'How do I stop spam on an Astro contact form?'
-    answer: 'Start with a honeypot. Set a field name under Settings, Honeypot Field Name in OSForms, add a hidden input with that exact name to the component, and submissions that fill it are dropped while the bot still gets a success response. The endpoint also rate limits each IP to 10 submissions per minute per form by default. reCAPTCHA and hCaptcha are supported if you need more; Cloudflare Turnstile is not verified correctly yet.'
+    answer: 'Start with a honeypot. Set a field name under Settings, Honeypot Field Name in OSForms, add a hidden input with that exact name to the component, and submissions that fill it are dropped while the bot still gets a success response. The endpoint also rate limits each IP to 10 submissions per minute per form by default. reCAPTCHA, hCaptcha, and Cloudflare Turnstile are supported with your own keys if you need more.'
   - question: 'Is it safe to put the form endpoint URL in my Astro code?'
     answer: 'Yes. The endpoint is public by design, the same way a form action has always been visible in page source. It carries no API key. Your Resend key and Google credentials stay encrypted on the server and never reach the browser. To stop other sites from posting to it, set Allowed Origins to your domain.'
 ---
@@ -217,7 +217,7 @@ https://yoursite.com, http://localhost:4321
 
 The match is exact against the browser's `Origin` header, so include the scheme, leave off the trailing slash, and list `www` and the apex separately if you serve both. A request from any other origin gets a `403 Origin not allowed`.
 
-Know what this setting does not do. It only applies to requests that carry an `Origin` header, which browsers send on cross-origin `fetch` calls and form posts. A script calling the endpoint with `curl` sends no `Origin` and is not blocked by it. That is where the other two layers come in: the honeypot field from the component (set the same name under **Settings → Honeypot Field Name**; it is off until you do) and the per-form rate limit of 10 submissions per minute per IP. For a harder gate, forms also support reCAPTCHA and hCaptcha with your own keys (the secret is set through the forms API today, not the Settings dialog). Cloudflare Turnstile tokens are accepted but not verified correctly yet ([issue #17](https://github.com/hawkeye-sama/osforms/issues/17)), so don't plan around Turnstile.
+Know what this setting does not do. It only applies to requests that carry an `Origin` header, which browsers send on cross-origin `fetch` calls and form posts. A script calling the endpoint with `curl` sends no `Origin` and is not blocked by it. That is where the other two layers come in: the honeypot field from the component (set the same name under **Settings → Honeypot Field Name**; it is off until you do) and the per-form rate limit of 10 submissions per minute per IP. For a harder gate, forms also support reCAPTCHA, hCaptcha, and Cloudflare Turnstile with your own keys (the secret is set through the forms API today, not the Settings dialog).
 
 ## Keeping Your Astro Contact Form Fully Static
 

@@ -153,24 +153,24 @@ A honeypot catches bots that fill everything. It does nothing against:
 - **Browser automation.** Playwright or Puppeteer bots that render the page and type only into visible fields never touch an off-screen input.
 - **People.** Paid spam is typed by hand, and a person sees what your visitors see.
 
-Allowed Origins won't save you here either, since it's a browser check and a script can simply omit the `Origin` header. When spam starts getting through, OSForms supports **reCAPTCHA** with your own keys: put the widget on your form (it adds a `g-recaptcha-response` field), and set the secret on the form. The secret isn't in the Settings dialog yet; set it through the API. The quickest way is from your browser's console while signed in to the dashboard, which sends your session cookie:
+Allowed Origins won't save you here either, since it's a browser check and a script can simply omit the `Origin` header. When spam starts getting through, OSForms supports **reCAPTCHA**, **hCaptcha**, and **Cloudflare Turnstile** with your own keys. Put the widget on your form (it adds a `g-recaptcha-response`, `h-captcha-response`, or `cf-turnstile-response` field) and set the matching secret on the form. The endpoint picks the verifier from that field name, so there's no provider setting to choose. The secret isn't in the Settings dialog yet; set it through the API. The quickest way is from your browser's console while signed in to the dashboard, which sends your session cookie:
 
 ```js
 // Run on osforms.com while logged in. FORM_ID is the id in /dashboard/forms/FORM_ID
 await fetch('/api/v1/forms/FORM_ID', {
   method: 'PATCH',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ recaptchaSecret: 'your-recaptcha-secret' }),
+  body: JSON.stringify({ recaptchaSecret: 'your-captcha-secret' }),
 }).then((r) => r.json());
 ```
 
 From then on, a submission without a token gets `400 CAPTCHA verification required`, and a bad one gets `400 CAPTCHA verification failed`. The honeypot still runs first, so obvious bots are dropped before the endpoint spends a call verifying their token. The [forms API reference](/docs/api-reference/forms) lists the other settings you can change this way.
 
-Three limits to know before you rely on it:
+Three things to know before you rely on it:
 
-- **Use reCAPTCHA v2 (checkbox or invisible).** The endpoint checks that the token is valid but doesn't read the v3 score. [Google's v3 docs](https://developers.google.com/recaptcha/docs/v3) describe that score as running from 0.0 (very likely a bot) to 1.0 and leave the threshold to you (November 2026). OSForms doesn't apply one, so a v3 token from a bot that passes validation still gets in.
-- **hCaptcha only verifies older `0x` secrets.** The endpoint sends secrets starting with `0x` to hCaptcha and everything else to Google. [hCaptcha's docs](https://docs.hcaptcha.com) now show secrets in an `ES_` format (November 2026), and those get sent to the wrong verifier and fail. Until that's fixed, reCAPTCHA is the safe choice.
-- **Cloudflare Turnstile is not supported.** Its tokens are accepted, but verification is broken, tracked in [issue #17](https://github.com/hawkeye-sama/osforms/issues/17).
+- **One provider per form.** The form holds a single secret, and it has to come from the same provider as the widget on the page. A Turnstile token checked against a reCAPTCHA secret fails.
+- **reCAPTCHA v3 scores are enforced at 0.5.** [Google's v3 docs](https://developers.google.com/recaptcha/docs/v3) describe the score as running from 0.0 (very likely a bot) to 1.0 and leave the threshold to you (November 2026). OSForms rejects v3 tokens that score below 0.5. That cutoff is fixed, not a per-form setting. v2 tokens carry no score, so they're simply valid or not.
+- **Verification fails closed.** If the provider doesn't answer within 5 seconds, the submission gets `400 CAPTCHA verification failed` rather than slipping through unchecked.
 
 ## Rate Limits: The Layer Under Everything
 
@@ -190,7 +190,7 @@ Here's how the layers stack up:
 | -------------- | --------------------------------------- | -------------------------------------- | ---------------------- |
 | Honeypot field | Bots that fill every input              | Targeted scripts, browser bots, humans | None                   |
 | Rate limit     | Bursts from one IP                      | Slow or distributed spam               | None                   |
-| reCAPTCHA v2   | Most automation, including browser bots | Human spam, CAPTCHA-solving services   | A challenge, sometimes |
+| CAPTCHA        | Most automation, including browser bots | Human spam, CAPTCHA-solving services   | A challenge, sometimes |
 | Moderation     | Everything                              | Nothing, but it's your time            | None                   |
 
 ## A Honeypot Field Is the Cheapest Layer

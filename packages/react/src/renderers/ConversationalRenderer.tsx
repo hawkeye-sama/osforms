@@ -1,6 +1,6 @@
 import type { FormSchema } from '@osforms/types';
 import { AnimatePresence, motion } from 'framer-motion';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { ThankYouScreen } from '../components/ThankYouScreen';
 import { WelcomeScreen } from '../components/WelcomeScreen';
 import { FieldRenderer } from '../fields';
@@ -26,6 +26,10 @@ const transition = {
 
 // Field types that auto-advance — skip showing the OK button
 const AUTO_ADVANCE_TYPES = new Set(['radio', 'rating', 'scale', 'select']);
+
+// Elements whose own Enter behaviour wins over the window-level shortcut
+const SELF_HANDLED_ENTER =
+  'input, textarea, select, button, a[href], [contenteditable=""], [contenteditable="true"]';
 
 interface ConversationalRendererProps {
   schema: FormSchema;
@@ -76,17 +80,32 @@ export function ConversationalRenderer({
   const showOkButton = !isAutoAdvance || isStatement;
 
   // ── Keyboard navigation ───────────────────────────────────────────────────
+  // Window-level Enter is a fallback for fields with no focusable input
+  // (statement, or after clicking away). It must not double up with handlers
+  // that already react to Enter, and must not hijack Enter on the host page.
+  const containerRef = useRef<HTMLDivElement>(null);
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (isComplete || showWelcome) return;
-      if (
-        e.key === 'Enter' &&
-        !['textarea'].includes(currentField?.type ?? '')
-      ) {
-        e.preventDefault();
-        if (isLastField) submit();
-        else advance();
+      if (e.key !== 'Enter' || e.defaultPrevented || e.isComposing) return;
+      if (currentField?.type === 'textarea') return;
+
+      const target = e.target;
+      const onPageRoot =
+        target === document.body || target === document.documentElement;
+      const insideForm =
+        target instanceof Node && !!containerRef.current?.contains(target);
+      if (!onPageRoot && !insideForm) return;
+
+      // Inputs, buttons and links handle Enter themselves (TextField submits,
+      // a focused button fires its own click). Acting here too would advance twice.
+      if (target instanceof Element && target.closest(SELF_HANDLED_ENTER)) {
+        return;
       }
+
+      e.preventDefault();
+      if (isLastField) submit();
+      else advance();
     },
     [isComplete, showWelcome, currentField, isLastField, advance, submit]
   );
@@ -174,7 +193,7 @@ export function ConversationalRenderer({
     totalFields === 0 ? 0 : Math.round((currentIndex / totalFields) * 100);
 
   return (
-    <div style={containerStyle}>
+    <div ref={containerRef} style={containerStyle}>
       {/* ── Progress bar — thin strip at very top ──────────────────────── */}
       {showProgressBar && totalFields > 1 && (
         <div

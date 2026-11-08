@@ -5,7 +5,7 @@ import { LandingPage } from '@/components/landing/landing-page';
 import { formatDate, getAllPosts } from '@/lib/blog';
 import { SITE_URL } from '@/lib/site';
 
-const HOME_TITLE = 'OSForms | The Open-Source Form Backend for Modern Devs';
+const HOME_TITLE = 'OSForms: Open-Source Form Backend for HTML & React Forms';
 const HOME_DESCRIPTION =
   'OSForms is the open-source form backend where you bring your own API keys. Send submissions to Resend, Google Sheets, and webhooks. 100 free submissions/month.';
 

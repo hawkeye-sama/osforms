@@ -23,7 +23,7 @@ Key facts:
 - Your keys are encrypted at rest with AES-256-GCM and never sent to the browser.
 - Open source and self-hostable against your own MongoDB.
 - Accepts application/x-www-form-urlencoded, multipart/form-data, and application/json.
-- Spam protection: configurable honeypot field + optional reCAPTCHA or hCaptcha (bring your own CAPTCHA keys).
+- Spam protection: configurable honeypot field + optional reCAPTCHA, hCaptcha, or Cloudflare Turnstile (bring your own CAPTCHA keys).
 - Export submissions as CSV from the dashboard.
 
 ## API

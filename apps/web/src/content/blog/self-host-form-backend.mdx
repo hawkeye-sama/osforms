@@ -63,14 +63,14 @@ These are the variables that matter:
 
 | Variable                                   | Needed              | Notes                                                                                 |
 | ------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------- |
-| `JWT_SECRET`                               | Yes                 | Signs session tokens. Left blank, the app falls back to a hardcoded development value |
+| `JWT_SECRET`                               | Yes                 | Signs session tokens. Left blank, login and signup fail with an error naming it       |
 | `ENCRYPTION_KEY`                           | Yes                 | Exactly 64 hex characters. AES-256-GCM key for stored integration configs             |
 | `NEXT_PUBLIC_APP_URL`                      | For any real domain | Baked into the client bundle at build time; also builds the Google OAuth redirect URI |
 | `MONGODB_URI`                              | No                  | Defaults to the bundled `mongodb` service. Set it to use Atlas or another database    |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | For Google Sheets   | Redirect URI must be `<NEXT_PUBLIC_APP_URL>/api/auth/google/callback`                 |
 | `RESEND_API_KEY`                           | No                  | System emails only. Each user's Resend integration uses their own key                 |
 
-Two of those deserve a warning. Compose will start with both secrets blank, and nothing tells you. A blank `JWT_SECRET` means sessions are signed with a default string that anyone can read in the source, so anyone could mint a valid login. A blank `ENCRYPTION_KEY` only fails later, with `ENCRYPTION_KEY must be a 64-character hex string`, the first time someone saves an integration. Set both before the first `up`.
+Two of those deserve a warning. Compose will start with both secrets blank, and nothing tells you until you use the app. A blank `JWT_SECRET` makes every login and signup fail with `JWT_SECRET is not set`, because the app refuses to sign sessions with a default value. A blank `ENCRYPTION_KEY` only fails later, with `ENCRYPTION_KEY must be a 64-character hex string`, the first time someone saves an integration. Set both before the first `up`.
 
 `NEXT_PUBLIC_APP_URL` is the other trap. Because it is inlined at build time, editing `.env` and restarting does nothing. Change it, then run `docker compose up --build`.
 
@@ -100,7 +100,7 @@ The other limit to know before you migrate anything: file inputs are accepted bu
 
 On a laptop the defaults are fine. On a VPS, three things change.
 
-**Bind the ports to localhost.** The compose file publishes `27017:27017` and `3000:3000`, which listen on every interface, and the bundled MongoDB has no authentication configured. Docker's published ports also skip your host firewall: Docker's docs say traffic "gets diverted before it goes through the ufw firewall settings" ([Docker packet filtering docs](https://docs.docker.com/engine/network/packet-filtering-firewalls/), November 2026). In your copy of `docker-compose.yml`, change them to `'127.0.0.1:27017:27017'` and `'127.0.0.1:3000:3000'`, or drop the MongoDB mapping entirely. The `web` container reaches the database over the Compose network either way.
+**Keep the ports on localhost.** The bundled MongoDB has no authentication configured, so the compose file already publishes it as `'127.0.0.1:27017:27017'`, reachable only from the host. The app port is still `3000:3000`, which listens on every interface, and Docker's published ports skip your host firewall: Docker's docs say traffic "gets diverted before it goes through the ufw firewall settings" ([Docker packet filtering docs](https://docs.docker.com/engine/network/packet-filtering-firewalls/), November 2026). Once a proxy fronts the app, change it to `'127.0.0.1:3000:3000'` in your copy of `docker-compose.yml`. The `web` container reaches the database over the Compose network either way.
 
 **Put a proxy in front for HTTPS.** Caddy is the short version:
 

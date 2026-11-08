@@ -182,7 +182,7 @@ With the form posting to OSForms, notifications are dashboard settings, not code
 
 **Webhooks.** For Slack, a CRM, or your own API, add a webhook URL. OSForms POSTs JSON with `event`, `formId`, `formName`, `submissionId`, `submittedAt`, and `data`, and signs it with an `X-osforms-Signature` HMAC-SHA256 header if you set a secret ([how to verify that signature in Node.js](/verify-webhook-signature-nodejs)).
 
-If an integration fails (an expired key, a revoked Google grant), the submission is still stored, the failure is logged against it, and you get an in-app notification. Two limits to know before you rely on it: OSForms does not store file uploads (a file field is saved as a placeholder like `[File: brief.pdf, 48213 bytes]`), and CAPTCHA support is reCAPTCHA or hCaptcha with your own keys, not Cloudflare Turnstile.
+If an integration fails (an expired key, a revoked Google grant), the submission is still stored, the failure is logged against it, and you get an in-app notification. Two limits to know before you rely on it: OSForms does not store file uploads (a file field is saved as a placeholder like `[File: brief.pdf, 48213 bytes]`), and CAPTCHA (reCAPTCHA, hCaptcha, or Cloudflare Turnstile) runs on your own keys, with the secret set through the forms API.
 
 ## Shipping a Lovable Contact Form You Don't Have to Babysit
 

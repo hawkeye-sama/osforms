@@ -286,7 +286,7 @@ export function LandingPage({ recentPosts }: LandingPageProps) {
               {
                 icon: Shield,
                 title: 'Spam Protection',
-                desc: 'Honeypot fields, per-form rate limits, and reCAPTCHA or hCaptcha with your own keys.',
+                desc: 'Honeypot fields, per-form rate limits, and reCAPTCHA, hCaptcha, or Turnstile with your own keys.',
               },
               {
                 icon: Zap,

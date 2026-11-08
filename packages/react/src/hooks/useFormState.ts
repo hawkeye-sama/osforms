@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { FormField, FormSchema } from '@osforms/types';
 import { getVisibleFields } from '../utils/conditional';
 import { validateField } from '../utils/validation';
@@ -34,6 +34,9 @@ export function useFormState(
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Synchronous re-entrancy guard for submit(). `isSubmitting` is read from the
+  // render closure, so two calls in the same tick would both see `false`.
+  const submittingRef = useRef(false);
   const [isComplete, setIsComplete] = useState(false);
   const [showWelcome, setShowWelcome] = useState(
     () => schema?.welcomeScreen?.enabled ?? false
@@ -96,7 +99,7 @@ export function useFormState(
   }, []);
 
   const submit = useCallback(async () => {
-    if (!schema || isSubmitting) return;
+    if (!schema || submittingRef.current) return;
 
     // Validate all visible fields
     const newErrors: Record<string, string> = {};
@@ -117,6 +120,7 @@ export function useFormState(
       return;
     }
 
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -147,6 +151,8 @@ export function useFormState(
       setIsComplete(true);
       onComplete?.();
     } catch (err) {
+      // Allow a retry only after a failed attempt; a successful submit stays locked.
+      submittingRef.current = false;
       const error =
         err instanceof Error
           ? err
@@ -156,15 +162,7 @@ export function useFormState(
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    schema,
-    isSubmitting,
-    visibleFields,
-    answers,
-    endpoint,
-    onComplete,
-    onError,
-  ]);
+  }, [schema, visibleFields, answers, endpoint, onComplete, onError]);
 
   const state: FormState = {
     answers,

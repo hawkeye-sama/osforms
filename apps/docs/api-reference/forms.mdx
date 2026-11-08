@@ -84,7 +84,7 @@ PATCH /api/v1/forms/{id}
 | `redirectUrl`     | string   | Where HTML form submissions are redirected after success                                                                                              |
 | `allowedOrigins`  | string[] | Origins allowed to submit. Empty means any origin                                                                                                     |
 | `honeypotField`   | string   | Name of the hidden honeypot input                                                                                                                     |
-| `recaptchaSecret` | string   | reCAPTCHA or hCaptcha secret key. Enables CAPTCHA checks on the endpoint                                                                              |
+| `recaptchaSecret` | string   | reCAPTCHA, hCaptcha, or Cloudflare Turnstile secret key. Enables CAPTCHA checks on the endpoint                                                       |
 | `rateLimit`       | number   | Submissions per minute per IP, 1 to 1000. Default `10`                                                                                                |
 | `formSchema`      | object   | Form builder schema that `@osforms/react` uses to render the form. `null` clears it. The submit endpoint ignores it and accepts any fields either way |
 

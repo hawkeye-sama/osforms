@@ -73,7 +73,9 @@ export function TextField({
     number: 'number',
   };
   const handleKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    // preventDefault also tells the conversational renderer's window-level
+    // Enter listener that this keypress is handled, so it advances only once.
+    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
       e.preventDefault();
       onSubmit();
     }

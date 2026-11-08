@@ -63,7 +63,7 @@ Multipart uploads are accepted, but **files are not stored**. A file field is sa
 ## Spam protection
 
 - **Honeypot**: set a **Honeypot Field Name** in the form's Setup tab (for example `_gotcha`) and add a hidden input with that name. Submissions that fill it get a normal success response but are not stored.
-- **CAPTCHA**: Google reCAPTCHA and hCaptcha are supported. Send the widget's token as `g-recaptcha-response` or `h-captcha-response`. Set the secret key with `PATCH /api/v1/forms/{id}` (`recaptchaSecret`). It isn't in the dashboard UI yet. Tokens are removed before the submission is stored.
+- **CAPTCHA**: Google reCAPTCHA (v2 and v3), hCaptcha, and Cloudflare Turnstile are supported. Send the widget's token in its usual field: `g-recaptcha-response`, `h-captcha-response`, or `cf-turnstile-response`. The endpoint picks the verifier from the field name (if both `h-captcha-response` and `g-recaptcha-response` arrive, as hCaptcha's widget sends, hCaptcha wins). Set the secret key with `PATCH /api/v1/forms/{id}` (`recaptchaSecret`). It isn't in the dashboard UI yet, and it must belong to the same provider as the widget. reCAPTCHA v3 tokens scoring below 0.5 are rejected. If the provider doesn't respond within 5 seconds, the submission is rejected. Tokens are removed before the submission is stored.
 
 ## CORS
 

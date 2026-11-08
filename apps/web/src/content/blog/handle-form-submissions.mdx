@@ -24,7 +24,7 @@ faq:
   - question: 'Where does my form data live if I use OSForms?'
     answer: 'Submissions are stored so you can view them anytime and export everything to CSV. Integrations forward each submission to your own services (your Resend account, your Google Sheet, your webhook) using your keys. You can also self-host OSForms against your own MongoDB to keep everything on your infrastructure.'
   - question: 'How do I stop spam without forcing a captcha on users?'
-    answer: 'A honeypot field is the frictionless option: add a hidden input that real users never fill, and discard any submission that arrives with it populated. OSForms supports a configurable honeypot field plus optional reCAPTCHA or hCaptcha if you want a captcha as well; Cloudflare Turnstile support is in progress.'
+    answer: 'A honeypot field is the frictionless option: add a hidden input that real users never fill, and discard any submission that arrives with it populated. OSForms supports a configurable honeypot field plus optional reCAPTCHA, hCaptcha, or Cloudflare Turnstile (your own keys) if you want a captcha as well.'
 ---
 
 You built a form. The HTML was the easy part. Now you need to actually _do something_ with the data when someone hits submit, and that is the wall every front-end developer runs into: a form's `action` has to POST somewhere, and "somewhere" usually means a backend you don't have.
@@ -132,7 +132,7 @@ That endpoint stores every submission and forwards it to **your** integrations: 
 You also get the parts the DIY function skipped, without writing any of them:
 
 - **A submissions dashboard** plus **CSV export** on every tier, so your data is never trapped ([why that matters](/own-your-form-data))
-- **Spam protection**: a configurable honeypot field, plus optional reCAPTCHA or hCaptcha (Turnstile support is tracked in [issue #17](https://github.com/hawkeye-sama/osforms/issues/17))
+- **Spam protection**: a configurable honeypot field, plus optional reCAPTCHA, hCaptcha, or Cloudflare Turnstile on your own keys
 - **Per-form CORS and rate limiting** handled at the endpoint
 - **Resilient delivery**: the submission is saved and a `200` returned instantly, then integrations run in the background, so a failing email provider never loses a submission. You get a per-submission log either way.
 

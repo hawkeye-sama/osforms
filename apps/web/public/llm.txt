@@ -16,7 +16,7 @@ Point your HTML form at an OSForms endpoint. OSForms stores each submission and 
   - Accepts application/x-www-form-urlencoded, multipart/form-data, and application/json
   - JSON requests get { "success": true }; HTML form posts get a 303 redirect when the form has a redirect URL set
 - Integrations: Resend email (with optional auto-reply to the submitter), Google Sheets (auto-creates missing columns), webhooks signed with HMAC-SHA256 (X-osforms-Signature header)
-- Spam protection: configurable honeypot field, optional reCAPTCHA or hCaptcha (your own keys), per-form rate limit
+- Spam protection: configurable honeypot field, optional reCAPTCHA, hCaptcha, or Cloudflare Turnstile (your own keys), per-form rate limit
 - CORS control per form (allowed origins)
 - Dashboard: browse submissions, submission charts, CSV export
 - Pull API: GET https://osforms.com/api/v1/submissions?formId={id-or-slug} with Authorization: Bearer osf_live_... (read-only keys scoped to selected forms, 60 requests/min per key, cursor pagination)

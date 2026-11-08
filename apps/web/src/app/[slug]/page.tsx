@@ -21,7 +21,11 @@ import {
   slugifyCategory,
 } from '@/lib/blog';
 import { SITE_URL as BASE_URL } from '@/lib/site';
-import { ORGANIZATION_ID, personSchema } from '@/lib/structured-data';
+import {
+  GITHUB_REPO_URL,
+  ORGANIZATION_ID,
+  personSchema,
+} from '@/lib/structured-data';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -401,12 +405,25 @@ export default async function BlogPostPage({ params }: Props) {
               Bring your own API keys. 100 free submissions a month, every
               integration included, no lock-in.
             </p>
-            <Link
-              href="/signup"
-              className="bg-foreground text-background mt-6 inline-flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
-            >
-              Get Started Free →
-            </Link>
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/signup"
+                className="bg-foreground text-background inline-flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90"
+              >
+                Get Started Free →
+              </Link>
+              <a
+                href={GITHUB_REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border-border text-foreground hover:bg-secondary inline-flex items-center gap-1.5 rounded-lg border px-5 py-2.5 text-sm font-medium transition-colors"
+              >
+                ★ Star on GitHub
+              </a>
+            </div>
+            <p className="text-muted-foreground mt-3 text-xs">
+              Open source (MIT). Self-host it if you prefer.
+            </p>
           </div>
 
           {/* ── Tags ────────────────────────────── */}

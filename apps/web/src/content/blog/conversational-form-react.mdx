@@ -22,7 +22,7 @@ faq:
   - question: 'Does @osforms/react work with Next.js?'
     answer: 'Yes. The component uses React state and effects, so in the Next.js App Router you render it from a file marked with the "use client" directive. In the Pages Router or a Vite app it works as a normal component. React 18 or newer is required.'
   - question: 'When should I use classic mode instead of conversational?'
-    answer: 'Use classic for short forms embedded inside a larger page, like a contact block in a footer. Conversational mode listens for the Enter key on the whole window so people can move forward without the mouse, which is right for a full-screen form but can catch key presses meant for the rest of the page.'
+    answer: 'Use classic for short forms embedded inside a larger page, like a contact block in a footer, where showing every field at once fits the layout. Use conversational for a dedicated page or fullScreen form. Since @osforms/react 0.1.2, the Enter shortcut only reacts while focus is inside the form, so it no longer catches key presses meant for the rest of the page.'
   - question: 'Is @osforms/react free?'
     answer: 'The package is open source under the MIT license. The hosted OSForms backend it posts to includes 100 free submissions a month with every integration (Resend email, Google Sheets, webhooks) running on your own API keys, and you can self-host the backend and point the component at it with the baseUrl prop.'
 ---
@@ -253,7 +253,7 @@ The `mode` prop decides the layout. The schema's own `mode` is the fallback, and
 
 **Classic** renders every field on one page in a single column with a normal submit button. Same schema, same endpoint, same stored data.
 
-Here is the practical rule for picking. Conversational mode attaches its Enter listener to the whole `window`, not just the form. On a dedicated page or in `fullScreen`, that is exactly what you want. But if the form is a small block inside a longer page, say a contact section under your pricing table, a press of Enter in some other input on that page can move the form along, or submit it from the last question. For inline embeds, use classic. Save conversational for pages where the form is the whole point.
+Here is the practical rule for picking. Conversational mode shines on a dedicated page or in `fullScreen`, where one question at a time is the whole experience. If the form is a small block inside a longer page, say a contact section under your pricing table, classic usually fits better because readers can see every field at a glance. Keyboard-wise both are safe to embed: since 0.1.2 the Enter shortcut only reacts while focus is inside the form (earlier versions listened on the whole `window`, so upgrade if you're on 0.1.1).
 
 > "The one-question-at-a-time flow is a presentation choice. The schema, the endpoint, and the data underneath it should not change when you switch it off."
 

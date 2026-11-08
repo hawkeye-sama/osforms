@@ -83,7 +83,7 @@ OSForms stores every submission (no expiry on the hosted tier) and routes it to 
 
 Your keys are encrypted at rest with AES-256-GCM and only used server-side when an integration runs, so nothing sensitive ships in your page's HTML. The whole thing is MIT-licensed and runs with `docker compose up` if you would rather host it yourself.
 
-The tradeoffs: 100 free submissions instead of 250, no file storage, and CAPTCHA means your own reCAPTCHA or hCaptcha keys, with the secret set through the forms API (Turnstile is not supported yet). Pick it when you want Sheets, webhooks, or auto-replies without paying, or a backend you can run yourself.
+The tradeoffs: 100 free submissions instead of 250, no file storage, and CAPTCHA means your own reCAPTCHA, hCaptcha, or Cloudflare Turnstile keys, with the secret set through the forms API. Pick it when you want Sheets, webhooks, or auto-replies without paying, or a backend you can run yourself.
 
 ### Formgrid
 

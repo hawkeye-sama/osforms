@@ -126,7 +126,7 @@ The frictionless defense is a honeypot: a field real people never see and bots f
 
 `tabindex="-1"` keeps it out of keyboard navigation, `aria-hidden` keeps it out of screen readers, and `autocomplete="off"` stops a password manager from helpfully filling it for a real human. When a submission arrives with that field populated, the endpoint returns the same success response a real visitor gets and stores nothing at all. The bot logs a win, moves on, and your inbox stays clean.
 
-If a honeypot is not enough, forms also support reCAPTCHA and hCaptcha with your own site keys. Be aware of two current limits before you plan around it: the CAPTCHA secret is set on the form record through the API rather than the Settings dialog today, and Cloudflare Turnstile tokens are accepted but not verified correctly yet, tracked in [issue #17](https://github.com/hawkeye-sama/osforms/issues/17). Stick to reCAPTCHA or hCaptcha, or just the honeypot, which handles the overwhelming majority of drive-by bots on a small site.
+If a honeypot is not enough, forms also support reCAPTCHA, hCaptcha, and Cloudflare Turnstile with your own site keys. The endpoint picks the verifier from the token field the widget adds (`g-recaptcha-response`, `h-captcha-response`, or `cf-turnstile-response`). One limit to know before you plan around it: the CAPTCHA secret is set on the form record through the API rather than the Settings dialog today. For most small sites the honeypot alone handles the overwhelming majority of drive-by bots.
 
 There is also a rate limit running whether you configure anything or not: 10 submissions per minute per IP per form by default. A human filling out a contact form will never notice it. A script hammering the endpoint gets a `429`.
 
