@@ -630,3 +630,9 @@ body {
 .animate-glow-pulse {
   animation: glow-pulse 2s ease-in-out infinite;
 }
+
+/* reCAPTCHA v3 floating badge. Hidden because the signup form shows the
+   required Google attribution text inline instead. */
+.grecaptcha-badge {
+  visibility: hidden;
+}

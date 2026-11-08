@@ -12,10 +12,12 @@ A [Resend](https://resend.com) account with a verified sending domain and an API
 1. Open your form in the dashboard and go to the **Integrations** tab
 2. Choose **Email (Resend)**
 3. Paste your Resend API key
-4. Enter the **From Email**. It must be on your verified Resend domain (e.g. `forms@yourdomain.com`)
+4. Enter the **From Email**. It must be a plain address on your verified Resend domain (e.g. `forms@yourdomain.com`). A display-name format like `Acme <forms@acme.com>` is rejected
 5. Enter one or more **To Email(s)** to receive notifications
 6. Optionally change the subject line
 7. Save
+
+A form has one Email integration. Creating another one for the same form replaces the existing one.
 
 ## What you receive
 
@@ -30,7 +32,7 @@ Each submission sends one email with:
 
 Turn on **Auto-Reply** to also send a confirmation to the person who filled in the form. It's sent from your **From Email** with your Resend key.
 
-- **Email Field**: the form field that holds their address. Leave it empty and OSForms looks for a valid address in a field named `email`, `Email`, `e-mail`, `user_email`, `contact_email`, `mail`, or similar. If none is found, the auto-reply is skipped.
+- **Email Field**: the form field that holds their address. If you set it and that field doesn't hold a valid address, the auto-reply is skipped. OSForms does not fall back to other fields. Leave it empty and OSForms checks these field names in order and uses the first one with a valid address: `email`, `Email`, `EMAIL`, `e-mail`, `E-mail`, `user_email`, `userEmail`, `contact_email`, `contactEmail`, `mail`, `Mail`. Names must match exactly (case-sensitive). If none matches, the auto-reply is skipped.
 - **Reply Subject** and **Email Template**: HTML with these placeholders:
 
 | Placeholder                  | Replaced with                               |
@@ -41,16 +43,22 @@ Turn on **Auto-Reply** to also send a confirmation to the person who filled in t
 | `{{anyField}}`               | The submitted value of that field           |
 | `{{#if anyField}}...{{/if}}` | Content shown only if the field has a value |
 
-Values are HTML-escaped. Placeholders with no matching field are removed.
+Values are HTML-escaped, in the **Reply Subject** too, so a submitted `&` shows up as `&amp;` in the subject line. Placeholders with no matching field are removed.
+
+`{{#if}}` only works with field names made of letters, digits, and underscores. With a name like `first-name`, the `{{#if first-name}}` and `{{/if}}` tags are stripped and the content always shows.
 
 ```html
 <p>Hi{{#if name}} {{name}}{{/if}},</p>
 <p>Thanks for contacting {{formName}}. We'll reply soon.</p>
 ```
 
+The notification and the auto-reply are logged as one Email integration. If the auto-reply fails, the whole integration is logged as failed and you get a failure alert, even if the notification email was delivered. A skipped auto-reply (no valid address) is not a failure.
+
 ## Testing
 
-Once saved, use the test button in the integration settings to send a sample email (`Test User`, `test@example.com`) and confirm your setup. No real submission is created.
+The dashboard has no test button for email. To test a saved integration, call [`POST /api/v1/integrations/{id}/test`](/docs/api-reference/integrations#test-an-integration). It runs the integration once with sample data (`name: Test User`, `email: test@example.com`, plus `message`, `phone`, and `company`) and sends a real notification email to your **To Email(s)**. No submission is created.
+
+If auto-reply is on, the test also sends a real auto-reply to `test@example.com`, because the sample data has an `email` field. If your **Email Field** names a different field, the test skips the auto-reply.
 
 ## Configuration reference
 
@@ -60,10 +68,10 @@ To set this up through the API, see the [EMAIL config](/docs/api-reference/integ
 
 If Resend rejects the request (for example an invalid API key or unverified domain), the integration is logged as failed and you get:
 
-- An **in-app notification** with the error message
-- An **email alert** at your account email, sent by OSForms rather than with your key
+- An **in-app notification** saying how many integrations failed for the form. It doesn't include the error text
+- An **email alert** at your account email with each failed integration's error, sent by OSForms rather than with your key
 
-The submission's integration logs in the dashboard show each attempt.
+The submission's integration logs in the dashboard show each attempt and its error message.
 
 <Note>
   Resend bills you directly at [their rates](https://resend.com/pricing),

@@ -69,11 +69,15 @@ Multipart uploads are accepted, but **files are not stored**. A file field is sa
 
 By default any origin can submit. To restrict it, list origins under **Allowed Origins** in the form's Setup tab. Requests from other origins get `403`.
 
+The check only runs when the request sends an `Origin` header, which browsers do. Requests without one (curl, server-side code) skip it, so allowed origins stop other websites from posting to your form but aren't authentication.
+
 ## Rate limiting
 
 Default: **10 requests per minute** per IP, per form. You can change it with `PATCH /api/v1/forms/{id}` (`rateLimit`, 1 to 1000). It isn't in the dashboard UI yet.
 
 When rate limited, the response includes a `Retry-After` header with the seconds until the limit resets.
+
+The counter is kept in memory on each server instance. On serverless hosting like osforms.com, requests can land on different instances, so treat the limit as best-effort rather than an exact cap.
 
 ## Monthly limit
 

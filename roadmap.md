@@ -1,17 +1,28 @@
 # 🗺️ Product Roadmap & Community Goals
 
-The mission of **osforms** is to provide a headless, developer-first form backend that empowers users to own their data. We prioritize features that eliminate "feature taxes" found in commercial alternatives.
+The mission of **OSForms** is to provide a headless, developer-first form backend that empowers users to own their data. We prioritize features that eliminate "feature taxes" found in commercial alternatives.
 
-## 🟢 Phase 1: The "Trust & Utility" Layer (Current Focus)
+## ✅ Shipped
+
+| Feature                   | Notes                                                                                               |
+| :------------------------ | :-------------------------------------------------------------------------------------------------- |
+| **Honeypot & CORS**       | Per-form honeypot field and allowed origins in form settings. Optional reCAPTCHA / hCaptcha (BYOK). |
+| **Webhooks**              | HMAC-SHA256 signed (`X-osforms-Signature`), custom headers, 30s timeout.                            |
+| **Custom Redirects**      | Per-form redirect URL; HTML form posts get a 303 redirect.                                          |
+| **Auto-Responders**       | Optional auto-reply on the Resend email integration, sent with the user's own key.                  |
+| **Submission Dashboard**  | Browse submissions, submission charts, integration logs, in-app notifications.                      |
+| **Data Export (CSV)**     | CSV export per form. JSON export is still open (issue #16).                                         |
+| **API Keys & Pull API**   | Read-only `osf_live_` keys scoped to selected forms; `GET /api/v1/submissions`, 60 req/min per key. |
+| **Visual Code Generator** | Form builder plus copy-paste snippets on the form page and in onboarding.                           |
+| **Self-Hosting Docs**     | `SELF_HOSTING.md` and a one-command `docker compose up` (Dockerfile + bundled MongoDB).             |
+
+---
+
+## 🟢 Phase 1: The "Trust & Utility" Layer
 
 **Goal:** Make the API production-ready and unblock custom workflows.
 
-| Feature              | Importance | Why it helps user acquisition                                          |
-| :------------------- | :--------- | :--------------------------------------------------------------------- |
-| **Honeypot & CORS**  | High       | Prevents spam. Trust is the #1 requirement for dev tools.              |
-| **Webhooks**         | High       | Unlocks "Programmability." Connects to Slack, Discord, or custom apps. |
-| **Custom Redirects** | Medium     | Essential for standard HTML forms (marketing sites).                   |
-| **Auto-Responders**  | Medium     | Closes the loop. Send a "We got your message" email via Resend.        |
+All Phase 1 items (honeypot & CORS, webhooks, redirects, auto-responders) have shipped. See above.
 
 ---
 
@@ -19,12 +30,12 @@ The mission of **osforms** is to provide a headless, developer-first form backen
 
 **Goal:** Disrupt the market by offering "Enterprise" features for free using User Keys.
 
-| Feature                    | Importance | Why it helps user acquisition                                             |
-| :------------------------- | :--------- | :------------------------------------------------------------------------ |
-| **Google Drive Uploads**   | Very High  | **Our "Killer Feature."** Free file uploads (unlimited) via user's GCP.   |
-| **Data Export (CSV/JSON)** | High       | Shows developers they own their data. Prevents vendor lock-in.            |
-| **Advanced Rate Limiting** | Medium     | Protects our infra and user's Resend quotas from abuse.                   |
-| **Submission Dashboard**   | Medium     | A clean UI to browse and filter results (replaces manual Sheet checking). |
+| Feature                    | Importance | Why it helps user acquisition                                                  |
+| :------------------------- | :--------- | :----------------------------------------------------------------------------- |
+| **Google Drive Uploads**   | Very High  | **Our "Killer Feature."** Free file uploads (unlimited) via user's GCP.        |
+| **Data Export (JSON)**     | High       | Shows developers they own their data. CSV ships today; JSON is issue #16.      |
+| **Advanced Rate Limiting** | Medium     | Protects our infra and user's Resend quotas from abuse.                        |
+| **Submission Filtering**   | Medium     | Search and filter results in the dashboard (browsing and charts already ship). |
 
 ---
 
@@ -32,12 +43,10 @@ The mission of **osforms** is to provide a headless, developer-first form backen
 
 **Goal:** Build the ecosystem and invite outside contributors.
 
-| Feature                   | Importance | Why it helps user acquisition                                          |
-| :------------------------ | :--------- | :--------------------------------------------------------------------- |
-| **Native Integrations**   | Medium     | One-click Slack, Discord, and Notion buttons for non-coders.           |
-| **Visual Code Generator** | Low        | Help users "copy-paste" their way to a working form.                   |
-| **CLI Tool**              | Low        | Manage forms and keys from the terminal (Dev-favored).                 |
-| **Self-Hosting Docs**     | Medium     | Detailed guides for users to run their own instance on Vercel/Railway. |
+| Feature                 | Importance | Why it helps user acquisition                                |
+| :---------------------- | :--------- | :----------------------------------------------------------- |
+| **Native Integrations** | Medium     | One-click Slack, Discord, and Notion buttons for non-coders. |
+| **CLI Tool**            | Low        | Manage forms and keys from the terminal (Dev-favored).       |
 
 ---
 

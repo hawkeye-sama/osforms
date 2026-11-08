@@ -17,6 +17,9 @@ FROM base AS builder
 # the URL the browser uses; server-side reads of the same var happen at runtime.
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+# Optional signup reCAPTCHA site key. Empty = CAPTCHA script not loaded.
+ARG NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
+ENV NEXT_PUBLIC_RECAPTCHA_SITE_KEY=$NEXT_PUBLIC_RECAPTCHA_SITE_KEY
 # Raise V8's heap ceiling above its ~2GB default so `next build` (Turbopack +
 # React Compiler over a large app) doesn't OOM. 4GB clears the build while
 # leaving VM headroom for Turbopack's native allocations. Needs a >=6GB Docker VM.

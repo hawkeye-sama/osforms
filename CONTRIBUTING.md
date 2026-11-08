@@ -13,12 +13,13 @@ Thanks for your interest in contributing! This guide gets you from a fresh fork 
 
 OSForms is a pnpm + Turborepo monorepo. The pieces you'll touch most:
 
-| Path             | What it is                                                  |
-| ---------------- | ----------------------------------------------------------- |
-| `apps/web`       | The Next.js app: dashboard, API routes, submission endpoint |
-| `apps/docs`      | Mintlify documentation site                                 |
-| `packages/react` | `@osforms/react`, the published React SDK                   |
-| `packages/types` | `@osforms/types`, shared TypeScript types                   |
+| Path              | What it is                                                      |
+| ----------------- | --------------------------------------------------------------- |
+| `apps/web`        | The Next.js app: dashboard, API routes, submission endpoint     |
+| `apps/docs`       | Mintlify documentation site                                     |
+| `apps/playground` | Vite sandbox for trying `@osforms/react` against your local app |
+| `packages/react`  | `@osforms/react`, the published React SDK                       |
+| `packages/types`  | `@osforms/types`, shared TypeScript types                       |
 
 ## Local development setup
 
@@ -52,8 +53,10 @@ OSForms is a pnpm + Turborepo monorepo. The pieces you'll touch most:
 4. **Start MongoDB:**
 
    ```bash
-   docker compose up -d
+   docker compose up -d mongodb
    ```
+
+   Name the service. A bare `docker compose up` also builds the `web` container on port 3000 (clashing with `pnpm dev`) and needs a root `.env`.
 
 5. **Build the SDK once, then run the app:**
 
@@ -62,19 +65,22 @@ OSForms is a pnpm + Turborepo monorepo. The pieces you'll touch most:
    pnpm dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000) to verify everything works.
+   Open [http://localhost:3000](http://localhost:3000) to verify everything works. `pnpm dev` also serves the SDK playground (`apps/playground`) at [http://localhost:3001](http://localhost:3001).
+
+   The verification email won't arrive on a local instance. Read the OTP from MongoDB instead: see [SELF_HOSTING.md → Verify your account without email](SELF_HOSTING.md#verify-your-account-without-email).
 
 ## Code style
 
 Lint, typecheck, and formatting run from the repo root via Turborepo:
 
 ```bash
-pnpm lint           # ESLint + tsc across all packages
-pnpm format:check   # Prettier check
-pnpm format         # Prettier auto-fix
+pnpm lint               # ESLint with --fix (rewrites files); tsc for the SDK packages only
+pnpm turbo lint:check   # ESLint without fixing + tsc for web, react, and types
+pnpm format:check       # Prettier check
+pnpm format             # Prettier auto-fix
 ```
 
-CI runs format, lint, typecheck, and a full build on every PR — run these locally first.
+CI runs format, lint, typecheck (`pnpm --filter @osforms/web lint:check`), and a full build on every PR, so run these locally first.
 
 ### Conventions
 
@@ -103,7 +109,7 @@ Integration handlers live in `apps/web/src/lib/integrations`. To add one:
    git checkout -b feature/your-feature-name
    ```
 
-2. **Make your changes** and ensure `pnpm lint` and `pnpm format:check` pass.
+2. **Make your changes** and ensure `pnpm turbo lint:check` and `pnpm format:check` pass.
 
 3. **Verify the build:** `pnpm build`.
 

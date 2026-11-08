@@ -9,7 +9,7 @@ Open-source form backend with BYOK (Bring Your Own Keys) integrations. Point you
 
 ## Why OSForms?
 
-Every form backend (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5–15+/month — for basic features you can get for free if you bring your own keys. OSForms flips that: **100 free submissions/month with all integrations included**, because you bring your own keys. Need more? Self-host it with no limits.
+Every form backend (Formspree, FormBold, Basin, Formcarry) paywalls integrations behind $5–15+/month — for basic features you can get for free if you bring your own keys. OSForms flips that: **100 free submissions/month with all integrations included**, because you bring your own keys. Need more? Self-host it, and the only limits are the ones you set.
 
 ## Features
 
@@ -18,9 +18,9 @@ Every form backend (Formspree, FormBold, Basin, Formcarry) paywalls integrations
 - **API keys encrypted at rest** — AES-256-GCM. Keys decrypted only during execution.
 - **Webhook HMAC signatures** — SHA-256 signed payloads for request verification.
 - **CORS control** — Configure allowed origins per form.
-- **Spam protection** — Honeypot fields + reCAPTCHA/hCaptcha/Turnstile support (BYOK).
+- **Spam protection** — Honeypot fields + reCAPTCHA/hCaptcha support (BYOK).
 - **Rate limiting** — Configurable per-form rate limits (default: 10 req/min).
-- **Submission analytics** — Dashboard with charts, export to CSV/JSON.
+- **Submission analytics** — Dashboard with charts, export to CSV.
 - **React SDK** — [`@osforms/react`](https://www.npmjs.com/package/@osforms/react) for classic and conversational (Typeform-style) forms.
 - **Open source** — MIT licensed. Self-host or use the hosted version.
 
@@ -32,11 +32,12 @@ OSForms is a [pnpm](https://pnpm.io) + [Turborepo](https://turbo.build) monorepo
 .
 ├── apps/
 │   ├── web/        # The Next.js 15 app — dashboard, API, public submission endpoint
-│   └── docs/       # Mintlify documentation site (osforms.com/docs)
+│   ├── docs/       # Mintlify documentation site (osforms.com/docs)
+│   └── playground/ # Vite sandbox for trying @osforms/react against your local app
 ├── packages/
 │   ├── react/      # @osforms/react — the published React SDK
 │   └── types/      # @osforms/types — shared TypeScript types
-├── docker-compose.yml   # Local MongoDB
+├── docker-compose.yml   # Docker self-host: MongoDB + the web app
 └── turbo.json
 ```
 
@@ -78,8 +79,8 @@ Google and Resend keys are optional — see [Environment Variables](#environment
 ### Run
 
 ```bash
-# Start MongoDB
-docker compose up -d
+# Start only MongoDB (plain `docker compose up` also builds the web app on port 3000)
+docker compose up -d mongodb
 
 # Build the workspace packages once (the web app imports @osforms/react)
 pnpm build --filter @osforms/react
@@ -90,7 +91,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000), create an account, and complete onboarding.
 
-> `pnpm dev` runs Turborepo, which starts the Next.js app and rebuilds `@osforms/react` in watch mode. Building the package once first avoids a first-run race where the app boots before the SDK is built.
+> `pnpm dev` runs Turborepo, which starts the Next.js app, rebuilds `@osforms/react` in watch mode, and serves the SDK playground at [http://localhost:3001](http://localhost:3001). Building the package once first avoids a first-run race where the app boots before the SDK is built.
 
 ## How It Works
 
@@ -130,18 +131,25 @@ The endpoint returns `{ "success": true }` for JSON/API calls, or redirects to y
 
 All variables live in `apps/web/.env` (copy from [apps/web/.env.example](apps/web/.env.example)).
 
-| Variable                      | Description                                         | Required |
-| ----------------------------- | --------------------------------------------------- | -------- |
-| `MONGODB_URI`                 | MongoDB connection string                           | Yes      |
-| `JWT_SECRET`                  | Secret for signing JWT auth tokens                  | Yes      |
-| `ENCRYPTION_KEY`              | 64-char hex string (32 bytes) for AES-256-GCM       | Yes      |
-| `NEXT_PUBLIC_APP_URL`         | Public app URL for CORS, redirects, OAuth callback  | Yes      |
-| `GOOGLE_CLIENT_ID`            | Google OAuth client ID (Google Sheets only)         | No       |
-| `GOOGLE_CLIENT_SECRET`        | Google OAuth client secret                          | No       |
-| `RESEND_API_KEY`              | Resend API key (system emails + Resend integration) | No       |
-| `RESEND_EMAIL_SIGNING_SECRET` | Signing secret for inbound Resend email webhook     | No       |
+| Variable                         | Description                                                     | Required |
+| -------------------------------- | --------------------------------------------------------------- | -------- |
+| `MONGODB_URI`                    | MongoDB connection string                                       | Yes      |
+| `JWT_SECRET`                     | Secret for signing JWT auth tokens                              | Yes      |
+| `ENCRYPTION_KEY`                 | 64-char hex string (32 bytes) for AES-256-GCM                   | Yes      |
+| `NEXT_PUBLIC_APP_URL`            | Public URL: OAuth callback, endpoint URLs, email links, sitemap | Yes      |
+| `GOOGLE_CLIENT_ID`               | Google OAuth client ID (Google Sheets only)                     | No       |
+| `GOOGLE_CLIENT_SECRET`           | Google OAuth client secret                                      | No       |
+| `RESEND_API_KEY`                 | System emails only (OTP, welcome, failure alerts)               | No       |
+| `RESEND_EMAIL_SIGNING_SECRET`    | osforms.com's inbound forwarding only; leave blank              | No       |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | reCAPTCHA v3 site key for signup spam protection                | No       |
+| `RECAPTCHA_SECRET_KEY`           | reCAPTCHA v3 secret; turns the signup CAPTCHA on                | No       |
+| `RECAPTCHA_MIN_SCORE`            | Minimum reCAPTCHA score to allow signup (default 0.5)           | No       |
 
-> Without `RESEND_API_KEY`, account verification emails won't send. For local dev you can read the OTP from the server logs, or set a Resend key.
+> `RESEND_API_KEY` is not used by the Resend email integration; each integration stores its own key.
+>
+> System emails are sent from hardcoded `@osforms.com` addresses, so a self-hosted instance can't deliver them yet, even with your own Resend key (and without one, signup returns a 500 after saving your account). The OTP is never logged. To verify, read the latest code from MongoDB and enter it at `/verify-email?email=<your email>`. See [SELF_HOSTING.md → Verify your account without email](SELF_HOSTING.md#verify-your-account-without-email).
+
+Running a public instance? Turn on the optional signup CAPTCHA to block bot accounts. See [Signup spam protection](SELF_HOSTING.md#signup-spam-protection-optional).
 
 ## Deploy / Self-Host
 
@@ -167,11 +175,12 @@ Forks ship with a scheduled GitHub Action ([.github/workflows/sync-fork.yml](.gi
 Scripts run from the repo root via Turborepo (they fan out to every workspace package):
 
 ```bash
-pnpm dev            # Start the app + SDK watch build
-pnpm build          # Production build of all packages
-pnpm lint           # Lint + typecheck all packages
-pnpm format         # Format with Prettier
-pnpm format:check   # Check formatting
+pnpm dev                # Start the app, SDK watch build, and playground
+pnpm build              # Production build of all packages
+pnpm lint               # ESLint with --fix (rewrites files); typechecks the SDK packages, not the web app
+pnpm turbo lint:check   # Lint without fixing + typecheck web, react, and types
+pnpm format             # Format with Prettier
+pnpm format:check       # Check formatting
 ```
 
 Target a single package with `--filter`, e.g. `pnpm build --filter @osforms/web`.

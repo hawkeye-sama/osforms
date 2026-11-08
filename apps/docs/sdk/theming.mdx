@@ -33,6 +33,8 @@ interface FormThemeColors {
 
 `fontSize` and `borderRadius` mostly affect classic mode. Conversational mode uses its own fixed sizes.
 
+Selected rating stars are always amber (`#fbbf24`), regardless of the theme.
+
 ## Priority
 
 Theme values are resolved in this order (highest to lowest):
@@ -111,7 +113,7 @@ export function ContactForm() {
 
 ## ConversationalRenderer and ClassicRenderer
 
-The low-level renderers don't apply defaults. Their `theme` prop needs a complete theme: all 7 colors, plus `fontFamily`, `fontSize` and `borderRadius` as CSS values, and `buttonVariant`. Most apps should use `OSForm` instead.
+The low-level renderers don't apply defaults, so their `theme` prop takes a fully resolved theme, not a `FormTheme`. Pass an object with all 7 colors, `fontFamily`, `fontSize` and `borderRadius` as CSS values (`'16px'`, `'8px'`, not `'md'`), and `buttonVariant`, as in the example below. That resolved theme type isn't exported, so write the object inline. Most apps should use `OSForm` instead.
 
 ```tsx
 import { ClassicRenderer } from '@osforms/react';

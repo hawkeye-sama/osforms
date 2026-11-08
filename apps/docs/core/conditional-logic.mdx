@@ -67,7 +67,7 @@ Each field can have one `conditionalLogic` rule:
 | `is_empty`     | No value entered                  | All types except `checkbox` |
 | `is_not_empty` | Any value entered                 | All types except `checkbox` |
 
-For `checkbox` fields, use `contains` with the option's value. `equals` only matches when exactly that one box is ticked, and an unticked checkbox group doesn't count as empty.
+For `checkbox` fields, use `contains` with the option's value. `equals` only matches when exactly that one box is ticked. `is_empty` is unreliable for checkboxes: a group nobody has touched has no value yet and counts as empty, but a group that was ticked and then cleared holds `[]`, which doesn't.
 
 ## Examples
 

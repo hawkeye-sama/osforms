@@ -37,9 +37,12 @@ type FieldType =
 ```
 
 <Warning>
-  `date`, `file`, and `divider` exist in the type but **the SDK doesn't render
-  them yet**: they're skipped on screen. Don't use them in forms you render with
-  `@osforms/react`. The other 12 types are fully supported.
+  `date`, `file`, and `divider` exist in the type but aren't supported by the
+  renderer yet. `divider` is dropped before rendering. `date` and `file` show
+  their label with no input, but they're still validated, so a required `date`
+  or `file` field blocks submission. Don't mark them required, and preferably
+  leave them out of forms you render with `@osforms/react`. The other 12 types
+  are fully supported.
 </Warning>
 
 ## FormField
@@ -116,6 +119,14 @@ interface FieldConfig {
   autoAdvance?: boolean;
 }
 ```
+
+<Note>
+  `autoAdvance` only controls advancing for `radio`, `rating`, and `scale`. On
+  those types, `false` keeps the visitor on the question and shows the OK
+  button. `select` advances on change either way. On any other type, `true`
+  doesn't auto-advance; it only hides the OK button, leaving `Enter` and the ↓
+  button (shown unless `settings.allowBack` is `false`) as the ways to move on.
+</Note>
 
 ---
 

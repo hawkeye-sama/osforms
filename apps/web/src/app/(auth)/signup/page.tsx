@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -10,6 +11,11 @@ import { AuthCard } from '@/components/auth/auth-card';
 import { AuthLayout } from '@/components/auth/auth-layout';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
+import {
+  getRecaptchaToken,
+  RECAPTCHA_SCRIPT_SRC,
+  RECAPTCHA_SITE_KEY,
+} from '@/lib/recaptcha-client';
 
 type FieldState = 'default' | 'success' | 'error';
 
@@ -167,11 +173,22 @@ export default function SignupPage() {
 
     setLoading(true);
 
+    let captchaToken: string | undefined;
+    try {
+      captchaToken = await getRecaptchaToken('signup');
+    } catch {
+      toast.error(
+        'Spam check failed to load. Disable content blockers for this page and reload.'
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, captchaToken }),
       });
 
       const data = await res.json();
@@ -198,6 +215,9 @@ export default function SignupPage() {
 
   return (
     <AuthLayout>
+      {RECAPTCHA_SCRIPT_SRC && (
+        <Script src={RECAPTCHA_SCRIPT_SRC} strategy="afterInteractive" />
+      )}
       <AuthCard
         title="Create your account"
         description="Start collecting form submissions for free"
@@ -303,6 +323,29 @@ export default function SignupPage() {
             >
               Create Account
             </Button>
+            {RECAPTCHA_SITE_KEY && (
+              <p className="text-muted-foreground mt-3 text-center text-xs">
+                Protected by reCAPTCHA. Google&apos;s{' '}
+                <a
+                  href="https://policies.google.com/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground underline"
+                >
+                  Privacy Policy
+                </a>{' '}
+                and{' '}
+                <a
+                  href="https://policies.google.com/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground underline"
+                >
+                  Terms
+                </a>{' '}
+                apply.
+              </p>
+            )}
           </motion.div>
         </form>
       </AuthCard>

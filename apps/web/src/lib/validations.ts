@@ -6,6 +6,8 @@ export const signUpSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   email: z.string().email('Valid email required'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  // reCAPTCHA v3 token; required server-side only when RECAPTCHA_SECRET_KEY is set
+  captchaToken: z.string().max(4096).optional(),
 });
 
 export const signInSchema = z.object({

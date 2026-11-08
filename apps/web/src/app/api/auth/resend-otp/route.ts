@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/db';
 import { generateOTP, sendVerificationEmail } from '@/lib/email';
 import EmailVerification from '@/lib/models/email-verification';
 import User from '@/lib/models/user';
+import { checkSharedRateLimit, getIP } from '@/lib/rate-limit';
 import { resendOtpSchema } from '@/lib/validations';
 
 export async function POST(req: NextRequest) {
@@ -19,6 +20,19 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB();
+
+    // Per-IP cap so this endpoint can't be used to spray OTP emails.
+    const limit = await checkSharedRateLimit(
+      `resend-otp:${getIP(req)}`,
+      10,
+      60 * 60 * 1000
+    );
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many code requests. Try again in an hour.' },
+        { status: 429 }
+      );
+    }
 
     const { email } = parsed.data;
 

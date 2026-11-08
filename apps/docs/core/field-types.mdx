@@ -215,7 +215,7 @@ Display-only text. No input is collected. Use it for instructions or notices. On
 
 ## Not supported yet
 
-The schema type also lists `date`, `file`, and `divider`. They aren't in the builder and `@osforms/react` doesn't render them, so don't use them yet. File uploads aren't stored by the submission endpoint either.
+The schema type also lists `date`, `file`, and `divider`. They aren't in the builder and the `@osforms/react` renderer doesn't support them yet. `divider` is dropped before rendering. `date` and `file` show their label with no input but are still validated, so a required one blocks submission. Don't mark them required, and preferably don't use them yet. File uploads aren't stored by the submission endpoint either.
 
 ---
 

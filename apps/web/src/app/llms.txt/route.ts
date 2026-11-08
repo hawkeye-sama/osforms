@@ -20,7 +20,12 @@ Key facts:
 - Your keys are encrypted at rest with AES-256-GCM and never sent to the browser.
 - Open source and self-hostable against your own MongoDB.
 - Accepts application/x-www-form-urlencoded, multipart/form-data, and application/json.
-- Spam protection: configurable honeypot field + optional reCAPTCHA, hCaptcha, or Turnstile.
+- Spam protection: configurable honeypot field + optional reCAPTCHA or hCaptcha (bring your own CAPTCHA keys).
+- Export submissions as CSV from the dashboard.
+
+## API
+- Submit: \`POST ${SITE_URL}/api/v1/f/{slug}\` (public, no auth). JSON requests get \`{ "success": true }\`; HTML form posts get a 303 redirect when the form has a redirect URL set.
+- Pull submissions: \`GET ${SITE_URL}/api/v1/submissions?formId={id-or-slug}\` and \`GET ${SITE_URL}/api/v1/submissions/{id}\` with \`Authorization: Bearer osf_live_...\`. Read-only API keys, scoped to the forms you pick, 60 requests/min per key, cursor pagination (\`limit\`, \`cursor\`, \`since\`, \`order\`, \`fields\`). Docs: [${SITE_URL}/docs/api-reference/pull-submissions](${SITE_URL}/docs/api-reference/pull-submissions)
 
 ## Product
 - [Get Started (free)](${SITE_URL}/signup): Create a form and get an endpoint in two minutes.

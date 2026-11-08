@@ -11,6 +11,8 @@ description: 'Send each submission to any URL, signed with HMAC-SHA256'
 4. Optionally enter a **Signing Secret**: any random string you choose. Store the same value on your server to verify requests
 5. Save
 
+A form has one Webhook integration. Creating another one for the same form replaces the existing one.
+
 ## Request format
 
 OSForms sends a `POST` request with `Content-Type: application/json` and `User-Agent: osforms-Webhook/1.0`:
@@ -33,6 +35,12 @@ OSForms sends a `POST` request with `Content-Type: application/json` and `User-A
 `data` holds exactly what was submitted. Keys are your input `name` attributes (HTML forms) or field IDs (forms built with the form builder or `@osforms/react`).
 
 Through the [API](/docs/api-reference/integrations#webhook-config) you can also switch the method to `PUT` or `PATCH` and add custom headers, such as an `Authorization` header for your endpoint.
+
+<Warning>
+  Saving the webhook in the dashboard always resets the method to `POST` and
+  clears custom headers. If you use a custom method or headers, manage the
+  webhook only through the API.
+</Warning>
 
 ## Verifying signatures
 
@@ -88,8 +96,8 @@ Missed a delivery? Fetch the submission with the [Pull Submissions](/docs/api-re
 
 ## Timeout
 
-Webhook requests time out after **30 seconds**. Respond quickly and do slow work after responding.
+Webhook requests time out after **30 seconds**. Integrations run in the background after OSForms has already answered the form submitter, and on the hosted service that background window can be shorter than 30 seconds. If the platform cuts the run off, no log entry or alert is created. Respond within a few seconds and do slow work after responding.
 
 ## Testing
 
-Once the webhook is saved, use **Test Webhook** in its settings to send a sample payload to your endpoint and check your signature verification.
+Once the webhook is saved, click **Send Test** under **Test Webhook** in its settings to send a sample payload to your endpoint and check your signature verification. The test payload's `submissionId` looks like `test_sub_1730000000000`, not a real submission ID.

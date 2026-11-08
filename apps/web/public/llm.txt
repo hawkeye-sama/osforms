@@ -1,63 +1,44 @@
 # OSForms - Open Source Form Backend
 
+> This file is kept for older crawlers. The canonical, always-current file is https://osforms.com/llms.txt (full blog corpus: https://osforms.com/llms-full.txt).
+
 ## Overview
-OSForms is an open-source, BYOK (Bring Your Own Keys) form backend SaaS — "Resend for Forms." 
-It provides developers with a powerful form handling solution without vendor lock-in.
+OSForms is an open-source, bring-your-own-key (BYOK) form backend for developers.
+Point your HTML form at an OSForms endpoint. OSForms stores each submission and routes it to your own integrations (Resend email, Google Sheets, webhooks) using your own API keys.
 
-## What It Does
-- Store form submissions in a secure backend
-- Forward submissions to your own integrations (Resend email, Google Sheets, webhooks)
-- 100% free because users bring their own API keys
-- No charges for integrations that competitors paywall at $5-15+/month
-
-## Target Audience
-- Developers who need quick form backends without vendor lock-in
-- LLMs building web applications that need form handling
-- Teams wanting privacy-first form handling (data goes to user's own services)
+## Pricing
+- Hosted service at https://osforms.com: 100 free submissions/month, no credit card required.
+- Every integration is included on the free plan, because your own API keys power them. You pay only your provider (e.g. Resend).
+- Open source (MIT) and self-hostable against your own MongoDB.
 
 ## Key Features
-- **Zero Vendor Lock-In**: Your API keys, your data, your control
-- **All Integrations Free**: Resend, Google Sheets, webhooks — all included
-- **Developer-First API**: REST API, webhook signatures, CORS control
-- **100 Free Submissions/Month**: No credit card required
-- **Open Source**: MIT Licensed
+- Public submission endpoint: POST https://osforms.com/api/v1/f/{slug}
+  - Accepts application/x-www-form-urlencoded, multipart/form-data, and application/json
+  - JSON requests get { "success": true }; HTML form posts get a 303 redirect when the form has a redirect URL set
+- Integrations: Resend email (with optional auto-reply to the submitter), Google Sheets (auto-creates missing columns), webhooks signed with HMAC-SHA256 (X-osforms-Signature header)
+- Spam protection: configurable honeypot field, optional reCAPTCHA or hCaptcha (your own keys), per-form rate limit
+- CORS control per form (allowed origins)
+- Dashboard: browse submissions, submission charts, CSV export
+- Pull API: GET https://osforms.com/api/v1/submissions?formId={id-or-slug} with Authorization: Bearer osf_live_... (read-only keys scoped to selected forms, 60 requests/min per key, cursor pagination)
+- React SDK: @osforms/react
+
+Not supported: file uploads are not stored (multipart file fields are replaced with a placeholder string).
+
+## Security
+- Your integration API keys are encrypted at rest with AES-256-GCM
+- JWT authentication in httpOnly cookies
+- Pull API keys are stored as SHA-256 hashes and shown once
 
 ## Tech Stack
-- Framework: Next.js 15 (App Router)
-- Database: MongoDB + Mongoose
-- Auth: Email/password with bcrypt + JWT
-- Encryption: AES-256-GCM for API keys
-- Styling: Tailwind CSS + shadcn/ui
-- Integrations: Resend, Google Sheets, custom webhooks
+- Next.js 15 (App Router), MongoDB + Mongoose
+- Email/password auth with OTP verification, bcrypt, JWT
+- Tailwind CSS + shadcn/ui
 
-## How It Works
-1. Point your HTML form at an OSForms endpoint
-2. Submissions are stored securely in MongoDB
-3. Integrations execute automatically using your own API keys
-4. View and manage submissions in the dashboard
-
-## Getting Started
-- Sign up at the website
-- Complete 3-step onboarding (profile, integrations, test)
-- Create forms and configure integrations
-- Start collecting submissions
-
-## Repository
-GitHub: Coming Soon (Open Source, MIT License)
-
-## Website
-https://osforms.com (or your configured domain)
-
-## Competitive Advantage
-Unlike Formspree, FormBold, Basin, and Formcarry which paywall integrations, 
-OSForms gives you ALL integrations for free because you bring your own API keys.
-
-## Privacy & Security
-- API keys encrypted at rest with AES-256-GCM
-- JWT authentication with httpOnly cookies
-- Configurable CORS per form
-- Rate limiting on public endpoints
-- Optional honeypot and reCAPTCHA support
+## Links
+- Website: https://osforms.com
+- Docs: https://osforms.com/docs
+- GitHub: https://github.com/hawkeye-sama/osforms (MIT License)
+- Canonical LLM index: https://osforms.com/llms.txt
 
 ---
-Last Updated: 2026-01-30
+Last Updated: 2026-11-08

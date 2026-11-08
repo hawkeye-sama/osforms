@@ -11,7 +11,15 @@ description: 'Add each form submission as a new row in a Google Sheet'
 
 OSForms creates a new spreadsheet in your Google Drive named after the form (for example **"Contact Form Submissions"**) and writes to its `Sheet1` tab. The integration settings show the connected account and a link to the sheet.
 
-OSForms only asks for the `drive.file` scope, so it can access the spreadsheets it creates and nothing else in your Drive.
+<Warning>
+  Don't rename or delete the `Sheet1` tab. OSForms always writes to a tab with
+  that exact name, so every append fails if it's gone. You can add other tabs
+  freely.
+</Warning>
+
+OSForms asks for the `drive.file` scope, so it can access the spreadsheets it creates and nothing else in your Drive. It also asks for `userinfo.email` and `userinfo.profile` to show which Google account is connected.
+
+A form has one Google Sheets integration. Going through **Connect with Google** again creates a new spreadsheet and replaces the existing integration. To keep the same sheet, use **Reconnect** (see [Google access expired or was revoked](#google-access-expired-or-was-revoked)).
 
 ## How columns work
 
@@ -23,7 +31,9 @@ On the first submission, OSForms writes a header row: `Submission ID`, `Submitte
 
 When a later submission includes a field that has no column yet, that column is added to the end of the header row. Values are matched to columns by header text, so you can reorder columns freely. If you rename a header, the next submission adds a new column under the field's original name.
 
-Column names are your input `name` attributes (HTML forms) or field IDs (forms built with the form builder or `@osforms/react`). Arrays and objects are written as JSON text.
+The `Submission ID` and `Submitted At` headers are matched by exact text too. If you rename either one, that value stops being written and the column is never re-added.
+
+Column names are your input `name` attributes (HTML forms) or field IDs (forms built with the form builder or `@osforms/react`). Every value is written as plain text (Google's `RAW` input mode): numbers and dates arrive as text, and a value starting with `=` is stored as text, not run as a formula. Arrays and objects are written as JSON text.
 
 ## Failure handling
 

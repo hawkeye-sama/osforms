@@ -28,6 +28,61 @@ The SDK posts JSON to the endpoint, keyed by field `id`. Only fields visible at 
 - **CAPTCHA**: the SDK doesn't send a CAPTCHA token. If the form has a CAPTCHA secret set, every SDK submission fails with `CAPTCHA verification required`. Use the honeypot or allowed origins instead.
 - **Allowed origins**: if the form restricts origins, pages on other origins can't load the schema and the component shows its error state.
 - **Redirects**: the form's redirect URL is followed only when the thank-you screen is enabled, after its delay (default 3 seconds). Otherwise use `onComplete`.
+- **Enter key in conversational mode**: the `Enter` listener is attached to the whole window, not the form. In an inline embed, pressing `Enter` anywhere on the page (another input, a search box) advances or submits the form. For forms embedded inside larger pages, use `mode="classic"`.
+
+## Schema settings & screens
+
+These live on the schema (`schema.settings`, `schema.welcomeScreen`, `schema.thankYouScreen`), not on `OSForm` props.
+
+### `settings`
+
+| Setting             | Default    | Applies to     | What it does                                                                                             |
+| ------------------- | ---------- | -------------- | -------------------------------------------------------------------------------------------------------- |
+| `showProgressBar`   | `true`     | Conversational | Thin progress strip at the top. Only shown when there's more than one visible field.                     |
+| `allowBack`         | `true`     | Conversational | Set to `false` to hide the ↑/↓ buttons, so there's no way back. `Enter` and the OK button still advance. |
+| `submitLabel`       | `"Submit"` | Both           | Label of the submit button (in conversational mode, the button on the last field).                       |
+| `showKeyboardHints` | `true`     | Conversational | Shows "Press Enter ↵" (or "Cmd+Enter ↵" for a textarea) next to the OK button. Hidden on the last field. |
+| `source`            | —          | Both           | Sent as `_source` in the submission. Stored as an ordinary field in the submission data.                 |
+
+`progressBarStyle`, `autoScrollToTop`, and `animationStyle` are in the type but not implemented yet. Neither is the top-level `steps` array.
+
+### `welcomeScreen`
+
+Shown before the first field when `enabled: true`.
+
+| Field         | Default   | What it does                             |
+| ------------- | --------- | ---------------------------------------- |
+| `title`       | —         | Heading                                  |
+| `description` | —         | Text under the heading                   |
+| `buttonLabel` | `"Start"` | Label of the start button                |
+| `imageUrl`    | —         | Image above the heading (max 140px tall) |
+
+### `thankYouScreen`
+
+Shown after a successful submission when `enabled: true`. Without it, the form shows "Thanks for your response!" and doesn't redirect.
+
+| Field           | Default                       | What it does                                                                                                         |
+| --------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `title`         | `"Thanks for your response!"` | Heading                                                                                                              |
+| `description`   | —                             | Text under the heading                                                                                               |
+| `redirectUrl`   | form's redirect URL           | Where to send the visitor. Takes priority over the form's redirect URL (which is only known when you pass `formId`). |
+| `redirectDelay` | `3`                           | Seconds before the redirect fires                                                                                    |
+
+`showSubmissionId` is in the type but isn't rendered yet.
+
+`FormSettings` isn't exported. If you need the type, derive it:
+
+```ts
+import type { FormSchema } from '@osforms/react';
+
+type FormSettings = NonNullable<FormSchema['settings']>;
+
+const settings: FormSettings = {
+  allowBack: false,
+  submitLabel: 'Send',
+  source: 'landing-page',
+};
+```
 
 ## Theme merging
 

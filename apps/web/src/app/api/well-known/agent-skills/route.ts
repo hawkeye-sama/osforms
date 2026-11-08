@@ -26,8 +26,20 @@ export function GET() {
         ],
         auth: 'none (public per-form endpoint)',
         response:
-          'JSON { "success": true } unless the form has a redirect URL configured.',
-        documentation: `${SITE_URL}/docs`,
+          'JSON requests (Content-Type or Accept application/json) always get JSON { "success": true, "message": "Submission received" }. HTML form posts get a 303 redirect when the form has a redirect URL set, otherwise the same JSON.',
+        documentation: `${SITE_URL}/docs/api-reference/submit-form`,
+      },
+      {
+        name: 'pull-submissions',
+        description:
+          'Read a form’s stored submissions. Read-only; the API key only sees the forms it was scoped to. The form query parameter accepts the form ID or its endpoint slug. Rate limited to 60 requests per minute per key.',
+        method: 'GET',
+        endpoint: `${SITE_URL}/api/v1/submissions?formId={formIdOrSlug}`,
+        contentTypes: ['application/json'],
+        auth: 'Authorization: Bearer osf_live_... (API key created in Dashboard → Settings → API Keys)',
+        response:
+          'JSON { "data": [{ "id", "formId", "submittedAt", "fields" }], "nextCursor", "hasMore" }. Optional query: limit (1-100, default 25), cursor, since (ISO 8601), order (asc|desc), fields (comma-separated). Single submission: GET /api/v1/submissions/{id}.',
+        documentation: `${SITE_URL}/docs/api-reference/pull-submissions`,
       },
     ],
   };

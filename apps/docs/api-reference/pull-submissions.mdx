@@ -26,6 +26,82 @@ To pick a form, pass its endpoint slug as `formId`. That's the last part of your
 
 API keys are read-only. They can't create, edit, or delete anything, and the dashboard endpoints don't accept them. To revoke a key, click **Revoke** in Settings. It stops working immediately.
 
+## Manage API keys
+
+You can also manage keys over HTTP. These endpoints take your login session (the `ff_token` cookie or `Authorization: Bearer <jwt>`, see [Auth](/docs/api-reference/auth)), not an API key.
+
+### List keys
+
+```
+GET /api/v1/api-keys
+```
+
+```json
+{
+  "apiKeys": [
+    {
+      "id": "6721c0a1c4d5e6f7a8b9c0e2",
+      "name": "CRM sync",
+      "prefix": "osf_live_ab12",
+      "forms": [
+        {
+          "id": "671fa2b3c4d5e6f7a8b9c0aa",
+          "name": "Contact Form",
+          "slug": "UNKMzY8jm18x"
+        }
+      ],
+      "lastUsedAt": "2026-10-05T12:00:00.000Z",
+      "createdAt": "2026-10-01T09:00:00.000Z"
+    }
+  ]
+}
+```
+
+Newest first. The key itself is never returned, only its `prefix`.
+
+### Create a key
+
+```
+POST /api/v1/api-keys
+```
+
+```json
+{
+  "name": "CRM sync",
+  "formIds": ["671fa2b3c4d5e6f7a8b9c0aa"]
+}
+```
+
+`name` is 1 to 100 characters. `formIds` takes 1 to 100 form IDs (the 24-character ID, not the slug), all owned by you. Returns `201`:
+
+```json
+{
+  "apiKey": {
+    "id": "6721c0a1c4d5e6f7a8b9c0e2",
+    "name": "CRM sync",
+    "prefix": "osf_live_ab12",
+    "createdAt": "2026-10-01T09:00:00.000Z",
+    "key": "osf_live_..."
+  }
+}
+```
+
+This is the only response that contains `key`. Store it now.
+
+| Status | Meaning                                                        |
+| ------ | -------------------------------------------------------------- |
+| `201`  | Key created                                                    |
+| `400`  | Validation failed (see `details`), or you already have 10 keys |
+| `404`  | One of the `formIds` doesn't exist or isn't yours              |
+
+### Revoke a key
+
+```
+DELETE /api/v1/api-keys/{id}
+```
+
+Returns `{ "success": true }`, or `404` if the key doesn't exist. The key stops working immediately.
+
 ## List submissions
 
 ```
@@ -117,7 +193,7 @@ async function syncNewSubmissions(formId: string, since?: string) {
 
 ## Rate limits
 
-Each API key can make **60 requests per minute**. Every response includes:
+Each API key can make **60 requests per minute**. Every authenticated response includes these headers (`401` responses don't):
 
 | Header                  | Meaning                                    |
 | ----------------------- | ------------------------------------------ |
@@ -129,9 +205,9 @@ Over the limit, you get `429` with a `Retry-After` header in seconds. Pulling su
 
 ## Errors
 
-| Status | Meaning                                                                       |
-| ------ | ----------------------------------------------------------------------------- |
-| `400`  | Invalid query parameter or cursor. The `details` field says which.            |
-| `401`  | Missing, malformed, or revoked API key.                                       |
-| `404`  | The form or submission doesn't exist, or the key wasn't granted access to it. |
-| `429`  | Rate limit exceeded. Wait `Retry-After` seconds.                              |
+| Status | Meaning                                                                           |
+| ------ | --------------------------------------------------------------------------------- |
+| `400`  | Invalid query parameter (`details` says which), or invalid cursor (`error` only). |
+| `401`  | Missing, malformed, or revoked API key.                                           |
+| `404`  | The form or submission doesn't exist, or the key wasn't granted access to it.     |
+| `429`  | Rate limit exceeded. Wait `Retry-After` seconds.                                  |

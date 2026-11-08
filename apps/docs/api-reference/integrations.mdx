@@ -49,14 +49,14 @@ POST /api/v1/integrations
 }
 ```
 
-**Types**: `EMAIL`, `WEBHOOK`, `GOOGLE_SHEETS`. Posting a type the form already has replaces that integration's config. Returns `201` with `{ "integration": { "id", "type", "name", "enabled", "createdAt" } }`.
+**Types**: `EMAIL`, `WEBHOOK`, `GOOGLE_SHEETS`. A form has one integration per type, so posting a type the form already has replaces that integration (name, config, and `enabled`) instead of adding a second one. Returns `201` with `{ "integration": { "id", "type", "name", "enabled", "createdAt" } }`.
 
 ### EMAIL config
 
 | Field       | Required | Description                                                                                        |
 | ----------- | -------- | -------------------------------------------------------------------------------------------------- |
 | `provider`  | Yes      | `"resend"`. (`sendgrid` and `smtp` are accepted but not implemented yet)                           |
-| `apiKey`    | Yes      | Resend API key (`re_...`)                                                                          |
+| `apiKey`    | Yes      | Resend API key (`re_...`). Checked when an email is sent, not when the config is saved             |
 | `from`      | Yes      | Sender address on your verified Resend domain                                                      |
 | `to`        | Yes      | Array of recipient addresses, at least one                                                         |
 | `subject`   | No       | Default `"New Form Submission"`. The form name is appended: `"{subject} - {form name}"`            |
@@ -81,7 +81,7 @@ Google Sheets is connected through Google OAuth from the form's **Integrations**
 GET /api/v1/integrations/{id}
 ```
 
-Returns `{ "integration": { "_id", "type", "name", "enabled", "config", "createdAt", "updatedAt" } }` with secrets masked.
+Returns `{ "integration": { "_id", "type", "name", "enabled", "config", "createdAt", "updatedAt" } }`. Secrets in `config` are replaced with the literal string `••••••••`: `apiKey` for `EMAIL`, `secret` for `WEBHOOK`, and `refreshToken` for `GOOGLE_SHEETS`.
 
 ## Update an integration
 
@@ -97,7 +97,20 @@ PATCH /api/v1/integrations/{id}
 
 Updatable fields: `name`, `enabled`, `config`.
 
-`config` **replaces** the stored config, so send the complete object. To keep an existing webhook secret without resending it, pass `"secret": "__KEEP_EXISTING__"`.
+`config` **replaces** the stored config, so send the complete object. Whatever you send is encrypted and saved as-is.
+
+<Warning>
+  Don't PATCH back a config you got from `GET`. The masked `••••••••` would be
+  saved as your real API key or secret, and the integration would start failing.
+</Warning>
+
+To keep a stored secret without resending it:
+
+| Type            | Send                            | Effect                                                               |
+| --------------- | ------------------------------- | -------------------------------------------------------------------- |
+| `EMAIL`         | `"apiKey": "auto"`              | Reuses the API key already stored for the form's `EMAIL` integration |
+| `WEBHOOK`       | `"secret": "__KEEP_EXISTING__"` | Keeps the current secret (or drops the field if none was set)        |
+| `GOOGLE_SHEETS` | No keep value                   | Reconnect through Google OAuth instead                               |
 
 ## Delete an integration
 
@@ -122,7 +135,7 @@ Runs the integration once with sample data (`Test User`, `test@example.com`, and
 }
 ```
 
-If the integration fails, you get `400` with `{ "error": "Test failed", "message": "<provider error>" }`.
+If the integration fails, you get `400` with `{ "error": "Test failed", "message": "<provider error>" }`. If the test throws instead (for example a timeout or network error), you get `500` with `{ "error": "Failed to test integration", "message": "<error>" }`.
 
 ## Integration status
 

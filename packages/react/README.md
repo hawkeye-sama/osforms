@@ -1,9 +1,9 @@
 # @osforms/react
 
-React component library for building beautiful conversational and classic form UIs that submit to [osforms](https://osforms.com) endpoints.
+React component library for building beautiful conversational and classic form UIs that submit to [OSForms](https://osforms.com) endpoints.
 
 - **Typeform-quality UX** — smooth animated conversational forms, one question at a time
-- **Zero config** — fetches your schema from the osforms dashboard automatically
+- **Zero config** — fetches your schema from the OSForms dashboard automatically
 - **Headless-friendly** — define schemas in code if you prefer, no dashboard required
 - **Themeable** — match your brand with color, font, and shape overrides
 - **Conditional logic** — show/hide fields based on previous answers
@@ -29,7 +29,7 @@ yarn add @osforms/react
 
 ### Option 1 — Dashboard Builder (recommended)
 
-Design your form visually in the osforms dashboard Builder tab, then drop in one component:
+Design your form visually in the OSForms dashboard Builder tab, then drop in one component:
 
 ```tsx
 import { OSForm } from '@osforms/react';
@@ -39,7 +39,7 @@ export default function ContactPage() {
 }
 ```
 
-The component fetches your schema from osforms and renders it. That's it.
+The component fetches your schema from OSForms and renders it. That's it.
 
 ### Option 2 — Define schema in code (headless)
 
@@ -114,18 +114,19 @@ export default function ContactPage() {
 
 ### `<OSForm />`
 
-| Prop               | Type                            | Default                 | Description                                                                                                   |
-| ------------------ | ------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `formId`           | `string`                        | —                       | Form slug from your osforms dashboard. Fetches schema automatically. Either `formId` or `schema` is required. |
-| `schema`           | `FormSchema`                    | —                       | Define schema in code. Requires `endpoint` when used without `formId`.                                        |
-| `endpoint`         | `string`                        | auto                    | Submission URL. Auto-derived from `formId` when omitted.                                                      |
-| `baseUrl`          | `string`                        | `'https://osforms.com'` | Override for self-hosted instances.                                                                           |
-| `mode`             | `'conversational' \| 'classic'` | schema default          | Override the form's mode.                                                                                     |
-| `theme`            | `Partial<FormTheme>`            | —                       | Theme overrides — merged with schema theme and osforms defaults.                                              |
-| `onComplete`       | `() => void`                    | —                       | Called after a successful submission.                                                                         |
-| `onError`          | `(error: Error) => void`        | —                       | Called when a submission fails.                                                                               |
-| `loadingComponent` | `ReactNode`                     | built-in                | Custom loading state while schema fetches.                                                                    |
-| `errorComponent`   | `ReactNode`                     | built-in                | Custom error state on fetch failure.                                                                          |
+| Prop               | Type                                         | Default                 | Description                                                                                                   |
+| ------------------ | -------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `formId`           | `string`                                     | —                       | Form slug from your OSForms dashboard. Fetches schema automatically. Either `formId` or `schema` is required. |
+| `schema`           | `FormSchema`                                 | —                       | Define schema in code. Requires `endpoint` when used without `formId`.                                        |
+| `endpoint`         | `string`                                     | auto                    | Submission URL. Auto-derived from `formId` when omitted.                                                      |
+| `baseUrl`          | `string`                                     | `'https://osforms.com'` | Override for self-hosted instances.                                                                           |
+| `mode`             | `'conversational' \| 'classic' \| 'stepped'` | schema default          | Override the form's mode. `stepped` currently renders the conversational layout.                              |
+| `theme`            | `Partial<FormTheme>`                         | —                       | Theme overrides, merged over the schema theme and the OSForms defaults.                                       |
+| `fullScreen`       | `boolean`                                    | `false`                 | Render fixed to the full viewport (`position: fixed`).                                                        |
+| `onComplete`       | `() => void`                                 | —                       | Called after a successful submission.                                                                         |
+| `onError`          | `(error: Error) => void`                     | —                       | Called when a submission fails.                                                                               |
+| `loadingComponent` | `ReactNode`                                  | built-in                | Custom loading state while schema fetches.                                                                    |
+| `errorComponent`   | `ReactNode`                                  | built-in                | Custom error state on fetch failure.                                                                          |
 
 ---
 
@@ -133,7 +134,9 @@ export default function ContactPage() {
 
 ### Conversational (default)
 
-One question at a time with smooth slide animations. Auto-advances on selection for choice fields. Keyboard-first: `Enter` to advance, `←` back.
+One question at a time with slide animations. Auto-advances on selection for `radio`, `select`, `rating`, and `scale` fields. Press `Enter` to advance (`Cmd/Ctrl+Enter` in a textarea); the on-screen ↑/↓ buttons move back and forward.
+
+The `Enter` listener is attached to the whole window, so in an inline embed, pressing `Enter` anywhere on the page advances or submits the form. For forms inside larger pages, use classic mode.
 
 ```tsx
 <OSForm formId="abc123" mode="conversational" />
@@ -205,12 +208,16 @@ interface FormTheme {
 | `number`    | Numeric input                                                        |
 | `tel`       | Phone number                                                         |
 | `url`       | URL with format validation                                           |
-| `select`    | Dropdown single-select                                               |
+| `select`    | Dropdown single-select — advances on selection                       |
 | `radio`     | Single choice (visible option list) — auto-advances by default       |
 | `checkbox`  | Multiple choice (multi-select)                                       |
 | `rating`    | Star rating (1–5 by default) — auto-advances by default              |
 | `scale`     | NPS-style numeric scale (1–10 by default) — auto-advances by default |
 | `statement` | Display-only text block, no input                                    |
+
+The `FieldType` union also lists `date`, `file`, and `divider`. `divider` is dropped before rendering. `date` and `file` aren't supported by the renderer yet: they show their label with no input, but still go through validation, so a required one blocks submission. Don't use them for now.
+
+Rating stars are always amber (`#fbbf24`) when selected, whatever the theme.
 
 ---
 
@@ -260,12 +267,13 @@ const schema: FormSchema = {
     enabled: true,
     title: "You're all set!",
     description: "We'll be in touch soon.",
-    showSubmissionId: false,
-    redirectUrl: 'https://yoursite.com/thanks',
-    redirectDelay: 3,
+    redirectUrl: 'https://yoursite.com/thanks', // overrides the form's redirect URL
+    redirectDelay: 3, // seconds, default 3
   },
 }
 ```
+
+`thankYouScreen.showSubmissionId` is in the type but isn't rendered yet.
 
 ---
 
@@ -288,8 +296,8 @@ function MyCustomForm({ slug }: { slug: string }) {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
-  const { currentField, visibleFields, currentIndex } = actions;
-  const { answers, errors, isComplete } = state;
+  const { currentField } = actions;
+  const { isComplete } = state;
 
   if (isComplete) return <p>Thanks!</p>;
 
@@ -303,27 +311,30 @@ function MyCustomForm({ slug }: { slug: string }) {
 }
 ```
 
+> **Welcome screen caveat**: `useFormState` reads `welcomeScreen.enabled` only on its first render. If the schema arrives later (as with `useFormSchema`), `state.showWelcome` stays `false` and the welcome screen never shows. If you need it, render the component that calls `useFormState` only after the schema has loaded.
+
 ---
 
 ## Source Tracking
 
-Track which platform submitted the form (shows as a badge in your osforms dashboard):
+Tag submissions with where they came from by setting `settings.source` in the schema:
 
 ```tsx
-// Injected automatically via schema settings
 const schema: FormSchema = {
   // ...
   settings: {
-    source: 'webflow', // 'react' | 'webflow' | 'wordpress' | 'embed' | 'api' | any string
+    source: 'webflow', // any string
   },
 };
 ```
+
+When `settings.source` is set, the SDK adds `_source` to the submitted JSON. Nothing is added when it isn't set. The server stores `_source` as an ordinary field in the submission data, next to your answers. There's no special dashboard treatment for it.
 
 ---
 
 ## Self-Hosting
 
-Point the component at your own osforms instance:
+Point the component at your own OSForms instance:
 
 ```tsx
 <OSForm formId="abc123" baseUrl="https://forms.yourcompany.com" />
@@ -337,4 +348,4 @@ MIT — see [LICENSE](../../LICENSE)
 
 ---
 
-Built with [osforms](https://osforms.com) — the open-source BYOK form backend.
+Built with [OSForms](https://osforms.com), the open-source BYOK form backend.

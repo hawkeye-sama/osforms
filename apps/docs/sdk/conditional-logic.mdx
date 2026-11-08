@@ -69,7 +69,7 @@ Conditions are re-evaluated on every answer. The evaluation helpers are internal
 - `equals` / `not_equals`: string comparison after `String(value)`
 - `contains` / `not_contains`: substring check on the stringified value. For checkboxes (an array of values) this checks the comma-joined list, so use `contains` rather than `equals`
 - `greater_than` / `less_than`: numeric comparison after `Number()`
-- `is_empty`: `undefined`, `null`, or `""`. An empty checkbox array (`[]`) does **not** count as empty
+- `is_empty`: `undefined`, `null`, or `""`. An untouched checkbox group is `undefined` and counts as empty, but one that was ticked and then cleared (`[]`) does **not**
 - `is_not_empty`: any other value
 - `match: 'all'`: every condition must be true (AND)
 - `match: 'any'`: at least one condition must be true (OR)

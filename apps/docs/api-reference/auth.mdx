@@ -20,9 +20,19 @@ POST /api/auth/signup
 {
   "name": "Jane Smith",
   "email": "you@example.com",
-  "password": "at-least-8-characters"
+  "password": "at-least-8-characters",
+  "captchaToken": "03AFcWeA..."
 }
 ```
+
+| Field          | Required    | Description                                                                               |
+| -------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| `name`         | Yes         | 1 to 100 characters                                                                       |
+| `email`        | Yes         | Valid email address                                                                       |
+| `password`     | Yes         | At least 8 characters                                                                     |
+| `captchaToken` | Conditional | Google reCAPTCHA v3 token minted for action `signup`, max 4096 characters. See note below |
+
+`captchaToken` is only checked when the server has `RECAPTCHA_SECRET_KEY` set. osforms.com does, so signups there need a valid token with a passing score. Self-hosted installs without the key skip the check.
 
 Creates the account and emails a 6-digit code. The account can't log in until the code is verified.
 
@@ -30,11 +40,15 @@ Creates the account and emails a 6-digit code. The account can't log in until th
 { "requiresVerification": true, "email": "you@example.com" }
 ```
 
-| Status | Meaning                                   |
-| ------ | ----------------------------------------- |
-| `201`  | Account created, verification code sent   |
-| `400`  | Validation failed (see `details`)         |
-| `409`  | An account with this email already exists |
+| Status | Meaning                                                                                                                     |
+| ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `201`  | Account created, verification code sent                                                                                     |
+| `400`  | Validation failed (see `details`), or the CAPTCHA token is missing, invalid, or scored too low (`error` only, no `details`) |
+| `409`  | An account with this email already exists                                                                                   |
+| `429`  | `Too many signup attempts. Try again in an hour.` Sent with a `Retry-After` header                                          |
+| `503`  | The spam check couldn't reach Google. Try again shortly                                                                     |
+
+Each IP gets 5 signup attempts per hour. Failed attempts count toward that limit.
 
 ## Verify email
 
@@ -76,7 +90,20 @@ POST /api/auth/resend-otp
 { "email": "you@example.com" }
 ```
 
-Sends a new code. You can request one every 60 seconds. Sooner returns `429` with `retryAfter` (seconds) in the body.
+Sends a new code:
+
+```json
+{ "success": true, "message": "Verification code sent" }
+```
+
+You can request one every 60 seconds per email. Sooner returns `429` with `retryAfter` (seconds) in the body. Each IP is also capped at 10 requests per hour; past that you get `429` with `Too many code requests. Try again in an hour.` and no `retryAfter` or `Retry-After` header.
+
+| Status | Meaning                                         |
+| ------ | ----------------------------------------------- |
+| `200`  | Code sent                                       |
+| `400`  | Validation failed, or `Email already verified`  |
+| `404`  | `User not found`                                |
+| `429`  | Per-email (60 seconds) or per-IP (hourly) limit |
 
 ## Log in
 
@@ -145,6 +172,35 @@ GET /api/auth/me
 
 Returns `401` if not logged in. For this month's submission usage, see `usage` in [`GET /api/v1/forms`](/docs/api-reference/forms#list-forms).
 
+## Update profile
+
+```
+PATCH /api/auth/me
+```
+
+```json
+{
+  "fullName": "Jane Smith",
+  "company": "Acme",
+  "role": "agency",
+  "onboardingComplete": true
+}
+```
+
+The dashboard uses this during onboarding. Send any of these fields; the rest of the body is ignored:
+
+| Field                | Type    | Description                                  |
+| -------------------- | ------- | -------------------------------------------- |
+| `fullName`           | string  | Display name                                 |
+| `website`            | string  | Your site                                    |
+| `company`            | string  | Company or project name                      |
+| `role`               | string  | `developer`, `agency`, `startup`, or `other` |
+| `onboardingComplete` | boolean | Marks onboarding as done                     |
+| `usecase`            | string  | What you'll use OSForms for                  |
+| `refSource`          | string  | How you heard about OSForms                  |
+
+There's no schema validation on this endpoint beyond the stored field types. Returns the updated user in the same shape as `GET /api/auth/me` (`usecase` and `refSource` aren't included), or `401` if not logged in.
+
 ## Google OAuth (Google Sheets)
 
 Google OAuth only connects Google Sheets to a form. It isn't a way to log in to OSForms.
@@ -154,3 +210,8 @@ GET /api/auth/google/login?formId={formId}
 ```
 
 Requires your login session, and you must own the form. Redirects to Google's consent screen. Google then redirects to `/api/auth/google/callback`, which creates a spreadsheet for the form and saves the encrypted OAuth token for the Google Sheets integration. The connection has to be finished within 10 minutes, in the same browser session that started it.
+
+Optional query parameters:
+
+- `returnTo`: a path on OSForms (must start with a single `/`) to land on after a new connection, instead of the form's Integrations tab.
+- `reconnect=1`: refreshes the OAuth token for an existing Google Sheets integration and keeps writing to the same spreadsheet. Google's screen preselects the account that created the sheet. Returns `404` if the form has no Google Sheets integration. Reconnects always return to the Integrations tab.
