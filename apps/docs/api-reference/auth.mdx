@@ -1,6 +1,6 @@
 ---
 title: 'Auth'
-description: 'Authentication endpoints'
+description: 'OSForms auth API: sign up with email and password, verify the 6-digit email code, log in, log out, read or update the current user, and connect Google OAuth.'
 ---
 
 OSForms uses email and password with a 6-digit email code for verification. Logging in issues a JWT in an httpOnly cookie (`ff_token`, valid for 7 days). Dashboard endpoints also accept the same JWT as `Authorization: Bearer <token>`.
