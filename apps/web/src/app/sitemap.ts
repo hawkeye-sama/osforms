@@ -15,6 +15,9 @@ const STATIC_LASTMOD = {
   privacy: '2026-03-26',
   terms: '2026-03-26',
   authors: '2026-11-08', // author page created
+  glossary: '2026-11-08', // glossary created
+  toolWebhookSignature: '2026-11-08', // tool created
+  toolHtmlFormGenerator: '2026-11-08', // tool created
 } as const;
 
 function newest(first: string, ...rest: Array<string | undefined>): Date {
@@ -79,6 +82,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}/docs/introduction`,
       changeFrequency: 'weekly',
       priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/tools/html-form-generator`,
+      lastModified: new Date(STATIC_LASTMOD.toolHtmlFormGenerator),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/tools/webhook-signature`,
+      lastModified: new Date(STATIC_LASTMOD.toolWebhookSignature),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/glossary`,
+      lastModified: new Date(STATIC_LASTMOD.glossary),
+      changeFrequency: 'monthly',
+      priority: 0.7,
     },
     {
       url: `${SITE_URL}/signup`,

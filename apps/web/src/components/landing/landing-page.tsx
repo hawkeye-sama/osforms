@@ -337,13 +337,13 @@ export function LandingPage({ recentPosts }: LandingPageProps) {
                       <span className="text-muted-foreground/50">·</span>
                       <time dateTime={post.date}>{post.dateLabel}</time>
                     </div>
-                    <h3 className="text-foreground mt-4 text-lg font-bold tracking-tight">
+                    <h3 className="text-foreground mt-4 line-clamp-2 text-lg font-bold tracking-tight">
                       {post.title}
                     </h3>
-                    <p className="text-muted-foreground mt-2 line-clamp-3 flex-1 text-sm leading-relaxed">
+                    <p className="text-muted-foreground mt-2 line-clamp-3 text-sm leading-relaxed">
                       {post.description}
                     </p>
-                    <span className="text-foreground mt-6 inline-flex items-center gap-1.5 font-mono text-xs">
+                    <span className="text-foreground mt-auto inline-flex items-center gap-1.5 pt-6 font-mono text-xs">
                       Read
                       <span className="transition-transform duration-200 group-hover:translate-x-1">
                         →

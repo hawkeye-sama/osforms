@@ -101,6 +101,14 @@ export const AnimatedBeam = ({
 
   // Create variants for the gradient animation to ensure a smooth flow that traverses the whole path
   const gradientVariants = {
+    // Start values so the SVG never renders with undefined x1/x2/y1/y2
+    // (browsers log "Expected length, 'undefined'" before the first frame).
+    initial: {
+      x1: reverse ? '100%' : '-100%',
+      x2: reverse ? '200%' : '0%',
+      y1: '0%',
+      y2: '0%',
+    },
     animate: {
       x1: reverse ? ['100%', '-100%'] : ['-100%', '100%'],
       x2: reverse ? ['200%', '0%'] : ['0%', '200%'],
@@ -140,6 +148,7 @@ export const AnimatedBeam = ({
           id={id}
           gradientUnits="userSpaceOnUse"
           variants={gradientVariants}
+          initial="initial"
           animate="animate"
           transition={{
             duration,

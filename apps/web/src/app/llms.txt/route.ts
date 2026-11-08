@@ -36,6 +36,11 @@ Key facts:
 - [GitHub](https://github.com/hawkeye-sama/osforms): Source code; audit or self-host.
 - [Blog](${SITE_URL}/blog): Tutorials, comparisons, and guides.
 
+## Free tools
+- [HTML Contact Form Generator](${SITE_URL}/tools/html-form-generator): Build an accessible HTML contact form (with an optional honeypot field) and copy the code. Runs in the browser.
+- [Webhook Signature Verifier](${SITE_URL}/tools/webhook-signature): Generate and verify HMAC-SHA256 webhook signatures (hex or base64) for OSForms, GitHub, Stripe, and Shopify. Runs in the browser.
+- [Form Backend Glossary](${SITE_URL}/glossary): Plain definitions of 27 form backend terms, from honeypot fields and CAPTCHA to CORS, webhooks, HMAC signatures, and BYOK.
+
 ## Blog posts
 ${blog}
 

@@ -4,7 +4,7 @@ import Link from 'next/link';
 export function Footer() {
   return (
     <footer className="border-border/40 bg-card/20 border-t px-8 py-16 backdrop-blur-sm">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 sm:grid-cols-3">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 sm:grid-cols-4">
         <div>
           <Link href="/">
             <Image
@@ -50,6 +50,32 @@ export function Footer() {
               className="text-muted-foreground hover:text-foreground text-sm transition-colors"
             >
               GitHub
+            </Link>
+          </nav>
+        </div>
+
+        <div>
+          <div className="text-foreground mb-3 text-sm font-semibold">
+            Free tools
+          </div>
+          <nav className="flex flex-col gap-2">
+            <Link
+              href="/tools/html-form-generator"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+            >
+              HTML Form Generator
+            </Link>
+            <Link
+              href="/tools/webhook-signature"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+            >
+              Webhook Signature Verifier
+            </Link>
+            <Link
+              href="/glossary"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+            >
+              Form Backend Glossary
             </Link>
           </nav>
         </div>
