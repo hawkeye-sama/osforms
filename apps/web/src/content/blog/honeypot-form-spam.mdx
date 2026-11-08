@@ -1,0 +1,202 @@
+---
+title: 'Honeypot Field: Stop Form Spam Without CAPTCHA'
+description: "Honeypot field setup that stops form spam without a CAPTCHA: accessible hidden markup, a name autofill won't touch, what gets through, and when to add more."
+date: '2027-01-11'
+dateModified: '2027-01-11'
+author: 'Bahroze Ali'
+tags: ['spam protection', 'honeypot', 'html forms', 'security']
+readingTime: '8 min read'
+category: 'Integrate'
+seoTitle: 'Honeypot Field: Stop Form Spam Without CAPTCHA'
+focusKeyphrase: 'honeypot field'
+coverImage: '/content/images/honeypot-form-spam-cover.png'
+coverTitle: 'Honeypot Field'
+coverSubtitle: 'Stop form spam without a CAPTCHA'
+faq:
+  - question: 'What is a honeypot field?'
+    answer: 'A honeypot field is a form input that real visitors never see or reach, hidden off-screen and removed from the tab order and the accessibility tree. Spam bots that fill every input fill it anyway. The server treats any submission with that field filled as spam and drops it, without making humans solve a challenge.'
+  - question: 'Should I hide a honeypot with display:none or type="hidden"?'
+    answer: 'Neither, if you can avoid it. Hidden inputs and inline display:none are the easiest honeypots for a bot to spot and skip. Position the field off-screen with a CSS class instead, wrap it in an element with aria-hidden="true", and give the input tabindex="-1" so keyboard and screen reader users never land on it.'
+  - question: 'Can autofill or a password manager fill a honeypot field?'
+    answer: 'Yes, if the field looks like something they know how to fill. Browsers and password managers match on names and labels such as email, website, url, phone, or company, and MDN notes that browsers may ignore autocomplete="off". Give the honeypot a name no autofill heuristic would recognize, like favorite_color, so a real visitor never trips it by accident.'
+  - question: 'What happens when a bot fills the honeypot on OSForms?'
+    answer: 'The endpoint returns the same success response a real visitor gets (JSON, or a 303 to your redirect URL) and stores nothing. The submission is not saved, does not count toward your monthly limit, and triggers no email, Google Sheets row, or webhook. The bot sees a success and moves on.'
+  - question: 'Is a honeypot enough on its own?'
+    answer: 'For most small sites, it stops the bulk of drive-by spam. It does not stop scripts written against your specific form, browser automation that only types into visible fields, or people paid to submit spam by hand. For those, add reCAPTCHA and tighten the per-form rate limit.'
+---
+
+A honeypot field is a hidden input that people never fill and spam bots usually do, so any submission that arrives with it filled can be thrown away. It stops most automated form spam without a CAPTCHA, a puzzle, or any friction for real visitors. The catch is that the details matter: hide it the wrong way and bots skip it, name it the wrong way and your visitors' autofill trips it.
+
+Every public form gets found, usually sooner than you'd think, and then the submissions start: SEO offers, crypto links, "I noticed your website..." The usual reflex is a CAPTCHA, which works, but every challenge you put in front of a human costs you some of the humans. A honeypot moves the work to the server, where it belongs. Below is markup that hides the field properly, how OSForms handles it, and a plain list of what a honeypot will not catch.
+
+## How Bots Fill Fields (and Why a Honeypot Field Catches Them)
+
+Most form spam is not clever. A crawler finds a `<form>`, reads every `input`, `textarea`, and `select` inside it, fills each one with something plausible (an email-looking string for anything named email, a URL for anything named website, filler text everywhere else), and POSTs to the `action` URL. It never renders the page. It doesn't know what is visible; it only knows what is in the HTML.
+
+That is the whole trick. Add an input that exists in the HTML but not on the screen, and you have a field that only a non-human would fill.
+
+If you run your own server, the check is a few lines:
+
+```js
+// Express, the DIY version
+app.post('/contact', express.urlencoded({ extended: false }), (req, res) => {
+  if (req.body.favorite_color) {
+    return res.redirect(303, '/thanks/'); // pretend it worked
+  }
+  // ...validate, store, send the email
+});
+```
+
+Notice the bot gets a success, not an error. An error teaches a spam script that something in its payload is wrong; a success teaches it nothing. The hard part was never this `if` statement. It's everything around it: the server, storage, email delivery, and rate limiting, for a form on a site that was otherwise static.
+
+## Accessible Hidden-Field Markup
+
+Here is the markup I'd use, and why each attribute is there:
+
+```html
+<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+  <label for="email">Email</label>
+  <input id="email" type="email" name="email" autocomplete="email" required />
+
+  <label for="message">Message</label>
+  <textarea id="message" name="message" required></textarea>
+
+  <!-- Honeypot: off-screen, out of the tab order, hidden from screen readers -->
+  <div class="hp" aria-hidden="true">
+    <label for="favorite_color">Leave this field empty</label>
+    <input
+      id="favorite_color"
+      type="text"
+      name="favorite_color"
+      tabindex="-1"
+      autocomplete="off"
+    />
+  </div>
+
+  <button type="submit">Send</button>
+</form>
+```
+
+```css
+.hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+```
+
+**Off-screen, not `display:none`.** An `<input type="hidden">` or an inline `style="display:none"` is the easiest honeypot to detect, and some bots skip both for exactly that reason. A class in your stylesheet that moves the field off-screen leaves it looking like any other text input in the HTML.
+
+**`aria-hidden="true"` on the wrapper** removes the field and its label from the accessibility tree, so screen reader users never hear about it.
+
+**`tabindex="-1"`** keeps keyboard users from tabbing into it. Without this, a sighted keyboard user can land in an invisible field and type into it.
+
+**The visible-if-broken label.** If your stylesheet fails to load, the field shows up. "Leave this field empty" tells a human what to do in that case. The trade-off is that a bot reading labels could take the hint; I'd keep it, because a broken stylesheet is more likely than a bot that parses label text.
+
+### Pick a name autofill won't touch
+
+This is where honeypots quietly cost people real leads. Browsers and password managers decide what to fill by matching on the field's `name`, `id`, and label. Name your honeypot `website`, `url`, `company`, or `phone` and a visitor's autofill may fill it, and the endpoint will throw away a real message without anyone noticing. `autocomplete="off"` doesn't fully save you: [MDN notes](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/autocomplete) that browsers may ignore it on login fields to support password managers (November 2026).
+
+| Honeypot name             | Risk                                                                  |
+| ------------------------- | --------------------------------------------------------------------- |
+| `website`, `url`          | Autofill matches the `url` token; real visitors can trip it           |
+| `email2`, `phone`, `name` | Matches contact-info heuristics in browsers and password managers     |
+| `honeypot`, `_gotcha`     | Safe from autofill, but well known; targeted scripts may skip them    |
+| `favorite_color`          | Plausible to a bot, matches no autofill token, unlikely to be skipped |
+
+The best name looks like a field a form might ask for but no browser knows how to fill.
+
+## The Honeypot Field in OSForms
+
+The honeypot in OSForms is **off until you name it**. There's no magic field name baked in. Open your form's **Settings** dialog, enter the name under **Honeypot Field Name** (the placeholder shows `_gotcha`, but use your own, like `favorite_color`), and save. The name in the dashboard and the `name` attribute in your markup must match exactly.
+
+Then the submission endpoint, `POST /api/v1/f/{slug}`, runs its checks in this order:
+
+| Step | Check                                          | Result if it fails                          |
+| ---- | ---------------------------------------------- | ------------------------------------------- |
+| 1    | Active form with that slug                     | `404`                                       |
+| 2    | Allowed Origins (if set)                       | `403 Origin not allowed`                    |
+| 3    | Per-IP rate limit                              | `429` with a `Retry-After` header           |
+| 4    | Monthly submission limit                       | `403`                                       |
+| 5    | Body parses                                    | `400`                                       |
+| 6    | **Honeypot field empty**                       | **Normal success response, nothing stored** |
+| 7    | CAPTCHA token (if set)                         | `400`                                       |
+| 8    | Store, then run integrations in the background | `200` JSON, or `303` to your redirect URL   |
+
+Step 6 is the important one. When the named field arrives non-empty, the endpoint returns exactly what a real visitor gets: `{"success":true,"message":"Submission received"}`, or a `303` to your thank-you page if a redirect URL is set. Nothing is written to the database. Because the monthly counter only goes up after a submission is stored, honeypot catches **don't count toward your 100 free submissions a month**, and since no submission exists, there's no email, no Google Sheets row, and no webhook call. When the field is empty, it's stripped before storage, so it never clutters your dashboard or CSV export.
+
+You can watch it work with two requests:
+
+```bash
+# A bot: honeypot filled. Same success response, nothing appears in the dashboard.
+curl -X POST https://osforms.com/api/v1/f/abc123xyz \
+  -H "Accept: application/json" \
+  -d "email=bot@example.com&message=cheap+seo&favorite_color=blue"
+
+# A person: honeypot empty. Stored, and your integrations run.
+curl -X POST https://osforms.com/api/v1/f/abc123xyz \
+  -H "Accept: application/json" \
+  -d "email=you@example.com&message=hello&favorite_color="
+```
+
+Both print `{"success":true,"message":"Submission received"}`. Only the second shows up in the dashboard.
+
+One gotcha if you submit with JavaScript. `new FormData(form)` picks up the honeypot automatically, which is what you want. A hand-built JSON body (`JSON.stringify({ email, message })`) leaves it out, and then the honeypot never triggers. Include the field's value in the payload, empty or not.
+
+## What Gets Past a Honeypot Field (and When to Add reCAPTCHA)
+
+A honeypot catches bots that fill everything. It does nothing against:
+
+- **Scripts written for your form.** Someone who looks at your HTML once and posts only `email` and `message` sails past.
+- **Browser automation.** Playwright or Puppeteer bots that render the page and type only into visible fields never touch an off-screen input.
+- **People.** Paid spam is typed by hand, and a person sees what your visitors see.
+
+Allowed Origins won't save you here either, since it's a browser check and a script can simply omit the `Origin` header. When spam starts getting through, OSForms supports **reCAPTCHA** with your own keys: put the widget on your form (it adds a `g-recaptcha-response` field), and set the secret on the form. The secret isn't in the Settings dialog yet; set it through the API. The quickest way is from your browser's console while signed in to the dashboard, which sends your session cookie:
+
+```js
+// Run on osforms.com while logged in. FORM_ID is the id in /dashboard/forms/FORM_ID
+await fetch('/api/v1/forms/FORM_ID', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ recaptchaSecret: 'your-recaptcha-secret' }),
+}).then((r) => r.json());
+```
+
+From then on, a submission without a token gets `400 CAPTCHA verification required`, and a bad one gets `400 CAPTCHA verification failed`. The honeypot still runs first, so obvious bots are dropped before the endpoint spends a call verifying their token. The [forms API reference](/docs/api-reference/forms) lists the other settings you can change this way.
+
+Three limits to know before you rely on it:
+
+- **Use reCAPTCHA v2 (checkbox or invisible).** The endpoint checks that the token is valid but doesn't read the v3 score. [Google's v3 docs](https://developers.google.com/recaptcha/docs/v3) describe that score as running from 0.0 (very likely a bot) to 1.0 and leave the threshold to you (November 2026). OSForms doesn't apply one, so a v3 token from a bot that passes validation still gets in.
+- **hCaptcha only verifies older `0x` secrets.** The endpoint sends secrets starting with `0x` to hCaptcha and everything else to Google. [hCaptcha's docs](https://docs.hcaptcha.com) now show secrets in an `ES_` format (November 2026), and those get sent to the wrong verifier and fail. Until that's fixed, reCAPTCHA is the safe choice.
+- **Cloudflare Turnstile is not supported.** Its tokens are accepted, but verification is broken, tracked in [issue #17](https://github.com/hawkeye-sama/osforms/issues/17).
+
+## Rate Limits: The Layer Under Everything
+
+Every form also has a rate limit, whether you configure it or not: **10 submissions per minute per IP per form** by default. The eleventh request inside the window gets a `429` with a `Retry-After` header giving the seconds left. The limit runs before the honeypot check, so a bot hammering your form gets throttled even when its submissions would be thrown away anyway.
+
+Ten a minute is generous for a contact form. Nobody sends three messages a minute by hand. You can lower it with the same API call as above, anywhere from 1 to 1000:
+
+```js
+body: JSON.stringify({ rateLimit: 3 }),
+```
+
+Know what this layer is. The counter is kept in memory on each server instance, keyed on the client IP, in a fixed 60-second window. On a serverless host, concurrent instances each keep their own count, and a botnet spread across many IPs never hits any single limit. Treat it as a brake on bursts, not a wall.
+
+Here's how the layers stack up:
+
+| Layer          | Catches                                 | Misses                                 | Cost to real visitors  |
+| -------------- | --------------------------------------- | -------------------------------------- | ---------------------- |
+| Honeypot field | Bots that fill every input              | Targeted scripts, browser bots, humans | None                   |
+| Rate limit     | Bursts from one IP                      | Slow or distributed spam               | None                   |
+| reCAPTCHA v2   | Most automation, including browser bots | Human spam, CAPTCHA-solving services   | A challenge, sometimes |
+| Moderation     | Everything                              | Nothing, but it's your time            | None                   |
+
+## A Honeypot Field Is the Cheapest Layer
+
+Start with a honeypot field and the default rate limit. For a portfolio, a docs site, or a small business contact form, that pair handles the drive-by spam that makes up most of what arrives, and your visitors never see a puzzle. Add reCAPTCHA when the spam that gets through is worth the friction, not before.
+
+> The best spam filter is one your visitors never notice. Make the bot do the work, and give it a success page for its trouble.
+
+The honeypot is one of a handful of settings that turn a bare endpoint into a usable contact form. The [HTML contact form tutorial](/html-contact-form) covers the rest (redirects, email, response codes), and the [GitHub Pages contact form guide](/github-pages-contact-form) shows the same honeypot inside a Jekyll or Hugo include. For the bigger picture of receiving form data without running a server, start at [how to handle form submissions without a backend](/handle-form-submissions).

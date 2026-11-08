@@ -2,9 +2,16 @@
 
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
+import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 
 import { CopyButton } from './copy-button';
+
+// Light build: register only the grammars the tabs use. `markup` also
+// registers its `html` alias; `tsx` pulls in jsx + typescript itself.
+SyntaxHighlighter.registerLanguage('markup', markup);
+SyntaxHighlighter.registerLanguage('tsx', tsx);
 
 // Colorful syntax highlighting theme
 const colorfulDark = {

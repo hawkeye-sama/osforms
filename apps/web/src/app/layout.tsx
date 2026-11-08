@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
+
+import { SITE_URL } from '@/lib/site';
+import {
+  ORGANIZATION_ID,
+  organizationSchema,
+  websiteSchema,
+} from '@/lib/structured-data';
 import './globals.css';
 
 const geistSans = Geist({
@@ -13,10 +20,8 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
 export const metadata: Metadata = {
-  metadataBase: new URL(baseUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'OSForms | The Open-Source Form Backend for Modern Devs',
     template: '%s | OSForms',
@@ -44,20 +49,20 @@ export const metadata: Metadata = {
   },
   alternates: {
     types: {
-      'application/rss+xml': `${baseUrl}/feed.xml`,
+      'application/rss+xml': `${SITE_URL}/feed.xml`,
     },
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: baseUrl,
+    url: SITE_URL,
     title: 'OSForms - Open Source Form Backend',
     description:
-      'The open-source form backend for developers. Bring your own API keys, stay in control. Integrated with Resend, Google Sheets, and Slack.',
+      'The open-source form backend for developers. Bring your own API keys, stay in control. Send submissions to Resend, Google Sheets, and webhooks.',
     siteName: 'OSForms',
     images: [
       {
-        url: `${baseUrl}/og-image.png`,
+        url: `${SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
         alt: 'OSForms - Open Source Form Backend',
@@ -68,8 +73,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'OSForms | Own your form backend',
     description:
-      'The open-source form backend for developers. Bring your own API keys, stay in control. Unlimited submissions, zero lock-in.',
-    images: [`${baseUrl}/og-image.png`],
+      'The open-source form backend for developers. Bring your own API keys, stay in control. 100 free submissions/month, zero lock-in.',
+    images: [`${SITE_URL}/og-image.png`],
     creator: '@osforms',
   },
   robots: {
@@ -103,20 +108,27 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
-              '@type': 'WebApplication',
-              name: 'OSForms',
-              description:
-                'Open-source form backend for developers. Bring your own API keys, get unlimited power.',
-              url: baseUrl,
-              applicationCategory: 'DeveloperApplication',
-              offers: {
-                '@type': 'Offer',
-                price: '0',
-                priceCurrency: 'USD',
-                description: '100 free submissions per month',
-              },
-              operatingSystem: 'Web',
-              permissions: 'browser',
+              '@graph': [
+                organizationSchema(),
+                websiteSchema(),
+                {
+                  '@type': 'WebApplication',
+                  name: 'OSForms',
+                  description:
+                    'Open-source form backend for developers. Bring your own API keys and send submissions to Resend, Google Sheets, and webhooks. 100 free submissions/month.',
+                  url: SITE_URL,
+                  applicationCategory: 'DeveloperApplication',
+                  offers: {
+                    '@type': 'Offer',
+                    price: '0',
+                    priceCurrency: 'USD',
+                    description: '100 free submissions per month',
+                  },
+                  operatingSystem: 'Web',
+                  permissions: 'browser',
+                  publisher: { '@id': ORGANIZATION_ID },
+                },
+              ],
             }),
           }}
         />

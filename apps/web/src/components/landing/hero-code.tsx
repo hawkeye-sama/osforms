@@ -2,8 +2,12 @@
 
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+// Light build: only the HTML grammar (`markup` registers the `html` alias).
+SyntaxHighlighter.registerLanguage('markup', markup);
 
 const CODE = `<form action="https://osforms.com/api/v1/f/abc123" method="POST">
   <input type="text" name="name" placeholder="Name" required />

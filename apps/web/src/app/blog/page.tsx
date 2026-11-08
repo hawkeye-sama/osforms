@@ -2,13 +2,22 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { formatDate, getAllPosts, getCoverUrl } from '@/lib/blog';
+import {
+  formatDate,
+  getAllPosts,
+  getCoverUrl,
+  slugifyCategory,
+} from '@/lib/blog';
 import { SITE_URL as BASE_URL } from '@/lib/site';
+import { ORGANIZATION_ID } from '@/lib/structured-data';
+
+const BLOG_TITLE = 'Form Backend Tutorials & Guides';
+const BLOG_DESCRIPTION =
+  'Form backend tutorials and guides: handle submissions in HTML, React, and Next.js, send them to Resend, Google Sheets, and webhooks, and own your data.';
 
 export const metadata: Metadata = {
-  title: 'Blog',
-  description:
-    'Tutorials, guides, and insights on form backends, BYOK integrations, and developer tools from the OSForms team.',
+  title: BLOG_TITLE,
+  description: BLOG_DESCRIPTION,
   alternates: {
     canonical: `${BASE_URL}/blog`,
     types: {
@@ -16,9 +25,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'OSForms Blog',
-    description:
-      'Tutorials, comparisons, and opinions on form backends, BYOK integrations, and building for developers.',
+    title: `${BLOG_TITLE} | OSForms`,
+    description: BLOG_DESCRIPTION,
     url: `${BASE_URL}/blog`,
     type: 'website',
   },
@@ -43,12 +51,7 @@ export default function BlogPage() {
     description:
       'Tutorials, comparisons, and opinions on form backends, BYOK integrations, and building for developers.',
     url: `${BASE_URL}/blog`,
-    publisher: {
-      '@type': 'Organization',
-      name: 'OSForms',
-      url: BASE_URL,
-      logo: { '@type': 'ImageObject', url: `${BASE_URL}/logo.png` },
-    },
+    publisher: { '@id': ORGANIZATION_ID },
     blogPost: posts.map((post) => ({
       '@type': 'BlogPosting',
       headline: post.title,
@@ -109,14 +112,18 @@ export default function BlogPage() {
               </div>
               <ul className="space-y-2.5">
                 {categories.map((c) => (
-                  <li
-                    key={c.name}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <span className="text-foreground">{c.name}</span>
-                    <span className="text-muted-foreground font-mono text-xs tabular-nums">
-                      {String(c.count).padStart(2, '0')}
-                    </span>
+                  <li key={c.name}>
+                    <Link
+                      href={`/category/${slugifyCategory(c.name)}`}
+                      className="group flex items-center justify-between text-sm"
+                    >
+                      <span className="text-foreground transition-opacity group-hover:opacity-70">
+                        {c.name}
+                      </span>
+                      <span className="text-muted-foreground font-mono text-xs tabular-nums">
+                        {String(c.count).padStart(2, '0')}
+                      </span>
+                    </Link>
                   </li>
                 ))}
               </ul>

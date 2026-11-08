@@ -2,7 +2,7 @@
 title: 'How to Handle Forms in React'
 description: 'Handling forms in React, end to end: controlled vs uncontrolled inputs, validation, and where to actually send the data without standing up your own backend.'
 date: '2026-07-13'
-dateModified: '2026-07-13'
+dateModified: '2026-11-08'
 author: 'Bahroze Ali'
 tags: ['react', 'forms', 'validation', 'tutorial']
 readingTime: '9 min read'
@@ -201,7 +201,7 @@ React cannot answer this. It runs in the browser, and the browser is the last pl
 
 **Write a server yourself.** An Express route, a Fastify app, a serverless function. You own an endpoint, and then you own everything behind it: a database to persist submissions, an email provider with a verified sending domain, SPF and DKIM records, a spam strategy, CORS rules, rate limiting, and a deploy target that stays up. For a contact form on a marketing site, this is a real amount of infrastructure to run so that somebody can say hello.
 
-**Use a third-party form service.** Point the form at a hosted endpoint and let it store the data. This is the right shape, and it is what most people should do. The catch is what the hosted tools charge for: the useful integrations (Google Sheets, webhooks) sit behind paid tiers on Formspree, Basin, and Web3Forms, even though it is your Google account and your endpoint doing the work. You pay a subscription for the privilege of connecting services you already own.
+**Use a third-party form service.** Point the form at a hosted endpoint and let it store the data. This is the right shape, and it is what most people should do. The catch is what the hosted tools charge for: the useful integrations (Google Sheets, webhooks) sit behind paid tiers on Formspree, Basin, and Web3Forms ([compared here](/formspree-alternative)), even though it is your Google account and your endpoint doing the work. You pay a subscription for the privilege of connecting services you already own.
 
 **Bring your own keys.** Same shape as the hosted service, different economics. The endpoint stores your submissions, and the integrations run on credentials you supply, so nobody marks up an API you are already paying for. That is the model OSForms is built on, and the reasoning behind it is in [what bring your own key actually means](/bring-your-own-key).
 
@@ -317,7 +317,7 @@ export function Contact() {
 }
 ```
 
-`formId` is the same slug as the endpoint. The component fetches the schema, renders the fields, validates them, posts the JSON, and handles the loading, error, and thank-you states. `mode="classic"` gives a standard single-page form; pass `conversational` for a one-question-at-a-time flow with keyboard navigation. Omit the prop and the component uses whichever mode the form was saved with in the dashboard. A `theme` prop overrides colors and fonts, and `baseUrl` points the component at a self-hosted instance instead of osforms.com.
+`formId` is the same slug as the endpoint. The component fetches the schema, renders the fields, validates them, posts the JSON, and handles the loading, error, and thank-you states. `mode="classic"` gives a standard single-page form; pass `conversational` for a one-question-at-a-time flow with keyboard navigation (the [conversational form guide](/conversational-form-react) covers that mode end to end, and the [open source Typeform alternative](/typeform-alternative) post compares it with Typeform). Omit the prop and the component uses whichever mode the form was saved with in the dashboard. A `theme` prop overrides colors and fonts, and `baseUrl` points the component at a self-hosted instance instead of osforms.com.
 
 One signature detail, since it is easy to guess wrong: `onComplete` takes no argument. It fires after a successful post, and if you need the submitted values, you already have them in your own state. `onError` receives a real `Error`, and its message is the server's error string when there was one.
 
@@ -329,7 +329,7 @@ Everything above gets a form from empty component to stored submission. What it 
 
 > "The form is never the hard part. The hard part is everything that happens in the ninety seconds after someone clicks Send."
 
-That is where bring-your-own-key stops being a philosophy and starts being a feature. Connect your own [Resend](https://resend.com) key and every submission emails you, with an auto-reply to the sender if you want one. Connect Google Sheets through OAuth (the narrow `drive.file` scope, so it only touches files it creates) and each submission appends a row to a spreadsheet on your account. Add a webhook and every submission is POSTed to your service, signed with HMAC-SHA256 so you can verify it. All three run in the background after the submission is stored, so your visitor's `fetch` returns immediately and never waits on a third-party API. Your keys are encrypted at rest with AES-256-GCM and never shipped to the browser, which is exactly where an API key should not be.
+That is where bring-your-own-key stops being a philosophy and starts being a feature. Connect your own [Resend](https://resend.com) key and every submission emails you, with an auto-reply to the sender if you want one. [Connect Google Sheets](/form-to-google-sheets) through OAuth (the narrow `drive.file` scope, so it only touches files it creates) and each submission appends a row to a spreadsheet on your account. Add a webhook and every submission is POSTed to your service, signed with HMAC-SHA256 so you can verify it. All three run in the background after the submission is stored, so your visitor's `fetch` returns immediately and never waits on a third-party API. Your keys are encrypted at rest with AES-256-GCM and never shipped to the browser, which is exactly where an API key should not be.
 
 Those integrations cost nothing on the OSForms side because they run on your credentials. That is the whole trick, and it is the opposite of the tiered model where a form tool charges you monthly to connect the Google account you already own.
 

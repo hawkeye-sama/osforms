@@ -1,0 +1,142 @@
+---
+title: 'OSForms vs Formspree: Who Pays for Your Form Integrations?'
+description: 'Formspree pricing in 2026: a 50-submission free plan, then $15, $30, and $90 a month. How it compares with OSForms on free limits, Sheets, and webhooks.'
+date: '2026-11-08'
+dateModified: '2026-11-08'
+author: 'Bahroze Ali'
+tags: ['formspree pricing', 'formspree', 'comparison', 'form backend']
+readingTime: '10 min read'
+category: 'Compare'
+seoTitle: 'Formspree Pricing 2026 vs OSForms: Free Plan'
+focusKeyphrase: 'formspree pricing'
+coverImage: '/content/images/osforms-vs-formspree-cover.png'
+coverTitle: 'OSForms vs Formspree'
+coverSubtitle: 'Pricing, integrations, and data ownership, compared honestly'
+faq:
+  - question: 'Is OSForms actually free?'
+    answer: 'The hosted tier is 100 submissions per month for free, with every integration included: email through your own Resend key, Google Sheets through your own Google account, and signed webhooks. Nothing is gated by plan because there is only one plan today. The platform is also open source under the MIT license, so you can self-host it; a self-hosted account starts at the same 100/month limit, which you raise with one MongoDB update.'
+  - question: 'What does Formspree charge for Google Sheets and webhooks?'
+    answer: "Formspree's pricing page (formspree.io/plans, checked November 2026) lists Google Sheets on the Personal plan at $15/month and up. Webhooks, Zapier, Stripe, Mailchimp, auto-response emails, and API access start on the Professional plan at $30/month. Yearly billing lowers those to an effective $10 and $20 a month. The free plan covers 50 submissions a month with email and chat plugins such as Slack and Discord."
+  - question: 'Is Formspree free?'
+    answer: "Yes, up to a point. Formspree's free plan (formspree.io/plans, November 2026) allows 50 submissions a month with a 30-day submission archive, email notifications, and chat plugins such as Slack and Discord. It has no file uploads and no CSV or JSON export. Past that, Personal is $15/month for 200 submissions, Professional $30/month for 2,000, and Business $90/month for 20,000, or $10, $20, and $60 a month billed yearly."
+  - question: 'Does OSForms handle file uploads?'
+    answer: 'No. OSForms accepts multipart form posts, but uploaded files are not stored; the submission records a placeholder like "[File: resume.pdf, 48213 bytes]" instead. Formspree stores uploads on its Personal plan and up (1 GB, 5 GB, or 10 GB depending on tier, up to 25 MB per file and 10 files per submission). If your form collects files, Formspree is the better pick.'
+  - question: 'Can I read submissions over an API on either service?'
+    answer: "Yes on both, at different prices. OSForms has a read-only pull API on the free tier: create an osf_live_ key scoped to the forms you choose and call GET /api/v1/submissions with cursor pagination. Pulls don't count toward your monthly quota. Formspree's API access, which fetches submissions from a JSON endpoint, is listed on the Professional plan ($30/month) and up."
+  - question: 'How hard is it to switch from Formspree to OSForms?'
+    answer: "It is one attribute. Both services receive a POST at an endpoint URL, so you replace the formspree.io URL in your form's action with your OSForms endpoint and keep your field names as they are. Export your Formspree submissions first (export is on its paid plans; free-plan submissions older than 30 days are already gone), then connect your Resend key and Google account before you swap the URL."
+---
+
+Formspree pricing starts with a free plan of 50 submissions a month, a 30-day submission archive, and no file uploads or export. Paid plans are Personal at $15/month (200 submissions, Google Sheets), Professional at $30/month (2,000 submissions, webhooks and auto-responses), and Business at $90/month (20,000), or $10, $20, and $60 a month billed yearly, per [Formspree's plans page](https://formspree.io/plans) in November 2026.
+
+So the comparison with OSForms mostly comes down to who pays for the integrations. Both are form backends: you point a form's `action` at an endpoint, and the service stores each submission and sends it on. Formspree is the mature hosted product, with a wider plugin catalog, real file uploads, and integrations priced by tier. OSForms is open source (MIT) and runs integrations on your own API keys, so email through Resend, Google Sheets, and signed webhooks all come with a free tier of 100 submissions a month. If your form collects files or needs one-click Mailchimp, pick Formspree. If you want Sheets and webhooks without a subscription, or the option to run the whole thing yourself, pick OSForms.
+
+I built OSForms, so read this with that in mind. Every Formspree number below comes from Formspree's own plans page and help center, checked on November 8, 2026. Every OSForms claim is checked against the code in [the public repo](https://github.com/hawkeye-sama/osforms). If you are weighing more than two tools, the [roundup of Formspree alternatives](/formspree-alternative) covers the wider field. This post is the narrow version: two products, compared row by row.
+
+## OSForms vs Formspree at a Glance
+
+|                              | OSForms                                   | Formspree                                                     |
+| ---------------------------- | ----------------------------------------- | ------------------------------------------------------------- |
+| Free tier                    | 100 submissions/mo, every integration     | 50 submissions/mo, email and chat plugins (Slack, Discord…)   |
+| Free-tier submission archive | No expiry                                 | 30 days                                                       |
+| Google Sheets                | Free, through your Google account         | Personal plan and up ($15/mo)                                 |
+| Webhooks                     | Free, optional HMAC-SHA256 signature      | Professional and up ($30/mo)                                  |
+| Auto-reply to the submitter  | Free, through your Resend key             | Professional and up ($30/mo)                                  |
+| Custom redirect after submit | Free                                      | Personal and up ($15/mo)                                      |
+| Export                       | CSV, every tier                           | CSV or JSON, Personal and up                                  |
+| Read submissions via API     | Read-only pull API, free                  | Professional and up ($30/mo)                                  |
+| File uploads                 | Not stored (placeholder string)           | Personal and up: 1 GB, 5 GB, or 10 GB                         |
+| Plugin catalog               | Email, Google Sheets, webhooks            | Wider: Zapier, Stripe, Mailchimp, Notion, Trello, Slack, more |
+| Spam protection              | Honeypot you name, reCAPTCHA or hCaptcha  | ML filtering on every plan; custom honeypot on Business       |
+| Source code                  | Open source, MIT                          | Closed; original repo archived July 2023                      |
+| Self-hosting                 | Yes (Next.js + MongoDB, Docker Compose)   | No                                                            |
+| React library                | `@osforms/react` (`<OSForm />` component) | `@formspree/react` (`useForm` hook)                           |
+
+The core job is identical. The differences are in who pays for the routing, how long your data sticks around, and what leaving looks like.
+
+## Formspree Pricing and Free Plan Limits vs OSForms
+
+[Formspree's pricing page](https://formspree.io/plans) shows this ladder (November 2026, billed monthly). It's unchanged from when I first drafted this post in July:
+
+- **Free ($0)**: 50 submissions/month, 30-day submission archive, 2 linked emails, no file uploads, email and chat plugins only.
+- **Personal ($15/mo)**: 200 submissions, 1 GB of uploads, unlimited archive, Google Sheets and other basic plugins (Notion, Trello), a custom thank-you page, CSV or JSON export.
+- **Professional ($30/mo)**: 2,000 submissions, 5 GB, all premium plugins (webhooks, Zapier, Stripe, Mailchimp), auto-response emails, API access, 2 team members.
+- **Business ($90/mo)**: 20,000 submissions, 10 GB, unlimited team members, a rules engine, custom spam rules and honeypot.
+- **Custom**: contact sales, for unlimited volume.
+
+Yearly billing brings the three paid tiers down to an effective $10, $20, and $60 a month, which is why you'll see both sets of numbers quoted around the web.
+
+The free plan works for a portfolio contact form. The friction is in the middle. $15 a month buys 200 submissions, about 7.5 cents each, and the integration a lot of developers want first (a webhook into their own app) still needs the next tier. A form that posts to a webhook costs $360 a year billed monthly, or $240 billed yearly.
+
+OSForms has one hosted tier: **100 submissions a month, free, with every integration included**. That's twice Formspree's free count with nothing gated inside it. Each form also gets a per-IP rate limit (10 requests a minute by default, adjustable) and a CORS allowlist, because those are safety features rather than upsells.
+
+What OSForms doesn't have is a paid hosted tier. There is no $90 plan that takes 20,000 submissions a month off your hands; paid plans are planned but not live. Past 100 a month, the path today is self-hosting, which I cover below along with its rough edges.
+
+Retention is the pricing difference people miss. Formspree's free plan keeps submissions for 30 days; paid plans lift that to unlimited. OSForms keeps them until you delete them, on the free tier too. The submission schema has no expiry logic at all. If you need a lead from six months ago and you aren't paying anyone, that matters more than the submission counts.
+
+## Integrations: Who Pays for What
+
+This is the real split between the two products.
+
+Formspree runs integrations on its side and prices them by tier. That's a coherent model: Formspree operates the connections and maintains a long list of them, and you pay for that convenience. It also means a subscription sits on top of API calls that cost little or nothing at the source.
+
+OSForms works the other way. You bring your own keys, so the integration layer costs nothing extra; you pay the actual provider, if anything:
+
+- **Email** goes through your own [Resend](https://resend.com/pricing) API key. Resend's free plan covers 3,000 emails a month (capped at 100 a day), far more than a 100-submission form needs. You get a notification on each submission plus an optional auto-reply to the person who filled in the form, with `{{field}}` variables filled from the submission. On Formspree, auto-response is a Professional feature. The [form email notifications guide](/form-email-notifications) walks through the setup.
+- **Google Sheets** connects through your own Google account using the narrow `drive.file` OAuth scope, so OSForms can only touch spreadsheets it created, not the rest of your Drive. Each submission becomes a row, and when your form gains a field, the missing column is added to the header row for you. Details are in [how to send form submissions to Google Sheets](/form-to-google-sheets).
+- **Webhooks** POST a JSON payload (`event`, `formId`, `formName`, `submissionId`, `submittedAt`, `data`) to any URL with a 30-second timeout. Set a secret and every request carries an `X-osforms-Signature` header: a hex HMAC-SHA256 of the raw body, with no prefix. Verifying it in Node:
+
+```js
+const crypto = require('crypto');
+
+// rawBody is the exact request body string, before JSON.parse
+const expected = crypto
+  .createHmac('sha256', process.env.OSFORMS_WEBHOOK_SECRET)
+  .update(rawBody)
+  .digest('hex');
+
+const received = req.headers['x-osforms-signature'] || '';
+const valid =
+  received.length === expected.length &&
+  crypto.timingSafeEqual(Buffer.from(received), Buffer.from(expected));
+```
+
+The fair question about BYOK is whether handing a SaaS your Resend key is safe. Keys are encrypted at rest with AES-256-GCM, decrypted only when an integration runs, and never sent to the browser. Since the code is public, you can check that yourself. The [bring-your-own-key explainer](/bring-your-own-key) covers the trade-offs, which do exist; leaked keys just aren't the default one.
+
+Reading data back out follows the same pattern. Formspree lists API access ("fetch all your submissions programmatically from a JSON HTTP endpoint") on Professional and up. OSForms has a read-only pull API on the free tier: create an `osf_live_` key scoped to specific forms, then call `GET /api/v1/submissions` with cursor pagination. Pulls don't count toward your monthly quota, and the response never includes IP addresses or user agents. The [pull API reference](/docs/api-reference/pull-submissions) has the parameters.
+
+Now the concession. Formspree's catalog is much wider: Zapier, Stripe, Mailchimp, Notion, Trello, and chat apps like Slack, Discord, Telegram, and WhatsApp (the chat ones even on the free plan). OSForms has exactly three integration types: email, Google Sheets, and webhooks. A webhook can reach anything with an HTTP endpoint, Zapier and Make included, but that's wiring you build, not a toggle. If your workflow lives on one-click Mailchimp sync or Stripe payments in the form, Formspree earns its subscription.
+
+## Data Ownership, Exports, and Self-Hosting
+
+Formspree started as an open-source project and more or less created this category. The [original repository](https://github.com/formspree/formspree) was archived on July 14, 2023, and its README now says the hosted product's "source code is not available." What you sign up for today is a closed, hosted service. Your submissions live on its servers, and exports depend on your plan: CSV or JSON from Personal up, none on Free.
+
+OSForms is MIT-licensed end to end, which matters in three practical ways:
+
+1. **You can read the code that handles your data.** The submission endpoint, the encryption, and the integration handlers are all public.
+2. **You can export on any tier.** Every form has CSV export of all submissions, free tier included. It's CSV only for now; if you want JSON files, Formspree's export is ahead, though the pull API returns JSON if you're scripting it.
+3. **You can leave without a rewrite.** Self-hosting isn't a separate enterprise edition. It's the same codebase, started with `docker compose up` or deployed to Vercel with MongoDB Atlas, which is what osforms.com runs on.
+
+Self-hosting has rough edges today, and you should know them before counting on it. System emails (signup OTP, welcome, failure alerts) are sent from fixed `@osforms.com` addresses, so a self-hosted instance can't deliver them yet; you verify your account by reading the OTP from MongoDB. And every account starts at the same 100 submissions a month. No env var changes that, but one `updateMany` in MongoDB does, as the [self-hosting guide](https://github.com/hawkeye-sama/osforms/blob/main/SELF_HOSTING.md#raise-the-submission-limit) shows. Workable for a developer, not yet a turnkey install for a non-technical client.
+
+That exit is the real lock-in test. If a hosted tool changes its pricing, your options are pay or rebuild. With OSForms the exit is `git clone`. The [guide to owning your form data](/own-your-form-data) makes the longer argument.
+
+Spam is where Formspree does more for you out of the box. Its Formshield filter applies machine learning to every plan, free included, with advanced controls on Professional and custom honeypots on Business. OSForms has no automatic filter. It gives you a honeypot field you name yourself (on every tier) plus reCAPTCHA or hCaptcha with your own site keys. Formspree wins this one if you don't want to configure anything.
+
+## Which One Should You Pick?
+
+Pick **Formspree** if:
+
+- **Your form collects files.** The clearest case. OSForms accepts multipart posts but stores a placeholder string, not the file. Formspree stores uploads from the Personal plan up: up to 25 MB per file and 10 files per submission, according to its [file uploads help article](https://help.formspree.io/hc/en-us/articles/115008380088-File-uploads).
+- **You need plugins beyond email, Sheets, and webhooks.** Stripe, Mailchimp, Notion, and Zapier are toggles on Formspree and webhook projects on OSForms.
+- **You want spam handled without setup.** Formshield runs on every plan with no keys to paste.
+- **You want high volume on someone else's servers.** 20,000 hosted submissions a month on Business, with support and team seats, is a fair thing to pay $90 for when self-hosting is off the table.
+
+Pick **OSForms** if:
+
+- **You want Google Sheets, webhooks, and auto-replies without a subscription.** These are the features Formspree tiers at $15 to $30 a month, and they're free here because your own keys power them.
+- **Your data should outlive 30 days on a free plan.** Submissions stay until you delete them, and CSV export and the pull API are on every tier.
+- **You want the exit hatch.** MIT source and Docker self-hosting mean a pricing change can't strand you.
+- **You'd rather email go through your own provider.** Notifications send from your Resend account, so the sending domain and delivery logs are yours.
+
+The cheapest test is to run both free tiers side by side: Formspree's 50 a month against OSForms' 100. Setup is the same shape on each, one endpoint URL in your form's `action`, and the [two-minute setup guide](/form-backend-setup) covers the OSForms half. Switching later in either direction is a one-line change. For the full set of options beyond these two, DIY serverless functions included, start with [how to handle form submissions without a backend](/handle-form-submissions).

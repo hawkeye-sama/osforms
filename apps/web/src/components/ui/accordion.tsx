@@ -1,8 +1,7 @@
 'use client';
 
 import { ChevronDown } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -19,10 +18,15 @@ function AccordionItem({
   isOpen,
   onClick,
 }: AccordionItemProps) {
+  const panelId = useId();
+
   return (
     <div className="border-border/50 border-b last:border-0">
       <button
+        type="button"
         onClick={onClick}
+        aria-expanded={isOpen}
+        aria-controls={panelId}
         className="flex w-full items-center justify-between py-6 text-left transition-all"
       >
         <span className="text-foreground text-lg font-medium">{question}</span>
@@ -33,21 +37,23 @@ function AccordionItem({
           )}
         />
       </button>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="overflow-hidden"
-          >
-            <div className="text-muted-foreground pb-6 text-base leading-relaxed">
-              {answer}
-            </div>
-          </motion.div>
+      {/* The answer is always in the DOM (so crawlers and AI answer engines can
+          read it); it's collapsed visually with a grid-rows transition. */}
+      <div
+        id={panelId}
+        role="region"
+        inert={!isOpen}
+        className={cn(
+          'grid transition-[grid-template-rows,opacity] duration-300 ease-in-out',
+          isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
         )}
-      </AnimatePresence>
+      >
+        <div className="overflow-hidden">
+          <div className="text-muted-foreground pb-6 text-base leading-relaxed">
+            {answer}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -63,7 +69,7 @@ export function Accordion({
     <div className="w-full">
       {items.map((item, i) => (
         <AccordionItem
-          key={i}
+          key={item.question}
           question={item.question}
           answer={item.answer}
           isOpen={openIndex === i}

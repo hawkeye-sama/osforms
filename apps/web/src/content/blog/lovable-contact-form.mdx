@@ -1,0 +1,191 @@
+---
+title: 'Lovable Contact Form That Stores Submissions'
+description: 'Lovable contact form guide: store every submission and get email or Google Sheets rows without putting an API key in your frontend. Includes a paste-in prompt.'
+date: '2027-01-25'
+dateModified: '2027-01-25'
+author: 'Bahroze Ali'
+tags: ['lovable', 'vibe coding', 'contact form', 'api keys']
+readingTime: '9 min read'
+category: 'Integrate'
+seoTitle: 'Lovable Contact Form That Stores Submissions'
+focusKeyphrase: 'lovable contact form'
+coverImage: '/content/images/lovable-contact-form-cover.png'
+coverTitle: 'Lovable Contact Form'
+coverSubtitle: 'Store every submission, keep your API keys out of the browser'
+faq:
+  - question: 'Does a Lovable contact form save submissions on its own?'
+    answer: "Only if something server-side receives them. Lovable's docs say that without a backend, everything your app shows lives only in the visitor's browser and disappears on reload. Either ask Lovable to enable its built-in backend (Lovable Cloud, built on Supabase) and store submissions in a table, or point the form at a hosted endpoint such as OSForms, which stores each submission for you."
+  - question: 'Is it safe to put my Resend API key in a VITE_ variable?'
+    answer: "No. Lovable's secrets docs say anything prefixed with VITE_ is a build-time, browser-exposed value embedded in the client bundle. Anyone can read it from your published JavaScript. Keep the key in Lovable's Secrets (read only by server-side functions) or in a form backend that holds it server-side, like OSForms, which encrypts it at rest with AES-256-GCM."
+  - question: 'Is the OSForms endpoint URL a secret?'
+    answer: 'No. The endpoint (https://osforms.com/api/v1/f/your-slug) is an address, not a credential, so it is fine in frontend code. Anyone who has it can post to it, which is true of any contact form. OSForms limits abuse with a per-IP rate limit (10 submissions a minute by default), an optional honeypot field, an optional allowed-origins list for browser requests, and your monthly cap.'
+  - question: 'Should I let Lovable create a Supabase edge function for my contact form?'
+    answer: 'It is a fine choice if you already use Lovable Cloud for auth and want submissions in the same database as your users, or if the form needs custom server logic. If you only need to store messages and get notified, a hosted endpoint is less to maintain: no function to secure, no table to design, and no secret in your project.'
+  - question: 'Can a Lovable contact form send messages to Google Sheets?'
+    answer: 'Yes, through OSForms. Connect your Google account on the form, and OSForms creates a spreadsheet named after the form and appends one row per submission, adding columns when new fields appear. It uses the drive.file scope, so it can only touch files it created.'
+---
+
+A Lovable contact form looks finished the moment the preview renders, but it only stores submissions if something on a server receives them. You have two clean options: let Lovable turn on its built-in backend and save messages to a database table through a server-side function, or point the form at a hosted form endpoint that stores each submission and forwards it to your email or a Google Sheet. Both keep API keys out of the browser, which is the one mistake to avoid.
+
+This guide is for people building with Lovable who now need the contact form to actually work. I build OSForms, the open-source form backend used in the second half, so I'll show the Lovable-native route first and say when it is the better choice.
+
+## What Lovable Builds for a Contact Form by Default
+
+Ask Lovable for a contact form and you get a React component with fields, validation, and a success toast. What happens on submit depends on whether your project has a backend. Lovable's [Cloud docs](https://docs.lovable.dev/features/cloud) put it plainly (November 2026): "Without one, everything your app shows lives only in that browser and disappears when the page reloads." The same page lists "anything a visitor submits through a form" and "a message to you when someone submits a form" as the jobs a backend does.
+
+When you ask Lovable to save or email submissions, it reaches for that built-in backend, Lovable Cloud, which the docs say uses "Supabase's open-source foundation". In practice that means a database table for messages and a server-side function that sends the email with your Resend key. Older projects run that code as an edge function. Per the [edge functions page](https://docs.lovable.dev/features/edge-functions), apps created from May 13, 2026 on TanStack Start usually run that code as server functions inside the app instead.
+
+The exact code Lovable writes changes with each model and template update, so I won't pretend to show "the" output. What matters is where the key and the data end up, and that you can check yourself.
+
+## Why API Keys in Client-Side JavaScript Leak
+
+Here is the shortcut that shows up in vibe-coded apps: the AI, or a hurried human, sends the email straight from the browser.
+
+```tsx
+// Don't ship this. The key ends up in your public JavaScript bundle.
+const RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY;
+
+await fetch('https://api.resend.com/emails', {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${RESEND_KEY}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ from, to, subject, text }),
+});
+```
+
+Lovable's own [secrets docs](https://docs.lovable.dev/features/secrets) are clear about why this fails (November 2026): values prefixed with `VITE_` "are embedded into the client bundle at build time". Its [security best practices page](https://docs.lovable.dev/tips-tricks/security-best-practices) adds that "secrets stored in frontend code are visible to users and should be considered compromised." Anyone can open DevTools, find the script under the Network tab, and search it for `re_`, the prefix every Resend key starts with. With that key they can send email as you until you revoke it.
+
+This is not hypothetical. In September 2025, [Wiz reported](https://www.wiz.io/blog/common-security-risks-in-vibe-coded-apps) finding "third-party API keys and service account credentials hardcoded directly into client-side JavaScript files" across vibe-coded apps, and its recommended fix for Lovable was to keep keys in Supabase Secrets and call services from edge functions. The rule is short: the browser can know where to send a message, never how to authenticate with your email provider.
+
+> "The browser can know where to send a message. It should never know how to log in to your email provider."
+
+## Set Up a Lovable Contact Form Endpoint With OSForms
+
+The hosted route moves both jobs (storing and forwarding) out of your Lovable project. Your frontend posts JSON to an endpoint; the endpoint stores the submission, then runs your integrations server-side with keys you saved in the OSForms dashboard.
+
+Setup takes three steps:
+
+1. **Create a form** in the OSForms dashboard and copy its endpoint, which looks like `https://osforms.com/api/v1/f/YOUR_FORM_SLUG`.
+2. **Set a honeypot field** in the form settings, for example `company_website`. Any submission that fills it is accepted with a normal success response but never stored.
+3. **Add allowed origins** once you publish, such as `https://your-app.lovable.app` and your custom domain, exactly as the browser sends them (scheme included, no trailing slash). If you test from Lovable's in-editor preview, its address can differ from your published URL, so leave the list empty while testing and fill it in when you publish. The check only applies to browser requests that send an `Origin` header.
+
+Then paste this into the Lovable chat:
+
+```text
+Update the contact form so it submits to my form backend instead of using
+Lovable Cloud.
+
+- On submit, send a POST request with fetch to:
+  https://osforms.com/api/v1/f/YOUR_FORM_SLUG
+- Headers: Content-Type: application/json
+- Body: JSON.stringify of the form fields, using these exact field names:
+  name, email, message, company_website
+- company_website is a honeypot: render it visually hidden (off-screen, not
+  display:none), with tabIndex={-1} and autoComplete="off", and label it
+  "Leave this field empty".
+- On a 2xx response: reset the form and show a success message.
+- On any other response: read the JSON body and show its "error" string.
+- Disable the submit button while the request is in flight.
+- Do NOT create an edge function, server function, database table, or secret
+  for this form. Do NOT add any API key to the frontend or to .env.
+```
+
+What you should get back is close to this. If Lovable's version differs, compare it against these lines rather than trusting it blindly:
+
+```tsx
+import { useState, type FormEvent } from 'react';
+
+const ENDPOINT = 'https://osforms.com/api/v1/f/YOUR_FORM_SLUG';
+
+export function ContactForm() {
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>(
+    'idle'
+  );
+  const [error, setError] = useState('');
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    setStatus('sending');
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      });
+      if (res.ok) {
+        form.reset();
+        setStatus('sent');
+        return;
+      }
+      const body = await res.json().catch(() => ({}));
+      setError(body.error ?? 'Something went wrong. Please try again.');
+    } catch {
+      setError('Network error. Please try again.');
+    }
+    setStatus('error');
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" required />
+      <input name="email" type="email" required />
+      <textarea name="message" required />
+      <div style={{ position: 'absolute', left: '-9999px' }} aria-hidden="true">
+        <label>
+          Leave this field empty
+          <input name="company_website" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
+      <button type="submit" disabled={status === 'sending'}>
+        {status === 'sending' ? 'Sending…' : 'Send'}
+      </button>
+      {status === 'sent' && <p>Thanks, your message was sent.</p>}
+      {status === 'error' && <p role="alert">{error}</p>}
+    </form>
+  );
+}
+```
+
+Because the request is JSON, the endpoint always answers with JSON: `{ "success": true, "message": "Submission received" }` on success, or `{ "error": "..." }` with a 4xx status. The ones you will see in practice are 403 (origin not in your allowed list, or the monthly limit reached), 429 (more than 10 submissions a minute from one IP, the default rate limit), and 404 (wrong slug). The response comes back as soon as the submission is stored; email and Sheets run in the background after that, so a slow integration never makes your visitor wait.
+
+The endpoint URL is safe to commit. It is an address, the same way a Lovable edge function URL is. What protects it is the rate limit, the honeypot, the origin list, and your 100-submission monthly cap on the free tier.
+
+## When to Decline Lovable's Supabase Edge Function
+
+Lovable will sometimes offer to create an edge function that handles the form and sends the email through Resend. Neither answer is wrong. Here is how the two routes compare:
+
+|                           | Lovable Cloud function                               | OSForms endpoint                                  |
+| ------------------------- | ---------------------------------------------------- | ------------------------------------------------- |
+| Where the Resend key sits | Lovable project Secrets                              | OSForms, encrypted at rest (AES-256-GCM)          |
+| Where submissions live    | A table in your Lovable Cloud database               | OSForms, with CSV export and a read-only pull API |
+| Spam and abuse controls   | Whatever the function implements                     | Rate limit, honeypot, allowed origins, built in   |
+| Google Sheets, webhooks   | More functions and more secrets to add               | Integrations you switch on per form               |
+| Who maintains it          | You, through prompts; usage draws on Lovable credits | OSForms; free up to 100 submissions a month       |
+| Leaving the platform      | Sync the code to GitHub and export the database      | Change one URL; export your submissions as CSV    |
+
+**Decline the function** when the form only needs to store messages and notify you. Lovable's edge functions page notes that "anyone who knows a function's address can send it requests, so each function must check the caller." A public contact form cannot check the caller in the usual sense, so you would be prompting your way to rate limiting and spam filtering on code you did not write. You also skip the backend usage that the Cloud docs say counts toward your Run credits.
+
+To decline, reply with one line: "Don't create a function or table for the contact form. Keep it as a plain fetch to my form endpoint."
+
+**Accept it** when submissions belong next to your app's own data. If signed-in users send support requests and you want them joined to user records, shown in an admin page you built in Lovable, or guarded by row-level security, a table in your own database is the right home. The same goes for forms with custom logic, like creating a CRM record only for leads above a budget. And if you already run a Lovable Cloud backend for auth, one more function is a small addition.
+
+## Email and Google Sheets Through OSForms Integrations
+
+With the form posting to OSForms, notifications are dashboard settings, not code. Each integration runs on your own account, which is the [bring-your-own-key model](/bring-your-own-key) the free tier is built on.
+
+**Email through Resend.** Add your Resend API key, a from address on a domain you verified in Resend, and one or more recipients. Each submission arrives as an HTML table of the fields, with your subject line plus the form name. Turn on auto-reply and OSForms also emails the visitor: it finds the address in a field named `email` (or one of a few common variants, or a field you name) and fills `{{name}}`-style placeholders in your template from the submission. The [form email notifications guide](/form-email-notifications) covers templates and testing.
+
+**Google Sheets.** Connect your Google account on the form and OSForms creates a spreadsheet named after the form (a form called Contact gets "Contact Submissions"), then appends a row per submission with `Submission ID` and `Submitted At` columns. New fields become new columns. It asks for the `drive.file` scope, so it can only open files it created. The [Google Sheets walkthrough](/form-to-google-sheets) has the details.
+
+**Webhooks.** For Slack, a CRM, or your own API, add a webhook URL. OSForms POSTs JSON with `event`, `formId`, `formName`, `submissionId`, `submittedAt`, and `data`, and signs it with an `X-osforms-Signature` HMAC-SHA256 header if you set a secret ([how to verify that signature in Node.js](/verify-webhook-signature-nodejs)).
+
+If an integration fails (an expired key, a revoked Google grant), the submission is still stored, the failure is logged against it, and you get an in-app notification. Two limits to know before you rely on it: OSForms does not store file uploads (a file field is saved as a placeholder like `[File: brief.pdf, 48213 bytes]`), and CAPTCHA support is reCAPTCHA or hCaptcha with your own keys, not Cloudflare Turnstile.
+
+## Shipping a Lovable Contact Form You Don't Have to Babysit
+
+Lovable is good at the part you see. The part you don't see, where a message is stored, who can send to it, and where your Resend key lives, is worth one deliberate decision. Either keep it inside Lovable Cloud and own the function, or hand it to an endpoint and keep your project frontend-only. Both are fine; a key in a `VITE_` variable is not.
+
+If you take the endpoint route, your Lovable contact form is one fetch call, your keys sit server-side, and every submission is stored and forwarded without a line of backend code in the project. For the wider picture of how static and AI-built sites receive forms, read [how to handle form submissions without a backend](/handle-form-submissions).

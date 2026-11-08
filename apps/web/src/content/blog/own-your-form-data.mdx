@@ -1,8 +1,8 @@
 ---
 title: "Why Your Form Tool Shouldn't Own Your Data"
-description: "Your form submissions live on someone else's servers, under their retention rules. Here's why you should own your data, and what it costs you when you don't."
+description: 'Own your data: most form tools keep submissions on their servers under their retention rules. Test export, deletion, and retention before you pick one.'
 date: '2026-07-27'
-dateModified: '2026-07-27'
+dateModified: '2026-11-08'
 author: 'Bahroze Ali'
 tags: ['data-ownership', 'byok', 'open-source', 'form-backend']
 readingTime: '7 min read'
@@ -41,7 +41,18 @@ Run the test on whatever you use today:
 2. **Does delete mean delete?** Or does "delete" hide the row in your UI while it stays in their database?
 3. **If you stop paying, what survives?** Downgrade to free and check what happens to last year's submissions.
 
-The answers are worse than most people expect. Formspree's free tier keeps a 30-day archive; a lead from six weeks ago is unrecoverable. Web3Forms' free tier forwards each submission to your inbox and stores it for 30 days with no CSV export, so your lasting archive is whatever your email search can dig up. These aren't hidden gotchas, they're in the pricing tables. But nobody reads a pricing table asking "who holds my data in two years?"
+The answers are worse than most people expect. Formspree's free tier keeps a 30-day archive; a lead from six weeks ago is unrecoverable. Web3Forms' free dashboard only lists the last 30 days of submissions, though its pricing page says the data itself is kept longer, so day to day your inbox becomes the archive. These aren't hidden gotchas, they're in the pricing tables. But nobody reads a pricing table asking "who holds my data in two years?"
+
+Here's the three-part test scored for four tools, using each vendor's own pricing page and help docs as of November 2026:
+
+| Tool          | Export everything                                                                                                 | Delete                                                                                                                                                                                   | Retention                                                                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Formspree** | CSV or JSON from Personal ($15/mo); no export on Free ([plans](https://formspree.io/plans))                       | Deleting an over-limit submission is permanent ([help docs](https://help.formspree.io/articles/form-and-project-settings/over-limit-submissions)); other deletion isn't documented there | 30-day archive on Free, unlimited on paid plans ([plans](https://formspree.io/plans))                                                               |
+| **Web3Forms** | CSV on every plan, Free included ([pricing](https://web3forms.com/pricing))                                       | Data is permanently deleted when the retention period you set runs out ([pricing](https://web3forms.com/pricing))                                                                        | Dashboard lists 30 days on Free; data kept up to 3 years, set per form ([pricing](https://web3forms.com/pricing))                                   |
+| **Typeform**  | CSV or XLSX of all responses or a filtered set ([help](https://help.typeform.com/hc/en-us/articles/360029253572)) | Permanent; Typeform says it cannot restore deleted responses ([help](https://help.typeform.com/hc/en-us/articles/360040196472-What-happens-to-deleted-responses-forms-and-accounts))     | Free plan collects 10 responses a month ([help](https://help.typeform.com/hc/en-us/articles/360032972852-Free-plan)); responses survive a downgrade |
+| **OSForms**   | CSV of every submission on every tier, plus a read-only pull API                                                  | Deleting a form deletes its submissions and integration configs in the same request; no soft delete                                                                                      | No expiry on any tier                                                                                                                               |
+
+Typeform does well on deletion and export, and that deserves saying. Its weak spot here is volume, not ownership. OSForms has a gap of its own: deletion is per form today, not per submission.
 
 The pattern underneath is the same one I wrote about in [what BYOK actually means](/bring-your-own-key): the tool sits between you and your own stuff, and the space between is where the pricing page lives.
 
@@ -53,7 +64,7 @@ That's what makes the form tool different from most SaaS in your stack. Your for
 
 > "Renting the top of your funnel on a 30-day retention window is a strange bet to make to save $15 a month."
 
-And the terms of that rental change without your input. Typeform gutted its free tier in early 2026; today its [pricing page](https://www.typeform.com/pricing/) starts at Basic, $39 a month. Getform rebranded to [Forminit](https://forminit.com/) in January 2026; that one worked out fine for users, but it's a reminder that the company holding your data layer can change identity, pricing, or direction any quarter. When the change comes, your options are pay up or lose the pipe, because the migration cost sits entirely on your side.
+And the terms of that rental change without your input. Typeform's [pricing page](https://www.typeform.com/pricing/) now leads with Basic at $39 a month and describes its free plan only as "a limited number of responses per month"; the [help center](https://help.typeform.com/hc/en-us/articles/360032972852-Free-plan) puts that limit at 10 (November 2026). If you like Typeform's format but not that deal, there is an [open source Typeform alternative](/typeform-alternative) that keeps the responses on your side. Getform rebranded to [Forminit](https://forminit.com/) in January 2026; that one worked out fine for users, but it's a reminder that the company holding your data layer can change identity, pricing, or direction any quarter. When the change comes, your options are pay up or lose the pipe, because the migration cost sits entirely on your side.
 
 There's a compliance edge to this too. If you collect personal data through a form, you're the data controller under GDPR, whether you feel like one or not. When someone asks you to hand over or erase everything you hold on them, "it's in a third-party dashboard, partly expired, exportable one page at a time" is a bad position to answer from. You can delegate storage; you can't delegate the obligation.
 
@@ -89,7 +100,7 @@ Storage is only half of where form data lives. The other half is the copies that
 
 Email notifications go out through your Resend key, so the messages sit in your sending history. Sheet rows are appended to a spreadsheet in your Google account, through an OAuth grant scoped to `drive.file` (files the app created, not your whole Drive). Webhooks post to your endpoint, signed with HMAC-SHA256 so you can verify each request. Revoke the Resend key or the Google grant and OSForms' access ends that second, without a support ticket.
 
-That's the quiet, structural difference between BYOK and the standard hosted model. Even if you never export a CSV and never self-host, a working copy of your submissions is accumulating in a Google Sheet you own and an inbox you own, from day one. The form tool becomes a router you can swap out, not a vault you have to negotiate with. It's also why the integrations cost nothing here while [Formspree charges $15 a month](/formspree-alternative) for the same Google Sheets connection running on your account either way.
+That's the quiet, structural difference between BYOK and the standard hosted model. Even if you never export a CSV and never self-host, a working copy of your submissions is accumulating in a Google Sheet you own and an inbox you own, from day one. The form tool becomes a router you can swap out, not a vault you have to negotiate with. It's also why the integrations cost nothing here while [Formspree charges $15 a month](/formspree-alternative) for the same Google Sheets connection running on your account either way. The [Google Sheets walkthrough](/form-to-google-sheets) shows what that live copy looks like.
 
 ## Own Your Data From the First Submission
 

@@ -1,14 +1,14 @@
 ---
-title: 'How to Handle Form Submissions in Next.js'
-description: 'A practical guide to Next.js form submission: server actions, API routes, and when you can skip the backend entirely and post straight to an endpoint.'
+title: 'How to Build a Next.js Contact Form Without a Database'
+description: 'Next.js contact form guide: Server Actions, Route Handlers, or posting straight to a hosted endpoint that stores and emails submissions with no database.'
 date: '2026-07-10'
-dateModified: '2026-07-10'
+dateModified: '2026-11-08'
 author: 'Bahroze Ali'
-tags: ['nextjs', 'form submission', 'server actions', 'tutorial']
+tags: ['nextjs', 'contact form', 'server actions', 'tutorial']
 readingTime: '15 min read'
 category: 'Build'
-seoTitle: 'Handle Form Submissions in Next.js the Easy Way'
-focusKeyphrase: 'next.js form submission'
+seoTitle: 'Next.js Contact Form: Server Action, No Database'
+focusKeyphrase: 'next.js contact form'
 coverImage: '/content/images/nextjs-form-submission-cover.png'
 coverTitle: 'Forms in Next.js'
 coverSubtitle: 'Server Actions, Route Handlers, and when to skip both'
@@ -25,13 +25,19 @@ faq:
     answer: 'Yes. Post to the endpoint from a client component with fetch, or call the same URL server-side inside a Server Action. Both work in the App Router and the Pages Router. The @osforms/react component also works, marked with the use client directive.'
 ---
 
-Next.js gives you more than one way to receive a form. You can write a Route Handler, you can write a Server Action, or you can skip both and post straight to a hosted endpoint. The right choice for your Next.js form submission depends less on the code and more on what happens after the data arrives: where it gets stored, who gets emailed, and how you keep bots out.
+Next.js gives you more than one way to receive a form. You can write a Route Handler, you can write a Server Action, or you can skip both and post straight to a hosted endpoint. The right choice for your Next.js contact form depends less on the code and more on what happens after the data arrives: where it gets stored, who gets emailed, and how you keep bots out.
 
 Here is the short answer. If you own the logic that runs on submit, use a Server Action. If the endpoint has to be public and callable from anywhere, use a Route Handler. If all you need is to collect the data, store it, and route it somewhere, you do not need either one. This guide walks all three paths with real code, then shows the parts Next.js does not solve for you and how to stop rebuilding them on every project.
 
-## Next.js Form Submission Options
+## Next.js Contact Form Options
 
-There are three honest ways to handle a form in a modern Next.js app, and they sit on a spectrum from "you write everything" to "you write almost nothing."
+| Approach                  | Use it when                                                                                                    | What you build yourself                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Server Action             | The form belongs to your app and the server must decide something first (sign-up, payment, a write to your DB) | Validation, storage, email delivery, spam protection, rate limiting                  |
+| Route Handler             | The endpoint is public and other clients call it (a mobile app, a third-party service, `curl`)                 | Everything above, plus CORS and the client `fetch` with loading and error state      |
+| Hosted endpoint (OSForms) | The server is only a courier: store the submission, notify someone, keep bots out                              | The form markup and a submit handler, plus validation if your business rules need it |
+
+There are three ways to handle a form in a modern Next.js app, and they sit on a spectrum from "you write everything" to "you write almost nothing."
 
 **Route Handlers** are the classic API endpoint. You create a file at `app/api/contact/route.ts`, export a `POST` function, and your client posts JSON to it with `fetch`. This is the mental model most developers carry over from Express or the old `pages/api` routes. It is explicit and familiar.
 
@@ -375,7 +381,7 @@ export function Contact() {
 }
 ```
 
-For a plain HTML starting point and the full setup walkthrough, see [how to set up a form backend in 2 minutes](/form-backend-setup). It covers creating the endpoint and the redirect behavior in more depth.
+For the full setup walkthrough, see [how to set up a form backend in 2 minutes](/form-backend-setup). It covers creating the endpoint and the redirect behavior in more depth. If a page doesn't need React at all, the same endpoint works from a [plain HTML contact form](/html-contact-form) with no JavaScript, and the client-side patterns above (controlled inputs, validation, error states) get a fuller treatment in [how to handle forms in React](/forms-in-react).
 
 ## Adding Email, Sheets, and Webhooks on Your Keys
 
@@ -414,7 +420,7 @@ export async function POST(req: Request) {
 
 The signature arrives as a raw hex digest in the `X-osforms-Signature` header, computed over the JSON payload with your signing secret. Compare it against your own recomputed digest before trusting the body.
 
-**Google Sheets.** Append every submission as a row in a sheet on your own Google account. The OAuth flow requests the narrow `drive.file` scope, so OSForms only touches files it creates, not your whole Drive.
+**Google Sheets.** Append every submission as a row in a sheet on your own Google account. The OAuth flow requests the narrow `drive.file` scope, so OSForms only touches files it creates, not your whole Drive. Column mapping and the setup steps are in [how to send form submissions to Google Sheets](/form-to-google-sheets).
 
 The thread through all three is BYOK. Your keys are encrypted at rest with AES-256-GCM and only decrypted in memory when a submission arrives, never logged. You pay your provider directly at their rate, with no per-integration tier marked up on top of an API you already pay for. That model, and why it matters, is the subject of [what bring your own key actually means](/bring-your-own-key). It is also why every integration is free on the OSForms side: they cost nothing to run when you supply the key.
 

@@ -1,14 +1,14 @@
 ---
 title: 'How to Send Form Submissions to Google Sheets'
-description: 'Connect a form to Google Sheets without paying for it. Use your own Google account via OAuth so every submission lands in a spreadsheet you own and control.'
+description: 'Send an HTML form to Google Sheets without Apps Script: point the form at an endpoint, connect your own Google account, and each submission becomes a row.'
 date: '2026-07-21'
-dateModified: '2026-07-21'
+dateModified: '2026-11-08'
 author: 'Bahroze Ali'
 tags: ['tutorial', 'google-sheets', 'integrations', 'byok']
-readingTime: '6 min read'
+readingTime: '7 min read'
 category: 'Integrate'
-seoTitle: 'Send Form Submissions to Google Sheets Free'
-focusKeyphrase: 'form to google sheets'
+seoTitle: 'HTML Form to Google Sheets Without Apps Script'
+focusKeyphrase: 'html form to google sheets'
 coverImage: '/content/images/form-to-google-sheets-cover.png'
 coverTitle: 'Form to Google Sheets'
 coverSubtitle: 'Every submission in a sheet you own'
@@ -25,15 +25,38 @@ faq:
     answer: 'Nothing is lost. The submission is stored in OSForms before any integration runs, so a failed append only means the row is missing from the sheet. The failure is recorded in the integration log with the exact error, and you get an in-app notification so you can fix the connection.'
 ---
 
-Google Sheets is still the most requested destination for form data, and the one most form backends make you pay for. To send a form to Google Sheets you need three things: an endpoint that receives the POST, an OAuth connection to a Google account, and code that appends each submission as a row. OSForms handles all three. You point your form at an endpoint, click **Connect with Google**, and every submission lands in a spreadsheet created in your own Drive, on your own account. It's included in the free tier, because the integration runs on your Google credentials, not ours.
+To send an HTML form to Google Sheets you need three things: an endpoint that receives the POST, an OAuth connection to a Google account, and code that appends each submission as a row. OSForms handles all three without Apps Script. You set your form's `action` to an OSForms endpoint, click **Connect with Google**, and every submission lands in a spreadsheet created in your own Drive, on your own account. It's included in the free tier, because the integration runs on your Google credentials, not ours.
 
-The DIY route is worth knowing so you can appreciate skipping it. The classic hack is a Google Apps Script bound to a sheet: write a `doPost(e)` handler, deploy it as a web app, fight with `e.parameter`, and redeploy every time the script changes. The grown-up route is the Sheets API with a service account: create a Google Cloud project, enable the API, generate a JSON key, share the sheet with the service account's email, then write and host server code that formats and appends rows. Both work. Both are a lot of machinery for "put the form in a spreadsheet."
+Google Sheets is still the most requested destination for form data, and the one most form backends make you pay for. Before the OSForms version, here's the route most tutorials show.
 
-## Why Send a Form to Google Sheets
+## HTML Form to Google Sheets With Apps Script (the DIY Way)
+
+The classic hack is a Google Apps Script bound to the sheet. You open **Extensions → Apps Script**, write a `doPost(e)` handler, and deploy it as a web app that anyone can call:
+
+```js
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
+  sheet.appendRow([
+    new Date(),
+    e.parameter.name,
+    e.parameter.email,
+    e.parameter.message,
+  ]);
+  return ContentService.createTextOutput(
+    JSON.stringify({ result: 'success' })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+```
+
+Then you paste the web app URL into your form's `action`. It works, and the rough edges show up quickly. The column order is hardcoded, so a new form field means editing the script and redeploying it. The web app is public, with no spam check or rate limit in front of it. Each code change needs a new deployment, and a form that posts with `fetch` from another origin runs into the script's redirect-based responses. Nothing stores the submission anywhere except the sheet, so a failed append loses it.
+
+The grown-up route is the Sheets API with a service account: create a Google Cloud project, enable the API, generate a JSON key, share the sheet with the service account's email, then write and host server code that formats and appends rows. Both work. Both are a lot of machinery for "put the form in a spreadsheet."
+
+## Why Send an HTML Form to Google Sheets
 
 A spreadsheet is the one interface everyone on a team already knows. Send submissions there and your leads are sortable, filterable, chartable, and shareable without anyone logging into another dashboard. For a waitlist, a contact form, or early customer research, a sheet is a perfectly good CRM.
 
-It's also the integration hosted form tools gate hardest. Formspree puts Google Sheets on its paid Personal plan at $15/month, Basin gates it behind its $24/month Growth tier, and Web3Forms holds it for the $18/month Pro plan (prices checked July 2026; confirm on the vendor pages, they drift). The pattern across all three: the connection runs through _your_ Google account, and you pay the tool a monthly fee for permission to use it.
+It's also the integration hosted form tools gate hardest. As of November 2026, [Formspree](https://formspree.io/plans) puts Google Sheets on its Personal plan at $15/month, [Basin](https://usebasin.com/pricing) gates it behind its Growth plan at $24.17/month billed yearly, and [Web3Forms](https://web3forms.com/pricing) holds it for the $149/year Pro plan. Prices drift, so confirm on the vendor pages. The pattern across all three: the connection runs through _your_ Google account, and you pay the tool a monthly fee for permission to use it.
 
 That pattern is why this integration is free in OSForms. There's no per-seat Google API cost for us to recover. You authorize your own account, Google's quota is yours, and the data never belongs to anyone but you. If the reasoning behind that model is new to you, [what bring your own key actually means](/bring-your-own-key) covers it in full.
 
@@ -52,7 +75,7 @@ You'll need a free [OSForms account](https://osforms.com/signup) and any Google 
 </form>
 ```
 
-Plain HTML shown here, but the endpoint accepts `application/x-www-form-urlencoded` and `application/json`, so `fetch` from React, Vue, or anywhere else works the same. If this part is new, the [form backend setup guide](/form-backend-setup) walks through it in two minutes.
+Plain HTML shown here (the [HTML contact form guide](/html-contact-form) adds labels, redirects, and a honeypot), but the endpoint accepts `application/x-www-form-urlencoded` and `application/json`, so `fetch` from React, Vue, or anywhere else works the same. If this part is new, the [form backend setup guide](/form-backend-setup) walks through it in two minutes.
 
 **2. Connect Google.** Open your form's **Integrations** tab, choose **Google Sheets**, and click **Connect with Google**. You'll see Google's standard consent screen. Approve it and OSForms creates a new spreadsheet in your Drive named after your form ("Contact Form Submissions"), links it to the integration, and drops you back in the dashboard with a direct link to the sheet.
 

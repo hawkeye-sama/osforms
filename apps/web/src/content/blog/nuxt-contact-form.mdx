@@ -1,0 +1,266 @@
+---
+title: 'Nuxt Contact Form: Server Route or Endpoint?'
+description: 'Nuxt contact form, two ways: a Nitro server route that validates and emails via Resend, or $fetch to a hosted endpoint. Code for both, plus when to pick each.'
+date: '2027-02-01'
+dateModified: '2027-02-01'
+author: 'Bahroze Ali'
+tags: ['nuxt', 'vue', 'contact form', 'resend']
+readingTime: '9 min read'
+category: 'Build'
+seoTitle: 'Nuxt Contact Form: Server Route or Endpoint?'
+focusKeyphrase: 'nuxt contact form'
+coverImage: '/content/images/nuxt-contact-form-cover.png'
+coverTitle: 'Nuxt Contact Form'
+coverSubtitle: 'Nitro server route or hosted endpoint, with code for both'
+faq:
+  - question: 'How do I send email from a Nuxt contact form?'
+    answer: 'Create a Nitro server route at server/api/contact.post.ts, validate the body with readValidatedBody, and send the message with the Resend SDK using an API key stored in private runtimeConfig (set through the NUXT_RESEND_API_KEY environment variable). Never put the key in runtimeConfig.public, which is exposed to the browser. Alternatively, post the form to a hosted form endpoint that sends the email with your Resend key server-side.'
+  - question: 'Does a Nuxt server route work with nuxt generate?'
+    answer: 'Not for a contact form. nuxt generate outputs static files in .output/public for a static host, and a static host has no Nitro server to run server/api/contact.post.ts when the form posts. If you deploy that way, send the form to a hosted endpoint with $fetch, or switch to a deployment that runs the Nitro server (nuxt build on a Node host or a serverless preset).'
+  - question: 'Is it safe to put the form endpoint URL in runtimeConfig.public?'
+    answer: 'Yes. A hosted endpoint URL such as https://osforms.com/api/v1/f/your-slug is an address, not a credential; the browser has to know it to post the form. Abuse is handled on the endpoint side: OSForms applies a per-IP rate limit (10 a minute by default), an optional honeypot field, an optional allowed-origins list for browser requests, and a monthly cap. API keys such as your Resend key are different and belong in private runtimeConfig or in the form backend.'
+  - question: 'Where should I validate a Nuxt contact form?'
+    answer: 'On both sides, from one schema. Put a Zod schema in shared/utils/ (Nuxt 3.14+), call safeParse in the component for instant feedback, and call readValidatedBody(event, contactSchema.parse) in the server route, which makes h3 answer with a 400 Validation Error when the body does not match. Client-side checks are for the visitor; server-side checks are the ones you can trust.'
+  - question: 'Does OSForms set Reply-To to the visitor in notification emails?'
+    answer: 'Not today. The OSForms notification email is an HTML table of the submitted fields sent from your address to your recipients, without a Reply-To header, so you copy the visitor address from the email to answer. A Nuxt server route that calls Resend directly can set replyTo to the visitor in one line. OSForms can send an auto-reply to the visitor, using the email field in the submission.'
+---
+
+A Nuxt contact form can send its submissions to one of two places: your own Nitro server route (`server/api/contact.post.ts`) that validates the body and emails it through Resend with a key kept in private runtime config, or a hosted form endpoint that you call with `$fetch` straight from the component. Pick the server route when you run a Nitro server and want custom logic; pick the endpoint when you deploy a static site with `nuxt generate`, or want submissions stored and sent to Sheets without writing backend code.
+
+Both start from the same Vue component, so this post builds the server-route version first, then shows what changes for the hosted version. Code targets Nuxt 4 (the `app/` directory layout) and was checked against the [nuxt.com docs](https://nuxt.com/docs/4.x/directory-structure/server) in November 2026. I build OSForms, the endpoint used in the second half; the comparison at the end says when the server route is the better call.
+
+## Option 1: A Nuxt Contact Form With a Nitro Server Route
+
+Start with one schema that both sides can import. Nuxt auto-imports anything in `shared/utils/` into the Vue app and the Nitro server, and the [shared directory docs](https://nuxt.com/docs/4.x/directory-structure/shared) note it has been available since v3.14:
+
+```ts
+// shared/utils/contact.ts
+import { z } from 'zod';
+
+export const contactSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(100),
+  email: z.string().trim().email('Enter a valid email address'),
+  message: z.string().trim().min(10, 'Message is too short').max(5000),
+  // Honeypot: hidden from people, filled in by most bots
+  company_website: z.string().optional(),
+});
+```
+
+Code in `shared/` cannot import Vue or Nitro code, which is fine for a Zod schema.
+
+The server route lives in `server/api/`. Files there get the `/api` prefix, and the `.post.ts` suffix makes Nitro answer only POST requests (other methods get a 405):
+
+```ts
+// server/api/contact.post.ts
+import { Resend } from 'resend';
+
+export default defineEventHandler(async (event) => {
+  const body = await readValidatedBody(event, contactSchema.parse);
+
+  // A filled honeypot means a bot. Answer as if it worked and do nothing.
+  if (body.company_website) {
+    return { ok: true };
+  }
+
+  const { resendApiKey, contactTo, contactFrom } = useRuntimeConfig(event);
+  const resend = new Resend(resendApiKey);
+
+  const { error } = await resend.emails.send({
+    from: contactFrom,
+    to: [contactTo],
+    replyTo: body.email,
+    subject: `Contact form: ${body.name}`,
+    text: `From: ${body.name} <${body.email}>\n\n${body.message}`,
+  });
+
+  if (error) {
+    throw createError({ status: 502, statusText: 'Email could not be sent' });
+  }
+
+  return { ok: true };
+});
+```
+
+The Resend key comes from private runtime config. Declare the keys in `nuxt.config.ts` and set real values through environment variables, which Nuxt maps by the `NUXT_` prefix:
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  runtimeConfig: {
+    resendApiKey: '', // NUXT_RESEND_API_KEY
+    contactTo: '', // NUXT_CONTACT_TO
+    contactFrom: '', // NUXT_CONTACT_FROM
+  },
+});
+```
+
+```bash
+# .env
+NUXT_RESEND_API_KEY=re_xxxxxxxxx
+NUXT_CONTACT_TO=you@example.com
+NUXT_CONTACT_FROM="Contact form <hello@yourdomain.com>"
+```
+
+Per the [runtime config docs](https://nuxt.com/docs/4.x/guide/going-further/runtime-config), keys outside `public` are only available on the server, and passing `event` to `useRuntimeConfig` makes sure environment overrides are read at runtime. Put the Resend key under `public` and it ships to every visitor's browser.
+
+The component posts to the route with `$fetch`, which Nuxt exposes globally (it is [ofetch](https://nuxt.com/docs/4.x/api/utils/dollarfetch) under the hood). Calling it from a submit handler is the documented use; `useFetch` is for loading data during render, not for form posts.
+
+```vue
+<!-- app/components/ContactForm.vue -->
+<script setup lang="ts">
+const form = reactive({
+  name: '',
+  email: '',
+  message: '',
+  company_website: '',
+});
+const status = ref<'idle' | 'sending' | 'sent' | 'error'>('idle');
+const errorMessage = ref('');
+
+async function submit() {
+  const check = contactSchema.safeParse(form);
+  if (!check.success) {
+    errorMessage.value =
+      check.error.issues[0]?.message ?? 'Check the form and try again.';
+    status.value = 'error';
+    return;
+  }
+
+  status.value = 'sending';
+  try {
+    await $fetch('/api/contact', { method: 'POST', body: form });
+    Object.assign(form, {
+      name: '',
+      email: '',
+      message: '',
+      company_website: '',
+    });
+    status.value = 'sent';
+  } catch {
+    errorMessage.value = 'Something went wrong. Please try again.';
+    status.value = 'error';
+  }
+}
+</script>
+
+<template>
+  <form novalidate @submit.prevent="submit">
+    <input v-model="form.name" name="name" placeholder="Name" />
+    <input v-model="form.email" name="email" type="email" placeholder="Email" />
+    <textarea v-model="form.message" name="message" placeholder="Message" />
+    <div aria-hidden="true" style="position: absolute; left: -9999px">
+      <input
+        v-model="form.company_website"
+        name="company_website"
+        tabindex="-1"
+        autocomplete="off"
+      />
+    </div>
+    <button type="submit" :disabled="status === 'sending'">
+      {{ status === 'sending' ? 'Sending…' : 'Send' }}
+    </button>
+    <p v-if="status === 'sent'">Thanks, your message was sent.</p>
+    <p v-else-if="status === 'error'" role="alert">{{ errorMessage }}</p>
+  </form>
+</template>
+```
+
+### What the validation covers, and what it doesn't
+
+The same `contactSchema` runs twice. In the component, `safeParse` gives the visitor an instant message without a round trip. In the route, `readValidatedBody(event, contactSchema.parse)` is the check that counts, because anyone can POST to `/api/contact` with curl. When `parse` throws, h3 responds with a [400 Validation Error](https://v1.h3.dev/examples/validate-data) and the handler never runs.
+
+That is about all this route does, and the gaps are the reason the second option exists. Nothing is stored: if Resend rejects the send, the visitor sees an error and the message only survives if they retry. Nothing limits how often one IP can call the route. And the Resend free plan allows 3,000 emails a month with a cap of 100 a day ([resend.com/pricing](https://resend.com/pricing), November 2026), which a bot loop that beats the honeypot can burn through. The [Node.js contact form with Resend](/nodejs-contact-form-resend) adds a rate limiter to a handler like this one and lists what storage and retries would take; the same work applies to a Nitro route.
+
+## Option 2: $fetch to a Hosted Form Endpoint
+
+The hosted version deletes the server route and the `nuxt.config` secrets. The component keeps its schema check and posts to a form endpoint instead. Here that is OSForms: create a form in the dashboard, copy its endpoint, and set the form's **honeypot field** to `company_website` so filled submissions are dropped before storage.
+
+The endpoint URL is not a secret (the browser has to know it), so it can live in public runtime config:
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  runtimeConfig: {
+    public: {
+      formEndpoint: '', // NUXT_PUBLIC_FORM_ENDPOINT=https://osforms.com/api/v1/f/YOUR_FORM_SLUG
+    },
+  },
+});
+```
+
+Only the submit function changes:
+
+```ts
+const {
+  public: { formEndpoint },
+} = useRuntimeConfig();
+
+async function submit() {
+  const check = contactSchema.safeParse(form);
+  if (!check.success) {
+    errorMessage.value =
+      check.error.issues[0]?.message ?? 'Check the form and try again.';
+    status.value = 'error';
+    return;
+  }
+
+  status.value = 'sending';
+  try {
+    await $fetch(formEndpoint, { method: 'POST', body: form });
+    Object.assign(form, {
+      name: '',
+      email: '',
+      message: '',
+      company_website: '',
+    });
+    status.value = 'sent';
+  } catch (err) {
+    const data = (err as { data?: { error?: string } }).data;
+    errorMessage.value =
+      data?.error ?? 'Something went wrong. Please try again.';
+    status.value = 'error';
+  }
+}
+```
+
+`$fetch` serializes the object as JSON, so OSForms answers in JSON: `{ "success": true, "message": "Submission received" }`, or `{ "error": "..." }` with a 4xx status. ofetch throws on any non-2xx response and puts the parsed body on `error.data`, which is why the catch block can show the server's message. The statuses you will meet are 403 (origin not on the form's allowed list, or the monthly limit reached), 429 (more than 10 submissions a minute from one IP, the default), and 404 (wrong slug).
+
+Because nothing runs on your server, this version works with `nuxt generate`. That command outputs static files to `.output/public` for a static host, and a static host has no Nitro process to answer a POST to `/api/contact`. That one fact decides the question for a lot of Nuxt marketing sites.
+
+Once you publish, add your site's origin (for example `https://example.com`, no trailing slash) to the form's allowed origins. The check only applies to browser requests that send an `Origin` header, which a `$fetch` from your page does.
+
+## Email: Resend From a Server Route vs OSForms With Your Resend Key
+
+Both options can send through the same Resend account. The difference is who holds the key and what happens around the send:
+
+|                            | Server route + Resend SDK                  | OSForms + your Resend key                                    |
+| -------------------------- | ------------------------------------------ | ------------------------------------------------------------ |
+| Where the key lives        | Your host's env (`NUXT_RESEND_API_KEY`)    | OSForms, encrypted at rest with AES-256-GCM                  |
+| Submission stored          | No, unless you add a database              | Yes, with CSV export and a read-only pull API                |
+| Reply-To set to visitor    | Yes, one `replyTo` line                    | No, the notification has no Reply-To today                   |
+| Auto-reply to the visitor  | A second `send()` you write                | A toggle, with `{{name}}`-style placeholders in the template |
+| When Resend fails          | Visitor sees your 502; the message is lost | Submission still stored, failure logged, in-app notification |
+| Google Sheets, webhooks    | More code and more credentials             | Per-form integrations, same dashboard                        |
+| Works with `nuxt generate` | No                                         | Yes                                                          |
+
+The Reply-To row is the one that bites in practice. With your own route, hitting reply in your inbox answers the visitor. With OSForms, the notification is an HTML table of the fields sent from your address, so you copy the visitor's email out of the table. If you answer every message by hand, that matters more than any other row.
+
+The rest of the table tilts the other way. OSForms stores the submission first and runs the email in the background, so a bad key or a Resend outage leaves a stored message and a notification in your dashboard instead of a lost lead. Google Sheets and signed webhooks are integrations you switch on per form, on the [bring-your-own-key model](/bring-your-own-key), and the [form email notifications guide](/form-email-notifications) covers the Resend setup, including auto-replies. The limits: 100 submissions a month on the free tier, no file storage, and CAPTCHA is reCAPTCHA or hCaptcha with your own keys (not Turnstile).
+
+> "A server route sends an email. A form backend keeps the message even when the email fails."
+
+## Picking One: Server Route or Endpoint?
+
+| Your situation                                                             | Pick                                      |
+| -------------------------------------------------------------------------- | ----------------------------------------- |
+| Static deploy with `nuxt generate` (GitHub Pages, any static host)         | Hosted endpoint                           |
+| You want every submission stored and exportable                            | Hosted endpoint, or route plus a database |
+| Rows in Google Sheets or a signed webhook, without new backend code        | Hosted endpoint                           |
+| Custom logic per submission: CRM lookup, routing by topic, signed-in users | Server route                              |
+| Your Nuxt server already sends transactional email with Resend             | Server route                              |
+| Reply-To must be the visitor's address                                     | Server route                              |
+| Well over 100 submissions a month and no wish to pay or self-host          | Server route                              |
+
+My default for a Nuxt contact form on a marketing site or a docs site is the endpoint: one `$fetch`, no secrets in the project, nothing to break when the deploy target changes. My default for a form inside a Nuxt app that already has a server, sessions, and its own database is the route, because the submission belongs next to that data. If you want the endpoint without depending on a hosted service, [OSForms self-hosts with Docker Compose](/self-host-form-backend) and keeps the same URL shape.
+
+Either way, the component and the schema stay the same, so switching later is a one-function change. For how this fits the wider picture of forms on static and server-rendered sites, read [how to handle form submissions without a backend](/handle-form-submissions).

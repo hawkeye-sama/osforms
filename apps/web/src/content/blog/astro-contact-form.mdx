@@ -1,0 +1,228 @@
+---
+title: 'Astro Contact Form Without a Backend'
+description: 'Astro contact form without a server: plain HTML in an .astro component, a fetch handler that survives View Transitions, and email plus Sheets on your own keys.'
+date: '2026-12-07'
+dateModified: '2026-12-07'
+author: 'Bahroze Ali'
+tags: ['tutorial', 'astro', 'contact-form', 'no-backend']
+readingTime: '8 min read'
+category: 'Build'
+seoTitle: 'Astro Contact Form Without a Backend'
+focusKeyphrase: 'astro contact form'
+coverImage: '/content/images/astro-contact-form-cover.png'
+coverTitle: 'Astro Contact Form'
+coverSubtitle: 'A static site that still gets your messages'
+faq:
+  - question: 'Does an Astro contact form need an adapter or SSR?'
+    answer: 'Not if the form posts to an external endpoint. The form markup is static HTML, so Astro can prerender the page like any other. You only need an adapter and on-demand rendering when the code that receives the POST lives inside your Astro project, as an API route with prerender set to false or as an Astro Action called from a form.'
+  - question: 'Why does my Astro form show raw JSON after I navigate to the contact page?'
+    answer: 'Your submit handler was bound once, by a bundled script, and the ClientRouter swapped in a fresh form without it. The router ignores forms whose action is on another origin, so the browser does a native POST and renders the JSON response. Bind the handler inside an astro:page-load listener so it runs after every navigation, not only the first page load.'
+  - question: 'Can I use Astro Actions instead of an external endpoint?'
+    answer: 'Yes, if you are willing to run server code. Calling an action from an HTML form action requires the page to be rendered on demand, which means an adapter and a host that executes it. You also still write the email sending, storage, and spam handling yourself. An external endpoint keeps the whole site prerendered.'
+  - question: 'How do I stop spam on an Astro contact form?'
+    answer: 'Start with a honeypot. Set a field name under Settings, Honeypot Field Name in OSForms, add a hidden input with that exact name to the component, and submissions that fill it are dropped while the bot still gets a success response. The endpoint also rate limits each IP to 10 submissions per minute per form by default. reCAPTCHA and hCaptcha are supported if you need more; Cloudflare Turnstile is not verified correctly yet.'
+  - question: 'Is it safe to put the form endpoint URL in my Astro code?'
+    answer: 'Yes. The endpoint is public by design, the same way a form action has always been visible in page source. It carries no API key. Your Resend key and Google credentials stay encrypted on the server and never reach the browser. To stop other sites from posting to it, set Allowed Origins to your domain.'
+---
+
+Astro builds static HTML by default, which is perfect until you add a contact form and realize nothing is listening for the POST. To build an Astro contact form without a backend, write the form as plain HTML in an `.astro` component, point its `action` at a hosted form endpoint, and add a small script that submits with `fetch` and re-binds on every `astro:page-load`. The page stays fully prerendered, the endpoint stores each submission, and email or Google Sheets delivery runs on your own API keys.
+
+That last script detail is the part most tutorials miss. If your site uses Astro's client-side router, a submit handler that works on first load quietly stops working after the visitor clicks around, and the form falls back to a full-page POST that dumps JSON on screen. I'll start with the DIY server version so the tradeoff is clear, then build the static one and fix that View Transitions trap.
+
+## Why an Astro Contact Form Needs an Endpoint
+
+Astro's docs say it plainly: "By default, Astro pages, routes, and API endpoints will be pre-rendered at build time as static pages" ([Astro on-demand rendering docs](https://docs.astro.build/en/guides/on-demand-rendering/), November 2026). A prerendered API route is a file on a CDN. It cannot accept a POST.
+
+So the in-Astro answer is to opt one route out of prerendering. Install an adapter (Node, Vercel, Netlify, or Cloudflare), then write the handler:
+
+```ts
+// src/pages/api/contact.ts
+import type { APIRoute } from 'astro';
+import { Resend } from 'resend';
+
+export const prerender = false;
+
+const resend = new Resend(import.meta.env.RESEND_API_KEY);
+
+export const POST: APIRoute = async ({ request }) => {
+  const form = await request.formData();
+  const email = form.get('email');
+  const message = form.get('message');
+
+  if (typeof email !== 'string' || typeof message !== 'string') {
+    return new Response('Missing fields', { status: 400 });
+  }
+
+  const { error } = await resend.emails.send({
+    from: 'Contact form <contact@yourdomain.com>',
+    to: ['you@yourdomain.com'],
+    replyTo: email,
+    subject: 'New contact form message',
+    text: message,
+  });
+
+  if (error) {
+    return new Response('Could not send', { status: 502 });
+  }
+
+  return new Response(null, { status: 303, headers: { Location: '/thanks' } });
+};
+```
+
+That works. It is also the start of a list. Astro Actions are the newer option, but the docs note that "pages must be on-demand rendered when calling actions using a form action" ([Astro Actions docs](https://docs.astro.build/en/guides/actions/), November 2026), so you land in the same place: server code, an adapter, and a host that runs it. Here is what the DIY route leaves on your plate compared with a static page that posts elsewhere:
+
+| Concern      | Astro API route or Action                  | Static page + OSForms endpoint              |
+| ------------ | ------------------------------------------ | ------------------------------------------- |
+| Rendering    | Adapter + `prerender = false` on the route | Fully prerendered, any static host          |
+| Email        | Resend SDK call you write and deploy       | Email integration on your Resend key        |
+| Storage      | None unless you add a database             | Every submission stored before delivery     |
+| Failed sends | Lost unless you log and retry              | Logged per integration, in-app notification |
+| Spam         | Your honeypot check, your rate limiter     | Honeypot field + 10/min per IP per form     |
+| Export       | Whatever you build                         | CSV export and a read-only pull API         |
+
+None of that is hard on its own. Together it is a small backend you now maintain for a form that gets a few messages a week.
+
+## The Contact Form Component
+
+The static version starts with markup that would have worked in 1998. Put it in a component so any page can drop it in:
+
+```astro
+---
+// src/components/ContactForm.astro
+const endpoint = 'https://osforms.com/api/v1/f/abc123xyz';
+---
+
+<form action={endpoint} method="POST" data-osforms>
+  <label for="name">Name</label>
+  <input id="name" name="name" type="text" autocomplete="name" required />
+
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" autocomplete="email" required />
+
+  <label for="message">Message</label>
+  <textarea id="message" name="message" rows="5" required></textarea>
+
+  <!-- Honeypot: must match the field name set in your form settings -->
+  <input
+    type="text"
+    name="_gotcha"
+    tabindex="-1"
+    autocomplete="off"
+    aria-hidden="true"
+    style="display:none"
+  />
+
+  <button type="submit">Send message</button>
+  <p data-status role="status" aria-live="polite"></p>
+</form>
+```
+
+Then use it from a page:
+
+```astro
+---
+// src/pages/contact.astro
+import Layout from '../layouts/Layout.astro';
+import ContactForm from '../components/ContactForm.astro';
+---
+
+<Layout title="Contact">
+  <h1>Get in touch</h1>
+  <ContactForm />
+</Layout>
+```
+
+To get the endpoint, sign up at [osforms.com](https://osforms.com/signup), create a form, and copy the URL it gives you. Each `name` attribute becomes a key on the stored submission, a row in the email, and a column if you connect a spreadsheet, so pick names you would be happy to see in a CSV header.
+
+This already works with zero JavaScript. The browser POSTs the fields natively and renders whatever comes back. By default that is a JSON body, and with a Redirect URL set in the form settings it is a `303` to your thank-you page. The [HTML contact form guide](/html-contact-form) covers that response behavior and every status code in detail, so I will not repeat it here. Set a redirect anyway: it becomes the fallback for visitors whose JavaScript never loads.
+
+## Submitting With Fetch on astro:page-load
+
+Staying on the page and showing an inline "thanks" needs a script. Astro bundles `<script>` tags in components as modules, so add this below the form in the same file:
+
+```astro
+<script>
+  async function handleSubmit(event: SubmitEvent) {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const status = form.querySelector<HTMLElement>('[data-status]');
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+
+    if (button) button.disabled = true;
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? `Request failed (${res.status})`);
+      form.reset();
+      if (status) status.textContent = 'Thanks, your message is on its way.';
+    } catch (err) {
+      if (status) {
+        status.textContent = err instanceof Error ? err.message : 'Something went wrong.';
+      }
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  function bindContactForms() {
+    document.querySelectorAll<HTMLFormElement>('form[data-osforms]').forEach((form) => {
+      if (form.dataset.bound) return;
+      form.dataset.bound = 'true';
+      form.addEventListener('submit', handleSubmit);
+    });
+  }
+
+  bindContactForms();
+  document.addEventListener('astro:page-load', bindContactForms);
+</script>
+```
+
+Two request details matter. The `Accept: application/json` header tells the endpoint you want JSON back even when a Redirect URL is configured, so `fetch` never tries to follow a `303` to your thank-you page. And sending `FormData` with only an `Accept` header keeps this a simple CORS request: the browser skips the preflight and the endpoint echoes your origin back, so `res.json()` is readable. Errors come back as `{ "error": "..." }`, which is why the handler can surface `body.error` directly, for example "Too many submissions. Please try again later." on a `429`.
+
+### The View Transitions gotcha
+
+Now the reason for `astro:page-load`. If your layout includes `<ClientRouter />` from `astro:transitions` (called `<ViewTransitions />` before Astro 5), navigation swaps the page DOM instead of loading a new document. Astro's docs are explicit about what that does to your scripts: bundled module scripts "are only ever executed once" and are ignored on later pages even if the script is present ([Astro view transitions docs](https://docs.astro.build/en/guides/view-transitions/), November 2026).
+
+Walk through what that means for a contact form:
+
+1. A visitor lands directly on `/contact`. The script runs, binds the form, everything works.
+2. They click to `/about`, then back to `/contact`. The router swaps in a brand new `<form>` element. The script does not run again, so nothing is bound to it.
+3. They submit. The router's own form handling checks the `action`, sees it points at a different origin, and steps aside. The browser does a native POST and the visitor lands on a JSON response (or your redirect page).
+
+No error in the console, and it only reproduces after a client-side navigation, which is why it tends to ship. The fix is the last line of the script: `astro:page-load` fires on the initial page load and after every navigation when the router is active, so the handler is re-bound onto each fresh form. The direct `bindContactForms()` call covers sites without the router, where `astro:page-load` never fires, and the `data-bound` guard stops the first page from getting two listeners.
+
+> A form handler that only works on the first page load is worse than no handler, because nobody tests the second one.
+
+You will see `data-astro-reload` suggested for forms under the router. It opts a form out of router handling, but the router already skips cross-origin actions, so it does not help here. Re-binding on `astro:page-load` is the fix.
+
+## Email, Google Sheets, and Locked Origins
+
+With submissions arriving, wire up delivery in the form's **Integrations** tab. Each form takes one integration of each type, and all three are on the free tier:
+
+- **Email** sends each submission through your own [Resend](https://resend.com/pricing) key, with an optional auto-reply to the sender. Resend's free plan covers 3,000 emails a month, capped at 100 a day (November 2026), which is plenty for a contact form. Setup and templates are in the [Resend notifications guide](/form-email-notifications).
+- **Google Sheets** connects through OAuth to your Google account and creates a spreadsheet in your Drive, adding columns as new fields appear. The [Google Sheets walkthrough](/form-to-google-sheets) covers the permissions.
+- **Webhooks** POST a JSON payload anywhere you like, such as a Slack relay or your own CRM, signed with HMAC-SHA256 when you set a secret.
+
+The submission is stored before any integration runs, so a revoked Resend key costs you a notification, never the message. Failures show up in the integration log and as an in-app notification.
+
+Then lock the endpoint to your site. Under **Settings**, fill in **Allowed Origins** with your production origin, plus Astro's dev server while you build:
+
+```text
+https://yoursite.com, http://localhost:4321
+```
+
+The match is exact against the browser's `Origin` header, so include the scheme, leave off the trailing slash, and list `www` and the apex separately if you serve both. A request from any other origin gets a `403 Origin not allowed`.
+
+Know what this setting does not do. It only applies to requests that carry an `Origin` header, which browsers send on cross-origin `fetch` calls and form posts. A script calling the endpoint with `curl` sends no `Origin` and is not blocked by it. That is where the other two layers come in: the honeypot field from the component (set the same name under **Settings → Honeypot Field Name**; it is off until you do) and the per-form rate limit of 10 submissions per minute per IP. For a harder gate, forms also support reCAPTCHA and hCaptcha with your own keys (the secret is set through the forms API today, not the Settings dialog). Cloudflare Turnstile tokens are accepted but not verified correctly yet ([issue #17](https://github.com/hawkeye-sama/osforms/issues/17)), so don't plan around Turnstile.
+
+## Keeping Your Astro Contact Form Fully Static
+
+The finished setup is one component, a dozen lines of script, and three settings in a dashboard. The site stays prerendered and deploys to any static host, with no adapter, no server route, and no secret in your Astro environment. Your Resend key is encrypted at rest with AES-256-GCM on the OSForms side and only decrypted when a submission needs sending; it never reaches the browser bundle.
+
+Two limits to plan around. The free tier is 100 submissions a month per account, more than most portfolio and small business contact forms see. And file inputs do not store files: the endpoint accepts multipart posts, but an attached file is replaced with a placeholder like `[File: brief.pdf, 48120 bytes]`. Ask for a link if you need documents.
+
+That is the whole Astro contact form: static HTML that posts somewhere real, re-bound on every navigation, with delivery running on keys you own. If you are still deciding between this, a serverless function, and the hosted tools, [how to handle form submissions without a backend](/handle-form-submissions) compares every option.

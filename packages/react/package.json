@@ -4,10 +4,14 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "homepage": "https://osforms.com/docs/sdk/introduction",
   "repository": {
     "type": "git",
     "url": "https://github.com/hawkeye-sama/osforms.git",
     "directory": "packages/react"
+  },
+  "bugs": {
+    "url": "https://github.com/hawkeye-sama/osforms/issues"
   },
   "files": [
     "dist"

@@ -4,13 +4,9 @@ import { CursorGridGlow } from '@/components/blog/cursor-grid-glow';
 import { Footer } from '@/components/layout/footer';
 import { LandingNavbar } from '@/components/layout/landing-navbar';
 
+// No title template here: a template only applies to child segments, and
+// /blog has none (posts live at root paths), so the root "%s | OSForms" wins.
 export const metadata: Metadata = {
-  title: {
-    default: 'Blog',
-    template: '%s | osforms Blog',
-  },
-  description:
-    'Tutorials, guides, and insights on form backends, BYOK integrations, and developer tools from the osforms team.',
   openGraph: { type: 'website' },
 };
 

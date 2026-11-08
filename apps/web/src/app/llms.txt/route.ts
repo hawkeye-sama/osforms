@@ -15,7 +15,10 @@ export function GET() {
 
 > OSForms is an open-source, bring-your-own-key (BYOK) form backend for developers. Point your HTML form at an endpoint; OSForms stores each submission and routes it to your own Resend (email), Google Sheets, and webhooks using your own API keys. 100 free submissions/month, every integration included free, and it's self-hostable.
 
+Not to be confused with OS2Forms, Open Forms (open-formulieren), or OpnForm: those are unrelated form projects. OSForms is the form backend at osforms.com (GitHub: hawkeye-sama/osforms, npm: @osforms/react).
+
 Key facts:
+- Uploaded files are not stored (multipart is accepted; files become a placeholder string).
 - BYOK: integrations run on your API keys, so they're free (you pay only your provider, e.g. Resend).
 - Your keys are encrypted at rest with AES-256-GCM and never sent to the browser.
 - Open source and self-hostable against your own MongoDB.

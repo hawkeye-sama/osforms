@@ -1,0 +1,223 @@
+---
+title: 'GitHub Pages Contact Form (No Server Needed)'
+description: 'GitHub Pages contact form with no server: a Jekyll or Hugo include, the right allowed origin, a thank-you redirect, and email alerts on your own Resend key.'
+date: '2027-01-04'
+dateModified: '2027-01-04'
+author: 'Bahroze Ali'
+tags: ['github pages', 'jekyll', 'hugo', 'contact-form']
+readingTime: '8 min read'
+category: 'Build'
+seoTitle: 'GitHub Pages Contact Form (No Server Needed)'
+focusKeyphrase: 'github pages contact form'
+coverImage: '/content/images/github-pages-contact-form-cover.png'
+coverTitle: 'GitHub Pages Contact Form'
+coverSubtitle: 'Jekyll or Hugo, no server, real email'
+faq:
+  - question: 'Can GitHub Pages handle a form submission?'
+    answer: 'No. GitHub Pages only serves static files, and a POST to a github.io URL comes back as 405 Method Not Allowed. The form itself can live on GitHub Pages, but its action attribute has to point at an endpoint hosted somewhere else, such as an OSForms form URL, which stores the submission and emails it to you.'
+  - question: 'What should I put in Allowed Origins for a GitHub Pages project site?'
+    answer: 'Only the scheme and host, with no path and no trailing slash. A project site at https://octocat.github.io/my-site/ sends the Origin header https://octocat.github.io, so that is the value to allow. With a custom domain, allow the domain the browser actually shows, for example https://www.example.com.'
+  - question: 'Why does my redirect go to the wrong page on a project site?'
+    answer: 'Usually because the baseurl is missing. Project sites live under /repository-name/, so the redirect URL must include it: https://octocat.github.io/my-site/thanks/ rather than https://octocat.github.io/thanks/. Use the full absolute URL in the form settings, not a relative path.'
+  - question: 'Why does my Hugo contact form disappear from the built page?'
+    answer: 'Hugo renders Markdown with Goldmark, which omits raw HTML by default and leaves a raw HTML omitted comment in its place. Put the form in a partial and call it from a shortcode or a layout, so the HTML never passes through the Markdown renderer.'
+  - question: 'Is a GitHub Pages contact form free?'
+    answer: 'GitHub Pages hosting is free for public repositories, and the OSForms free tier covers 100 submissions a month with email, Google Sheets, and webhooks included. Email runs on your own Resend API key, so any sending costs are between you and Resend.'
+---
+
+A GitHub Pages contact form is a normal HTML `<form>` on your Jekyll or Hugo site whose `action` points at a hosted form endpoint, because GitHub Pages itself cannot receive a POST. Put the form in an include so every build keeps it, allow your site's origin on the endpoint, set a redirect to a thank-you page, and turn on email notifications. No server, no serverless function, and the site stays 100% static.
+
+On a GitHub Pages site, the contact form is always the one part that doesn't fit. The usual fixes all cost something. A `mailto:` link depends on the visitor having a mail client set up. A serverless function means a second host, a second deploy, and SMTP credentials. A hosted form service works, until you need Google Sheets or webhooks and find them on a paid plan. This post is the setup I'd recommend, including the three GitHub Pages quirks (baseurl, origins, and Hugo's HTML stripping) that most tutorials skip.
+
+## Why a GitHub Pages Contact Form Can't POST to Itself
+
+GitHub's own docs describe Pages as "a static site hosting service that takes HTML, CSS, and JavaScript files straight from a repository" ([About GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages), November 2026). Static means GET only. Here is what a POST gets you:
+
+```bash
+curl -i -X POST -d "name=test" https://octocat.github.io/
+# HTTP/1.1 405 Method Not Allowed
+```
+
+I ran that in November 2026 and got exactly that `405`. There is no PHP, no function runtime, and nowhere for a request body to go. So the form markup can live on Pages, but the `action` has to be a URL on another host.
+
+With OSForms, that URL is a form endpoint you create in the dashboard: `https://osforms.com/api/v1/f/abc123xyz`. It accepts `application/x-www-form-urlencoded` (what a plain HTML form sends), `multipart/form-data`, and JSON. It stores the submission first, then runs your integrations in the background, so a misconfigured email key costs you a notification but never the message. The [HTML contact form tutorial](/html-contact-form) covers the markup basics. Here I'll focus on what changes when the page is built by Jekyll or Hugo and served from github.io.
+
+## The Form as a Jekyll or Hugo Include
+
+You could paste the form into one page and be done. I'd put it in an include instead, for two reasons. The endpoint URL then lives in config, not scattered across pages. And the form never passes through the Markdown renderer, which matters a lot on Hugo.
+
+### Jekyll
+
+Put the endpoint in `_config.yml`, next to the `url` and `baseurl` GitHub Pages already needs:
+
+```yaml
+# _config.yml
+url: 'https://octocat.github.io'
+baseurl: '/my-site' # empty string for a user site or a custom domain
+osforms_endpoint: 'https://osforms.com/api/v1/f/abc123xyz'
+```
+
+Then the form, in `_includes/contact-form.html`:
+
+```html
+<form action="{{ site.osforms_endpoint }}" method="POST" class="contact-form">
+  <label for="cf-name">Name</label>
+  <input id="cf-name" type="text" name="name" autocomplete="name" required />
+
+  <label for="cf-email">Email</label>
+  <input
+    id="cf-email"
+    type="email"
+    name="email"
+    autocomplete="email"
+    required
+  />
+
+  <label for="cf-message">Message</label>
+  <textarea id="cf-message" name="message" rows="6" required></textarea>
+
+  <!-- Honeypot: must match "Honeypot Field Name" in the form settings -->
+  <div style="position:absolute;left:-10000px" aria-hidden="true">
+    <input type="text" name="favorite_color" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <button type="submit">Send message</button>
+</form>
+```
+
+Drop `{% include contact-form.html %}` into any page or layout. Kramdown, the Markdown engine GitHub Pages uses for Jekyll, passes block-level HTML through untouched, so this works in a `.md` file as well as a layout.
+
+Every `name` attribute becomes a key in your dashboard, the notification email, and a Google Sheets column if you connect one. The endpoint is headless, so there is no field list to register: add a `<select name="budget">` later and the next submission simply carries a `budget` key. The one field you do register is the honeypot: enter `favorite_color` under **Honeypot Field Name** in the form settings, and any submission with it filled is dropped. The odd name is deliberate, since browser autofill won't fill a field it can't recognize.
+
+### Hugo
+
+Hugo is where people lose an afternoon. Since Hugo switched its default Markdown renderer to Goldmark, raw HTML in content files is **omitted by default**. Paste a `<form>` into `content/contact.md` and the built page shows nothing but an HTML comment reading `raw HTML omitted`. You can flip `markup.goldmark.renderer.unsafe = true`, but a partial is cleaner and keeps raw HTML out of your content globally.
+
+Config first:
+
+```toml
+# hugo.toml
+baseURL = 'https://octocat.github.io/my-site/'
+
+[params]
+  osformsEndpoint = 'https://osforms.com/api/v1/f/abc123xyz'
+```
+
+The form goes in `layouts/_partials/contact-form.html` (Hugo 0.146 and later; older versions use `layouts/partials/`), with the same markup as above and one change to the action:
+
+```html
+<form
+  action="{{ site.Params.osformsEndpoint }}"
+  method="POST"
+  class="contact-form"
+>
+  <!-- same fields as the Jekyll include -->
+</form>
+```
+
+To use it from a Markdown page, wrap it in a shortcode at `layouts/_shortcodes/contact-form.html`:
+
+```html
+{{ partial "contact-form.html" . }}
+```
+
+Then `content/contact.md` contains just `{{< contact-form >}}` where the form should render. Shortcode output is not filtered by Goldmark, so the form survives every build. Hugo sites on GitHub Pages deploy through a GitHub Actions workflow rather than the built-in Jekyll build, but none of this changes with the deploy method.
+
+## Allowed Origins: baseurl Paths vs. Custom Domains
+
+Once the form works, lock the endpoint to your site. Open the form's **Settings** dialog in OSForms and fill in **Allowed Origins (comma-separated)**. When the list is non-empty, a browser post whose `Origin` header isn't on it gets a `403` with `Origin not allowed`.
+
+The trap on GitHub Pages: **the Origin header never includes a path.** A project site at `https://octocat.github.io/my-site/` sends `Origin: https://octocat.github.io`. The match is exact, so the `/my-site` part, a trailing slash, or `http` instead of `https` all cause a `403`.
+
+| Where the site is served                           | Value for Allowed Origins   |
+| -------------------------------------------------- | --------------------------- |
+| User site, `https://octocat.github.io/`            | `https://octocat.github.io` |
+| Project site, `https://octocat.github.io/my-site/` | `https://octocat.github.io` |
+| Custom domain, `https://www.example.com/`          | `https://www.example.com`   |
+| Apex and www both serving the page                 | Both, comma-separated       |
+| `jekyll serve` locally                             | `http://localhost:4000`     |
+| `hugo server` locally                              | `http://localhost:1313`     |
+
+Two consequences worth thinking through. First, every project site under the same account shares one origin, so allowing `https://octocat.github.io` allows all of them. A custom domain gives you a tighter boundary. Second, once you set a custom domain, GitHub redirects the github.io address to it, so the origin the browser sends is the custom domain. Add that one, and drop the localhost entries once you ship.
+
+Keep expectations right about what this protects. Allowed Origins is a browser-level check: a request with no `Origin` header at all (`curl`, a script) isn't blocked by it. That's why the include above carries a honeypot, and why every form also has a rate limit of 10 submissions per minute per IP by default, answered with a `429` and a `Retry-After` header.
+
+## A Thank-You Page That Survives the Redirect
+
+A plain form post navigates the browser to whatever the endpoint returns. With no redirect configured, that's a page of raw JSON:
+
+```json
+{ "success": true, "message": "Submission received" }
+```
+
+Fix it with a real page. In Jekyll, `thanks.md`:
+
+```markdown
+---
+layout: page
+title: Thanks
+permalink: /thanks/
+sitemap: false
+---
+
+Got it. I read every message and usually reply within two days.
+```
+
+(`sitemap: false` keeps it out of the sitemap if you use the `jekyll-sitemap` plugin.) In Hugo, `content/thanks.md` with the same body works.
+
+Now set **Redirect URL (after submission)** in the form settings to the page's full URL, **baseurl included**:
+
+```text
+https://octocat.github.io/my-site/thanks/
+```
+
+When a redirect URL is set and the request is a normal browser post, the endpoint answers a successful submission with a `303 See Other`, and the browser follows it with a GET to your thank-you page. Use the absolute URL. The endpoint can only redirect to a full URL, so a relative path like `/thanks/` produces a server error after the submission is saved: you get the message, the visitor gets an error page. And on a project site, forgetting the `/my-site` segment sends people to a 404 on the account's root.
+
+If you'd rather keep visitors on the page, add a few lines of JavaScript. The form still works without it:
+
+```html
+<p class="form-status" role="status"></p>
+<script>
+  document
+    .querySelector('.contact-form')
+    .addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      const status = document.querySelector('.form-status');
+      const res = await fetch(form.action, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: new FormData(form),
+      });
+      const body = await res.json();
+      status.textContent = res.ok ? 'Thanks, message sent.' : body.error;
+      if (res.ok) form.reset();
+    });
+</script>
+```
+
+The `Accept: application/json` header is what makes this work alongside the redirect: when a caller asks for JSON, the endpoint returns JSON even if a redirect URL is set. One form, both behaviors, nothing to toggle. Errors come back as `{ "error": "..." }` with the matching status code, so the `403` and `429` cases show a readable message instead of failing silently.
+
+## Email Notifications for Your GitHub Pages Contact Form
+
+Stored submissions are only half of it. You want to know a message arrived.
+
+In the form's **Integrations** tab, add **Email**, paste a [Resend](https://resend.com) API key, set a from address on a domain you've verified in Resend, and list one or more recipients. Every submission then sends you an email with the fields laid out in a table. Optionally, turn on an auto-reply so the visitor gets a confirmation; OSForms finds the email field automatically, or you can name it.
+
+Three details worth knowing before you rely on it:
+
+- **The key is yours.** It's encrypted at rest with AES-256-GCM and never sent to the browser, which is the point: putting a Resend key in a static site's JavaScript would publish it to anyone who opens dev tools. The [bring-your-own-key explainer](/bring-your-own-key) covers why that model keeps email free on our side.
+- **Reply manually.** The notification is sent from your from address and doesn't set a Reply-To, so hitting reply goes to yourself. Copy the visitor's address from the email.
+- **Failures are loud.** If Resend rejects a send, the submission is still stored, and you get an in-app notification plus an alert email.
+
+The [Resend notifications guide](/form-email-notifications) walks through the templates and auto-reply in more depth. If you want a running log instead of (or as well as) an inbox, the same Integrations tab connects a Google Sheet or a webhook, with no plan upgrade in between.
+
+## A Static Site With a Working Inbox
+
+Put together, the setup is one include, three settings, and an integration: the form in `_includes/` or a Hugo partial, the bare origin in Allowed Origins, the full thank-you URL as the redirect, and your Resend key for email. The site stays a pile of static files on GitHub Pages, and nothing about it needs patching.
+
+> GitHub Pages can't take a POST. It doesn't need to. The form lives with your site; the submission goes somewhere built to receive it.
+
+Two limits before you build on it. The free tier is 100 submissions a month, which covers most personal and project sites but is a real ceiling. And file uploads are not stored: a file input won't break the post, but the file is replaced with a placeholder like `[File: cv.pdf, 48120 bytes]`. Ask for a link instead.
+
+That's a GitHub Pages contact form with no server of your own, and every piece of it (the markup, the keys, the export) stays yours. If you're still deciding between this and other approaches, [how to handle form submissions without a backend](/handle-form-submissions) compares them side by side.

@@ -1,0 +1,166 @@
+---
+title: 'Formspree vs Resend: Which Does Your Form Need?'
+description: 'Formspree vs Resend: one is a form backend, the other is an email API. See where your form email is sent from, what each costs, and when to pick each one.'
+date: '2026-11-16'
+dateModified: '2026-11-16'
+author: 'Bahroze Ali'
+tags: ['formspree', 'resend', 'comparison', 'email']
+readingTime: '9 min read'
+category: 'Compare'
+seoTitle: 'Formspree vs Resend: Which Does Your Form Need?'
+focusKeyphrase: 'formspree vs resend'
+coverImage: '/content/images/formspree-vs-resend-cover.png'
+coverTitle: 'Formspree vs Resend'
+coverSubtitle: 'A form backend and an email API are different jobs'
+faq:
+  - question: 'Can Resend receive form submissions on its own?'
+    answer: 'No. Resend is an email sending API. It has no endpoint your HTML form can post to, and its own docs tell you to call it from the server so your API key stays out of the browser. You need something in between: a serverless function you write, or a form backend that calls Resend for you.'
+  - question: 'Can Formspree send form emails from my own domain?'
+    answer: "Only on the Business plan ($90/month, or $60/month billed yearly, per formspree.io/plans in November 2026). On every other plan, Formspree's help center says notification emails come from an address ending in @formspree.io. Custom-domain email is sent through SendGrid after you add DNS records."
+  - question: 'Can I use Formspree and Resend together?'
+    answer: "Not directly. Formspree's plans list no option to send through your own email provider. The workaround is a Formspree webhook (Professional plan, $30/month) pointing at your own function, which then calls Resend. At that point you are paying for Formspree and still writing the server code."
+  - question: 'Is the Resend free plan enough for a contact form?'
+    answer: "For most sites, yes. Resend's free plan covers 3,000 emails a month with a cap of 100 per day (resend.com/pricing, November 2026). If you also send an auto-reply to every submitter, each submission uses two emails, so plan for about 50 submissions a day before you hit the cap."
+  - question: 'What does OSForms add on top of my Resend key?'
+    answer: 'The parts a bare Resend call skips: a public endpoint your form posts to, stored submissions with a dashboard and CSV export, a honeypot field, reCAPTCHA or hCaptcha, per-form rate limiting and CORS, an auto-reply template, and a log of every send. The free tier is 100 submissions a month, and your Resend key is encrypted at rest with AES-256-GCM.'
+---
+
+Formspree vs Resend is a comparison between two different jobs. **Formspree** is a form backend: it gives your HTML form a URL to post to, stores the submission, and emails you from an `@formspree.io` address. **Resend** is an email API: it sends email from your own domain, but only when your server code calls it, so it can't receive a form by itself. If you have a static site and want the form working in five minutes, use a form backend. If you already run server code and want the email to come from your domain, call Resend from that code. There's also a third option in the middle, which is what I built OSForms to be: a form backend that sends through _your_ Resend key.
+
+I build OSForms, so weigh my take with that in mind. Below is where the email comes from in each one, the route you'd write to wire Resend up yourself, and a decision table. Pricing comes from each vendor's own page, checked in November 2026.
+
+## What Formspree and Resend Actually Are
+
+The search "Formspree vs Resend" usually comes from someone holding a contact form and two browser tabs. Here is the split.
+
+**Formspree** receives. You set your form's `action` to a Formspree URL, and Formspree accepts the POST, filters spam, stores the submission, and sends you a notification email. You write no server code. [Formspree's plans page](https://formspree.io/plans) lists 50 submissions a month on the free plan, with email notifications on every tier (November 2026).
+
+**Resend** sends. It's an API for transactional email: you call `resend.emails.send()` with a `from`, a `to`, and a body, and Resend delivers it. It doesn't host forms, store submissions, or give a browser anywhere to post. Resend's [CORS troubleshooting page](https://resend.com/docs/knowledge-base/how-do-i-fix-cors-issues) says it plainly: send from the server side so you don't expose your API keys. The [Resend free plan](https://resend.com/pricing) covers 3,000 emails a month, capped at 100 a day (November 2026).
+
+|                        | Formspree                 | Resend                                |
+| ---------------------- | ------------------------- | ------------------------------------- |
+| What it is             | Hosted form backend       | Email sending API                     |
+| Receives form POSTs    | Yes                       | No                                    |
+| Stores submissions     | Yes (30 days on Free)     | No                                    |
+| Sends email            | Yes, notifications to you | Yes, anything your code asks for      |
+| Server code needed     | None                      | Yes, to hold the key and call the API |
+| Default sender address | `@formspree.io`           | Any address on your verified domain   |
+| Free tier              | 50 submissions/month      | 3,000 emails/month, 100/day           |
+
+Put side by side, they barely overlap. The useful question is whether you want to write and host the piece that sits between your form and Resend.
+
+## Where the Email Gets Sent From
+
+This is the difference that shows up in your inbox, and the one people miss when they compare feature lists.
+
+With Formspree, the notification comes from Formspree. Its [help article on email domains](https://help.formspree.io/articles/advanced-features/setting-email-domain) says all emails are sent from an address ending in `@formspree.io` unless you set up a custom domain, which is a Business plan feature ($90/month, or $60/month billed yearly). Custom-domain mail is delivered through SendGrid, and Formspree may switch you back to `formspree.io` if your DNS records go missing. For a notification that only lands in your own inbox, the sender barely matters. For an **auto-reply to the person who filled in the form**, it matters a lot: a confirmation from `@formspree.io` looks like a third party, not your product. Formspree's autoresponse starts on the Professional plan at $30/month.
+
+With Resend, the email comes from you. Once a domain is verified in your Resend account, [you can send from any address at that domain](https://resend.com/docs/knowledge-base/how-do-I-create-an-email-address-or-sender-in-resend). The SPF and DKIM records are yours, the sending reputation is yours, and every message shows up in your Resend dashboard logs. The catch, again, is that something has to call the API.
+
+| Setup                     | Sender address            | Auto-reply to submitter | Delivery logs                      |
+| ------------------------- | ------------------------- | ----------------------- | ---------------------------------- |
+| Formspree Free / Personal | `@formspree.io`           | No                      | Formspree dashboard                |
+| Formspree Professional    | `@formspree.io`           | Yes ($30/mo)            | Formspree dashboard                |
+| Formspree Business        | Your domain, via SendGrid | Yes ($90/mo)            | Formspree dashboard                |
+| Your function + Resend    | Your verified domain      | If you write it         | Your Resend account                |
+| OSForms + your Resend key | Your verified domain      | Yes, free tier          | Your Resend account + OSForms logs |
+
+## The DIY Path: A Serverless Function Plus Resend
+
+If you already deploy to Vercel, Netlify, or anything that runs Node, the DIY version is short. Here is a Next.js Route Handler that receives a plain HTML form post and emails you through Resend:
+
+```ts
+// app/api/contact/route.ts
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export async function POST(req: Request) {
+  const form = await req.formData();
+  const name = String(form.get('name') ?? '');
+  const email = String(form.get('email') ?? '');
+  const message = String(form.get('message') ?? '');
+
+  // Honeypot: a hidden input real visitors never fill in
+  if (form.get('company_site')) {
+    return Response.redirect(new URL('/thanks', req.url), 303);
+  }
+
+  if (!email.includes('@') || !message) {
+    return Response.json(
+      { error: 'Email and message are required' },
+      { status: 400 }
+    );
+  }
+
+  const { error } = await resend.emails.send({
+    from: 'Contact Form <forms@yourdomain.com>',
+    to: ['you@yourdomain.com'],
+    replyTo: email,
+    subject: `New message from ${name || email}`,
+    text: `${name} <${email}>\n\n${message}`,
+  });
+
+  if (error) {
+    return Response.json({ error: 'Could not send' }, { status: 502 });
+  }
+
+  return Response.redirect(new URL('/thanks', req.url), 303);
+}
+```
+
+Point your form at it with `<form action="/api/contact" method="POST">`, set `RESEND_API_KEY` in your host's environment, and it works. The key never reaches the browser, the email comes from your domain, and `replyTo` means hitting Reply in your inbox answers the visitor.
+
+For a single form on a project that already has a server, this is the right call, and I'd still write it today. The trouble starts with the list of things it doesn't do:
+
+- **No storage.** If Resend rejects the call (bad key, unverified domain, daily cap), the message is gone. There is no record of it anywhere.
+- **No rate limiting.** Anyone can POST to `/api/contact` in a loop, and each request spends one of your 100 free emails for the day.
+- **No auto-reply.** That's a second `send()` call, an HTML template, and a decision about what to do when the visitor typed a broken address.
+- **No dashboard or export.** Every submission lives only in your inbox.
+- **One copy per project.** On a static site with no server, you'd deploy this as a separate function. Across five client sites, you maintain five of them.
+
+Each item is a small amount of code. Together they're a small app, and that's the point where people go looking for a form backend instead.
+
+> "Resend is the email engine. A form backend is the car around it. The question is whether you want to build the car."
+
+## The Form-Backend Path: Formspree, or OSForms With Your Resend Key
+
+A form backend does the receiving, storing, and routing for you. You get two different trade-offs depending on which one you pick.
+
+**Formspree** is the zero-setup option. Change the `action`, confirm your email, done. No domain to verify, no API key, no DNS. You also get real file uploads from the Personal plan and a long plugin list. What you give up is the sender: notifications and auto-replies come from `@formspree.io` until you pay for Business, and the auto-reply itself is a $30/month feature. Its plans list no option to send through your own email provider, so your Resend account isn't involved at all. I go through the full feature-by-feature comparison in [OSForms vs Formspree](/osforms-vs-formspree).
+
+**OSForms** keeps the zero-server part and swaps the email engine for yours. The form looks the same:
+
+```html
+<form action="https://osforms.com/api/v1/f/your-form-slug" method="POST">
+  <input type="text" name="name" required />
+  <input type="email" name="email" required />
+  <textarea name="message" required></textarea>
+  <button type="submit">Send</button>
+</form>
+```
+
+Then, in the form's **Integrations** tab, choose **Email (Resend)** and fill in four things:
+
+1. Your Resend API key (`re_...`). It's encrypted at rest with AES-256-GCM and only decrypted when a submission is being sent. It's never shipped to the browser.
+2. A **From** address on your verified Resend domain, as a plain address like `forms@yourdomain.com`. A display-name format such as `Acme <forms@acme.com>` is rejected, which is a small difference from the DIY snippet above.
+3. One or more **To** addresses, comma-separated.
+4. Optionally, an **Auto-Reply** with your own HTML template. It supports `{{name}}`-style placeholders for any submitted field, and it finds the submitter's address in fields like `email` or `user_email` on its own.
+
+Each submission is stored first, then the email goes out in the background through your Resend account, so it appears in your Resend logs next to everything else you send. If Resend rejects the call, the submission is still saved, the failure is logged against it, and you get an in-app notification and an email alert. Your visitor got a fast response either way. The [Resend integration docs](/docs/integrations/resend) list every field, and the [contact form email walkthrough](/form-email-notifications) shows the auto-reply template in detail.
+
+The limits, stated plainly: OSForms needs you to verify a domain in Resend before email works, which Formspree doesn't. It stores no uploaded files (a multipart upload is replaced with a placeholder like `[File: cv.pdf, 48213 bytes]`). Each form has one email integration. And the free tier is 100 submissions a month. Past that, the code is MIT-licensed and you can self-host it.
+
+## Formspree vs Resend: The Decision Table
+
+| Your situation                                                          | Pick                      | Why                                                                        |
+| ----------------------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------------- |
+| Static site, want it live in five minutes, sender doesn't matter        | Formspree                 | No domain, no key, no code                                                 |
+| Your app already has a server and handles one form                      | Resend directly           | One short route in an app you already deploy                               |
+| You want auto-replies from your own domain without paying $30–$90/month | OSForms + your Resend key | Auto-reply and your sender are on the free tier                            |
+| The form collects file uploads                                          | Formspree                 | OSForms doesn't store files; a bare Resend function would need storage too |
+| You want every submission stored even when email fails                  | Formspree or OSForms      | A bare Resend call has no record if `send()` errors                        |
+| Many client sites, each with its own sending domain                     | OSForms                   | One endpoint per form, each with its own Resend key and From address       |
+| You need Stripe, Mailchimp, or Zapier as one-click plugins              | Formspree                 | OSForms has email, Google Sheets, and webhooks only                        |
+
+The short version of Formspree vs Resend: Formspree is a finished product with its own mail server, and Resend is a sending API that expects you to write the receiver. Pick Formspree when the fastest working form matters more than who the email is from. Pick Resend when you already have the server. If you want Resend's sending and your own domain without writing or hosting the receiver, a form backend that runs on your key covers the gap. The [bring-your-own-key explainer](/bring-your-own-key) covers why that model costs nothing extra, and for every way to catch a form without building a backend, start with [how to handle form submissions without a backend](/handle-form-submissions).

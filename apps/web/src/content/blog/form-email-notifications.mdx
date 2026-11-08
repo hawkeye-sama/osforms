@@ -1,14 +1,14 @@
 ---
-title: 'How to Send Form Email Notifications With Resend'
-description: 'Set up form email notifications with your own Resend key: get instant alerts on every submission, with no backend code and no per-email paywall.'
+title: 'How to Send Contact Form Email With Resend (No Backend)'
+description: 'Send contact form email with Resend and no backend code: a notification on every submission plus an auto-reply to the sender, all on your own Resend key.'
 date: '2026-04-20'
-dateModified: '2026-06-28'
+dateModified: '2026-11-08'
 author: 'Bahroze Ali'
-tags: ['tutorial', 'resend', 'email', 'html']
+tags: ['tutorial', 'resend', 'email', 'contact form']
 readingTime: '6 min read'
 category: 'Integrate'
-seoTitle: 'Send Form Email Notifications With Resend'
-focusKeyphrase: 'form email notifications'
+seoTitle: 'Send Contact Form Email With Resend, No Backend'
+focusKeyphrase: 'send contact form email with resend'
 coverImage: '/content/images/form-email-notifications-cover.png'
 coverTitle: 'Form Email Notifications'
 coverSubtitle: 'Alerts + auto-reply on your own Resend key'
@@ -18,20 +18,20 @@ faq:
   - question: 'What happens if Resend is down when a submission arrives?'
     answer: 'The submission is stored immediately regardless. If the Resend call fails, you get an in-app notification in the OSForms dashboard with the error so you can review the submission manually.'
   - question: 'Can I send notifications to multiple email addresses?'
-    answer: 'Yes. Set up multiple email integrations pointing to different addresses, or configure your Resend account to forward to a distribution list. OSForms runs all integrations in parallel per submission.'
+    answer: 'Yes. One email integration takes a list of recipient addresses in its To field, and every address gets the notification. Each form has one email integration, so add all recipients there, or send to a distribution list you manage.'
   - question: 'How does the auto-reply know where to send?'
     answer: 'It auto-detects common email field names in the submission (email, user_email, contactEmail, and similar) and replies to that address. If your field has an unusual name, set it explicitly in the auto-reply settings. If no valid email is found, the auto-reply is skipped and the notification still sends.'
   - question: 'What is the difference between OSForms and using Resend directly?'
     answer: 'Resend requires server-side code to make the API call. OSForms is that server code. You point your HTML form at an endpoint and get submission storage, integration logs, and spam protection with zero backend work on your side.'
 ---
 
-Every web app has at least one form: contact forms, waitlist signups, feedback widgets. And every time you ship one, you need the same thing. Get notified when someone fills it out, and ideally send the person a confirmation back.
+To send contact form email with Resend without a backend, point your form at an OSForms endpoint and paste your Resend API key into the email integration. Every submission then triggers a notification to your inbox plus an optional auto-reply to the sender, both sent through your own Resend account.
 
-The usual path is painful. You stand up a server, wire up an email provider, handle errors, manage retries. Or you reach for a hosted form tool and hit a paywall the moment you want email forwarding, even though you're [supplying the API key yourself](/bring-your-own-key).
+Every web app has at least one form, and every time you ship one you need the same two things: a notification when someone fills it out, and ideally a confirmation back to them. The usual path is painful. You stand up a server, wire up an email provider, handle errors, manage retries. Or you reach for a hosted form tool and hit a paywall the moment you want email forwarding, even though you're [supplying the API key yourself](/bring-your-own-key).
 
-This walks through form email notifications the BYOK way: alerts to your inbox **and** a custom auto-reply to the submitter, both sent through your own [Resend](https://resend.com) account, with no backend to maintain.
+This walks through the BYOK way, step by step: alerts to your inbox **and** a custom auto-reply to the submitter, both sent through your own [Resend](https://resend.com) account, with no backend to maintain.
 
-## Form Email Notifications Without a Paywall
+## Send Contact Form Email With Resend, No Paywall
 
 Here's what you'll wire up:
 
@@ -40,9 +40,9 @@ Here's what you'll wire up:
 - A custom auto-reply to the person who submitted
 - Per-send delivery logs so you can see exactly what happened
 
-All of it runs on **your** Resend key. OSForms makes the API call; Resend bills your account directly, at Resend's pricing, which starts at 3,000 emails/month free. There's no per-email markup and no integration tier to unlock.
+All of it runs on **your** Resend key. OSForms makes the API call; Resend bills your account directly. Resend's free plan covers 3,000 emails a month, capped at 100 a day ([resend.com/pricing](https://resend.com/pricing), November 2026), so a small contact form usually costs nothing to notify on. If a busy form could pass 100 emails in a day (remember an auto-reply doubles the count), plan for Resend's paid tier. There's no per-email markup and no integration tier to unlock.
 
-> "You're not paying for integrations. You're paying for the markup on your own API keys."
+That second part is where most hosted form tools differ. They email you a notification on their free plans, but the auto-reply to the submitter is where the paywall sits. As of November 2026, Formspree lists auto-response from its $30/month Professional plan ([formspree.io/plans](https://formspree.io/plans)), Basin from its Growth plan at $24.17/month billed yearly ([usebasin.com/pricing](https://usebasin.com/pricing)), and Web3Forms from its $149/year Pro plan ([web3forms.com/pricing](https://web3forms.com/pricing)). Those tools send from their own infrastructure, so the fee is real cost plus margin. When the email goes out on your Resend key, there's nothing left to charge for.
 
 You'll need an [OSForms account](https://osforms.com/signup) and a [Resend account](https://resend.com). Both are free, no card required.
 
@@ -75,7 +75,7 @@ OSForms encrypts your key at rest with AES-256-GCM. It's never stored in plain t
 </form>
 ```
 
-Submit it, and within seconds the notification email lands in your inbox with every field formatted into a table. The form works on any stack: plain HTML, React, Vue, Astro, anything that can send a POST request.
+Submit it, and within seconds the notification email lands in your inbox with every field formatted into a table. The form works on any stack: plain HTML, [React](/forms-in-react), Vue, Astro, anything that can send a POST request. If you're building the markup from scratch, the [HTML contact form tutorial](/html-contact-form) covers labels, native validation, and every response code the endpoint can return.
 
 **4. Set a success redirect.** If you don't set a redirect URL, the endpoint replies with a JSON `{ "success": true }` body. That's fine for `fetch`/AJAX, but a plain HTML form will drop your visitor on raw JSON. For HTML forms, set a **redirect URL** in form settings (for example `/thank-you`) so visitors land on a clean confirmation.
 
@@ -118,12 +118,13 @@ That means you can answer "did the email actually go out?" without guessing:
 - **Each send logged independently.** The notification and the auto-reply run and log separately, so a skipped auto-reply (say, no email field in the submission) never hides a successful notification.
 - **Failures surface.** If a send fails, you get an in-app notification with the error so you can fix the key and move on. Nothing is lost, because the submission is already saved.
 
-## The OSForms Take
+## When to Call Resend Directly Instead
 
-Every hosted form tool charges for email forwarding. Formspree: $15/month. FormBold: $9/month. Basin: $7/month. Auto-reply usually sits a tier higher still, all for features that run entirely on your Resend key.
+A form backend is the right tool when the form is courier work: store the submission, notify someone, reply to the sender. Call the Resend API from your own code instead when:
 
-That's not a business model. It's a markup on your own credentials.
+- **You already run a server for this form.** If submitting it creates a user, charges a card, or writes to your own database, the email belongs in that same request handler. Adding a second service in the path buys you nothing.
+- **The email depends on your own data.** OSForms templates can use the submitted fields and a few submission details (`{{formName}}`, `{{submittedAt}}`, `{{submissionId}}`). If the reply needs an order status, an account name, or anything else from your database, send it from your code.
+- **You want React Email components or attachments.** The auto-reply here is an HTML string with `{{field}}` variables and `{{#if}}` blocks. Richer templating is easier with the Resend SDK in your own app.
+- **You need more than 100 hosted submissions a month and won't self-host.** That's the hosted free tier's limit today, and there's no paid hosted plan yet.
 
-OSForms flips it. You bring the Resend key, and email (notifications _and_ auto-reply) is free. We only charge on submission volume, which scales with actual usage, not with how many integrations you dare to enable.
-
-The code is [open source on GitHub](https://github.com/hawkeye-sama/osforms), so you can audit exactly how your key is stored, encrypted, and used. And for the reasoning behind the model, read [what bring your own key actually means](/bring-your-own-key).
+For everything else, the endpoint is the server code you'd otherwise write. The hosted tier meters submission volume, not integrations, so email (notifications _and_ auto-reply) costs nothing extra. The code is [open source on GitHub](https://github.com/hawkeye-sama/osforms), so you can audit exactly how your key is stored, encrypted, and used. For the reasoning behind the model, read [what bring your own key actually means](/bring-your-own-key).

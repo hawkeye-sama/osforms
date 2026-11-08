@@ -1,0 +1,326 @@
+---
+title: 'How to Add a Conversational Form to React'
+description: 'A React conversational form in one component: @osforms/react shows one question at a time, validates each answer, and posts the result to a backend you own.'
+date: '2026-11-08'
+dateModified: '2026-11-08'
+author: 'Bahroze Ali'
+tags: ['react', 'conversational forms', 'open source', 'tutorial']
+readingTime: '9 min read'
+category: 'Build'
+seoTitle: 'Build a React Conversational Form in Minutes'
+focusKeyphrase: 'react conversational form'
+coverImage: '/content/images/conversational-form-react-cover.png'
+coverTitle: 'Conversational Forms in React'
+coverSubtitle: 'One question at a time, one component, your own backend'
+faq:
+  - question: 'What is a conversational form?'
+    answer: 'A conversational form shows one question per screen instead of every field at once. The respondent answers, moves forward, and sees the next question, the way Typeform works. It is a presentation choice, not a chatbot: the data you collect is the same set of fields a classic form would collect.'
+  - question: 'How do I add a conversational form to a React app?'
+    answer: 'Install @osforms/react and render <OSForm formId="your-form-slug" />. Conversational is the default mode, so the component fetches your form schema, shows one question at a time with transitions and a progress bar, validates each answer, and posts the submission to your OSForms endpoint. You can also pass a schema object in code instead of building the form in the dashboard.'
+  - question: 'Can the same form switch between conversational and classic layouts?'
+    answer: 'Yes. Pass mode="classic" to render every field on one page, or mode="conversational" for one question at a time. The schema, endpoint, and stored submissions stay the same. A third value, stepped, is accepted but currently renders the conversational layout.'
+  - question: 'Does @osforms/react work with Next.js?'
+    answer: 'Yes. The component uses React state and effects, so in the Next.js App Router you render it from a file marked with the "use client" directive. In the Pages Router or a Vite app it works as a normal component. React 18 or newer is required.'
+  - question: 'When should I use classic mode instead of conversational?'
+    answer: 'Use classic for short forms embedded inside a larger page, like a contact block in a footer. Conversational mode listens for the Enter key on the whole window so people can move forward without the mouse, which is right for a full-screen form but can catch key presses meant for the rest of the page.'
+  - question: 'Is @osforms/react free?'
+    answer: 'The package is open source under the MIT license. The hosted OSForms backend it posts to includes 100 free submissions a month with every integration (Resend email, Google Sheets, webhooks) running on your own API keys, and you can self-host the backend and point the component at it with the baseUrl prop.'
+---
+
+You want a form that asks one thing at a time. Name, then email, then the actual question, each on its own screen with a smooth transition between them, the way Typeform does it. Then you search npm for a React conversational form and find wrappers around libraries that have not seen a release in years, or chat-bubble widgets that turn your form into a fake support conversation.
+
+The short answer: install `@osforms/react` and render `<OSForm formId="your-form-slug" />`. Conversational is the default mode, so you get one question per screen, animated transitions, a progress bar, per-question validation, and a submission that lands in storage you own, without writing the state machine yourself. The rest of this post shows what that state machine looks like when you do write it yourself, then the component version, then the settings that actually matter.
+
+## What a React Conversational Form Actually Is
+
+"Conversational form" means two different things depending on who you ask. One meaning is the chat-style UI: questions appear as message bubbles, answers appear as replies. The other is the Typeform pattern: a full-width screen, one question, a big input, an OK button, and the next question sliding in from below.
+
+This post is about the second one. It is a presentation layer over a normal form. You still collect `name`, `email`, and `message`. The difference is that the respondent only ever looks at one of them, which makes long forms feel short and keeps attention on the current answer instead of the scrollbar.
+
+That presentation layer is where all the work hides, because the browser gives you none of it. A `<form>` element knows how to show every field and submit them together. Showing them one at a time is your problem.
+
+### The DIY version: a state machine you have to own
+
+Here is the minimum honest version, a component that steps through questions and validates each one before moving on:
+
+```tsx
+import { useState } from 'react';
+
+const questions = [
+  { id: 'name', label: "What's your name?", type: 'text', required: true },
+  {
+    id: 'email',
+    label: 'Where should we reply?',
+    type: 'email',
+    required: true,
+  },
+  {
+    id: 'message',
+    label: 'What are you building?',
+    type: 'textarea',
+    required: false,
+  },
+];
+
+export function DiyConversationalForm() {
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [error, setError] = useState('');
+  const q = questions[step];
+
+  function next() {
+    const value = (answers[q.id] ?? '').trim();
+    if (q.required && !value) return setError('This field is required');
+    if (q.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) {
+      return setError('Enter a valid email');
+    }
+    setError('');
+    if (step < questions.length - 1) setStep(step + 1);
+    else void submit();
+  }
+
+  async function submit() {
+    // Now you need an endpoint, storage, spam checks, and an email...
+  }
+
+  return (
+    <div>
+      <p>{q.label}</p>
+      <input
+        value={answers[q.id] ?? ''}
+        onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
+      />
+      {error && <p role="alert">{error}</p>}
+      <button onClick={next}>OK</button>
+    </div>
+  );
+}
+```
+
+That works, and it is a small slice of the job. Count what is still missing. There is no back button, so a typo on question one means starting over. There are no transitions, so each question just pops in. The `textarea` type is declared but every question renders an `<input>`. Keyboard handling is absent, and adding it means deciding what Enter does in a single-line input versus a multi-line one. A radio question should move forward on click instead of making people press OK. Conditional questions ("only ask how many sites if they said agency") mean the step index has to skip fields based on earlier answers, and so does the final payload. A welcome screen and a thank-you screen are two more states in the machine.
+
+And then `submit()` is still an empty function. Somebody has to receive that POST, store it, notify you, and keep bots out. That part is a backend, and it is the same backend every form needs. I wrote up the whole list in [how to handle form submissions without a backend](/handle-form-submissions), so I will not repeat it here.
+
+None of this is hard on its own. Together it is a few days of work you will maintain forever, for a form that is supposed to be the easy part of the product.
+
+## Installing @osforms/react
+
+The component version starts with one install:
+
+```bash
+npm install @osforms/react
+```
+
+It needs React 18 or newer and pulls in Framer Motion for the transitions. Create a form in the [OSForms dashboard](https://osforms.com) to get a slug. If you build the questions in the dashboard's form builder, the integration is one line:
+
+```tsx
+'use client';
+
+import { OSForm } from '@osforms/react';
+
+export default function Feedback() {
+  return <OSForm formId="your-form-slug" />;
+}
+```
+
+The `'use client'` line matters in the Next.js App Router, because the component runs on React state and effects. In Vite, Remix, or the Pages Router you can drop it. With `formId` set, the component fetches the schema from `/api/v1/f/{slug}/schema`, renders it, and posts answers to `/api/v1/f/{slug}`.
+
+I prefer keeping the questions in the repo, reviewed like any other code. For that, pass a `schema` and an `endpoint` instead:
+
+```tsx
+'use client';
+
+import { OSForm } from '@osforms/react';
+import type { FormSchema } from '@osforms/react';
+
+const schema: FormSchema = {
+  mode: 'conversational',
+  fields: [
+    { id: 'name', type: 'text', label: "What's your name?", required: true },
+    {
+      id: 'email',
+      type: 'email',
+      label: 'Where should we reply?',
+      required: true,
+    },
+    {
+      id: 'role',
+      type: 'radio',
+      label: 'Which describes you best?',
+      required: true,
+      options: [
+        { id: 'r1', label: 'Freelancer', value: 'freelancer' },
+        { id: 'r2', label: 'Agency', value: 'agency' },
+        { id: 'r3', label: 'In-house team', value: 'in-house' },
+      ],
+    },
+    {
+      id: 'sites',
+      type: 'number',
+      label: 'Roughly how many client sites do you run?',
+      required: true,
+      validation: { min: 1 },
+      conditionalLogic: {
+        action: 'show',
+        match: 'all',
+        conditions: [{ fieldId: 'role', operator: 'equals', value: 'agency' }],
+      },
+    },
+    {
+      id: 'urgency',
+      type: 'scale',
+      label: 'How soon do you need this live?',
+      required: false,
+      config: {
+        scaleMin: 1,
+        scaleMax: 5,
+        scaleLowLabel: 'No rush',
+        scaleHighLabel: 'Yesterday',
+      },
+    },
+    {
+      id: 'message',
+      type: 'textarea',
+      label: 'What are you building?',
+      required: false,
+    },
+  ],
+  settings: { submitLabel: 'Send inquiry', source: 'pricing-page' },
+};
+
+export default function Inquiry() {
+  return (
+    <OSForm
+      schema={schema}
+      endpoint="https://osforms.com/api/v1/f/your-form-slug"
+      onComplete={() => {
+        // Fires after a successful submission. Takes no arguments.
+      }}
+      onError={(err) => console.error(err.message)}
+    />
+  );
+}
+```
+
+Everything from the DIY gap list is in there as data. The `sites` question only appears when `role` equals `agency`, and if it stays hidden it is left out of the payload too. `required` and `validation` block forward movement with an inline error (an invalid email gets "Please enter a valid email address" before the respondent can continue). The `radio` and `scale` questions move forward on their own after a click. Text, number, and textarea questions show an OK button.
+
+The available field types are `text`, `email`, `number`, `tel`, `url`, `textarea`, `select`, `radio`, `checkbox`, `rating`, `scale`, and `statement` (a block of copy with no input). The schema type also lists `date` and `file`, but the renderer does not draw an input for either yet, so leave them out. The backend does not store uploaded files anyway.
+
+When the last question is answered, the component sends one JSON POST to the endpoint, keyed by field `id`:
+
+```json
+{
+  "name": "Ada",
+  "email": "ada@example.com",
+  "role": "agency",
+  "sites": "12",
+  "urgency": 4,
+  "message": "Lead forms for client sites",
+  "_source": "pricing-page"
+}
+```
+
+Optional questions the respondent skipped are sent as empty strings, and `_source` comes from `settings.source`, which is handy when the same form lives on several pages. If the server rejects the submission (rate limit, monthly cap, a blocked origin), its error message shows under the current question and is passed to `onError`.
+
+### OSForm props
+
+Every prop `<OSForm>` accepts, from the component's own type definition:
+
+| Prop               | Type                                         | What it does                                                                                                    |
+| ------------------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `formId`           | `string`                                     | Your form's slug. The component fetches the schema from the dashboard and posts to that form's endpoint.        |
+| `schema`           | `FormSchema`                                 | Define the form in code instead. Used in place of the fetched schema. Needs `endpoint` if there is no `formId`. |
+| `endpoint`         | `string`                                     | Submission URL. Defaults to `{baseUrl}/api/v1/f/{formId}`.                                                      |
+| `baseUrl`          | `string`                                     | API origin, `https://osforms.com` by default. Point it at your own instance when you self-host.                 |
+| `mode`             | `'conversational' \| 'classic' \| 'stepped'` | Overrides the schema's `mode`. Conversational is the default; `stepped` currently renders as conversational.    |
+| `theme`            | `Partial<FormTheme>`                         | Colors, font, border radius, button style. Merged over the schema's theme and the built-in dark defaults.       |
+| `onComplete`       | `() => void`                                 | Runs after a successful submission. Takes no arguments.                                                         |
+| `onError`          | `(error: Error) => void`                     | Runs when the submission fails.                                                                                 |
+| `fullScreen`       | `boolean`                                    | Renders the form `position: fixed` over the whole viewport.                                                     |
+| `loadingComponent` | `ReactNode`                                  | Shown while the schema loads (only when you use `formId` without `schema`).                                     |
+| `errorComponent`   | `ReactNode`                                  | Shown if the schema fetch fails (same condition).                                                               |
+
+## Conversational vs Classic Mode in React
+
+The `mode` prop decides the layout. The schema's own `mode` is the fallback, and conversational is the default if neither is set:
+
+```tsx
+<OSForm formId="your-form-slug" mode="conversational" fullScreen />
+<OSForm formId="your-form-slug" mode="classic" />
+```
+
+**Conversational** shows one question per screen with a vertical slide transition, a thin progress bar across the top, and the question number above each label. Enter moves forward, and inside a textarea it takes Cmd+Enter or Ctrl+Enter so plain Enter can still add a new line. The ↑ and ↓ buttons in the bottom-right corner step back and forward. There are no left and right arrow shortcuts. Add `fullScreen` and the form covers the viewport with `position: fixed`, which is the standalone, send-someone-a-link experience.
+
+**Classic** renders every field on one page in a single column with a normal submit button. Same schema, same endpoint, same stored data.
+
+Here is the practical rule for picking. Conversational mode attaches its Enter listener to the whole `window`, not just the form. On a dedicated page or in `fullScreen`, that is exactly what you want. But if the form is a small block inside a longer page, say a contact section under your pricing table, a press of Enter in some other input on that page can move the form along, or submit it from the last question. For inline embeds, use classic. Save conversational for pages where the form is the whole point.
+
+> "The one-question-at-a-time flow is a presentation choice. The schema, the endpoint, and the data underneath it should not change when you switch it off."
+
+Two more details. `mode="stepped"` is accepted but currently renders the conversational layout, so do not plan around a separate multi-field-per-page view yet. And the package is young (0.x), so walk through your own form with the keyboard and on a phone before you ship it, the same as you would with any UI dependency.
+
+## Configuring Welcome and Thank-You Screens
+
+Both screens live in the schema, and both are off until you set `enabled: true`:
+
+```tsx
+const schema: FormSchema = {
+  mode: 'conversational',
+  fields: [
+    /* ... */
+  ],
+  welcomeScreen: {
+    enabled: true,
+    title: 'Tell us about your project',
+    description: 'Six questions, about a minute.',
+    buttonLabel: 'Start',
+    imageUrl: '/logo.svg',
+  },
+  thankYouScreen: {
+    enabled: true,
+    title: 'Got it, thanks.',
+    description: 'We reply within one business day.',
+    redirectUrl: 'https://example.com/next-steps',
+    redirectDelay: 5,
+  },
+  settings: {
+    showProgressBar: true,
+    allowBack: true,
+    showKeyboardHints: true,
+    submitLabel: 'Send inquiry',
+  },
+};
+```
+
+The welcome screen shows the title, optional description and image, and a button (labelled "Start" unless you change it). The thank-you screen shows after a successful submit. If it has a `redirectUrl`, the page navigates there after `redirectDelay` seconds (3 by default). When you render with `formId` and leave the thank-you screen's `redirectUrl` empty, it falls back to the redirect URL set on the form in the dashboard. Leave the thank-you screen disabled and the component shows a plain "Thanks for your response!" and does not redirect, so handle navigation in `onComplete` if you need it.
+
+The settings that do something today: `showProgressBar` hides the top bar, `allowBack: false` removes the ↑/↓ buttons, `showKeyboardHints: false` hides the "Press Enter ↵" hint next to the OK button, `submitLabel` renames the final button, and `source` tags the payload as shown earlier. The `FormSettings` type lists a few more (`progressBarStyle`, `animationStyle`, `autoScrollToTop`) and the thank-you type has `showSubmissionId`. The renderer ignores those for now, so do not rely on them.
+
+Colors and fonts go through the `theme` prop. The default is dark (`#0a0a0a` background), and anything you pass merges over it:
+
+```tsx
+<OSForm
+  formId="your-form-slug"
+  theme={{
+    colors: {
+      background: '#ffffff',
+      surface: '#f4f4f5',
+      border: '#d4d4d8',
+      text: '#111111',
+      textSecondary: '#52525b',
+      primary: '#111111',
+    },
+    borderRadius: 'sm',
+  }}
+/>
+```
+
+## Where Your React Conversational Form Sends Its Data
+
+The DIY version ended at an empty `submit()`. Here, the submission goes to an OSForms endpoint that stores it, counts it toward your 100 free submissions a month, and then runs your integrations in the background: an email through your own Resend key, a row in your own Google Sheet, or a signed webhook to your API. You can export submissions to CSV whenever you want. Because those integrations run on your keys, none of them sit behind a paid plan. That model is explained in [what bring your own key actually means](/bring-your-own-key).
+
+Two limits to know up front. The component does not render a CAPTCHA widget, so if you set a reCAPTCHA or hCaptcha secret on the form, submissions from `<OSForm>` will be rejected with "CAPTCHA verification required". For those forms, lean on the per-form rate limit (10 requests a minute per IP by default) and an allowed-origins list instead. And file questions are out, as covered above.
+
+If the hosted cap ever gets in the way, the backend is open source. Self-host it and point the component at your instance with `baseUrl`, and nothing else in your code changes. The [SDK docs](/docs/sdk/introduction) cover the full prop reference.
+
+That is the real trade a React conversational form should give you: the Typeform feel on the front, and on the back a plain endpoint you can read, move, or run yourself. If you are weighing it against Typeform directly, the [open-source Typeform alternative](/typeform-alternative) breakdown covers pricing and where Typeform still wins. And if you are new to wiring forms in React at all, start with [how to handle forms in React](/forms-in-react), which covers the controlled-input and validation basics this component handles for you.

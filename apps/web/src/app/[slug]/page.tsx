@@ -9,18 +9,28 @@ import remarkGfm from 'remark-gfm';
 import { CursorGridGlow } from '@/components/blog/cursor-grid-glow';
 import { Footer } from '@/components/layout/footer';
 import { LandingNavbar } from '@/components/layout/landing-navbar';
+import type { Author } from '@/lib/authors';
+import { getAuthorByName } from '@/lib/authors';
 import type { BlogPost } from '@/lib/blog';
 import {
   formatDate,
   getAllPosts,
   getCoverUrl,
   getPostBySlug,
+  getRelatedPosts,
+  slugifyCategory,
 } from '@/lib/blog';
 import { SITE_URL as BASE_URL } from '@/lib/site';
+import { ORGANIZATION_ID, personSchema } from '@/lib/structured-data';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
+
+// Only published posts are prebuilt; any other slug (including a scheduled,
+// future-dated post) 404s instead of rendering on demand. A scheduled post goes
+// live when the daily publish cron triggers a rebuild on/after its date.
+export const dynamicParams = false;
 
 export async function generateStaticParams() {
   return getAllPosts().map((post) => ({ slug: post.slug }));
@@ -106,16 +116,21 @@ const MDX_COMPONENTS = {
   table: BlogTable,
 };
 
-function JsonLd({ post, slug }: { post: BlogPost; slug: string }) {
+function JsonLd({
+  post,
+  slug,
+  author: authorProfile,
+}: {
+  post: BlogPost;
+  slug: string;
+  author: Author | null;
+}) {
   // Author derives from frontmatter so on-page, OG, and JSON-LD signals agree.
   // A named person carries more E-E-A-T weight than a generic org byline.
-  const author = {
-    '@type': 'Person',
-    name: post.author,
-    url: 'https://github.com/hawkeye-sama',
-    image: `${BASE_URL}/profile-pic.webp`,
-    sameAs: ['https://github.com/hawkeye-sama'],
-  };
+  const author = authorProfile
+    ? personSchema(authorProfile)
+    : { '@type': 'Person', name: post.author };
+  const categoryUrl = `${BASE_URL}/category/${slugifyCategory(post.category)}`;
 
   const blogPosting = {
     '@context': 'https://schema.org',
@@ -129,16 +144,9 @@ function JsonLd({ post, slug }: { post: BlogPost; slug: string }) {
     image: `${BASE_URL}${getCoverUrl(post)}`,
     ...(post.tags.length > 0 && { keywords: post.tags.join(', ') }),
     inLanguage: 'en',
+    articleSection: post.category,
     author,
-    publisher: {
-      '@type': 'Organization',
-      name: 'OSForms',
-      url: BASE_URL,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${BASE_URL}/logo.png`,
-      },
-    },
+    publisher: { '@id': ORGANIZATION_ID },
   };
 
   const breadcrumb = {
@@ -154,6 +162,12 @@ function JsonLd({ post, slug }: { post: BlogPost; slug: string }) {
       {
         '@type': 'ListItem',
         position: 2,
+        name: post.category,
+        item: categoryUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
         name: post.title,
         item: `${BASE_URL}/${slug}`,
       },
@@ -194,13 +208,13 @@ export default async function BlogPostPage({ params }: Props) {
     notFound();
   }
 
-  const morePosts = getAllPosts()
-    .filter((p) => p.slug !== slug)
-    .slice(0, 2);
+  const relatedPosts = getRelatedPosts(post, 3);
+  const author = getAuthorByName(post.author);
+  const isUpdated = !!post.dateModified && post.dateModified !== post.date;
 
   return (
     <div className="dark bg-background text-foreground relative min-h-screen">
-      <JsonLd post={post} slug={slug} />
+      <JsonLd post={post} slug={slug} author={author} />
       <div className="bg-grid-glow pointer-events-none fixed inset-0" />
       <CursorGridGlow />
       <LandingNavbar />
@@ -218,9 +232,12 @@ export default async function BlogPostPage({ params }: Props) {
               </span>{' '}
               Blog
             </Link>
-            <span className="text-muted-foreground font-mono text-[11px] tracking-widest uppercase">
+            <Link
+              href={`/category/${slugifyCategory(post.category)}`}
+              className="text-muted-foreground hover:text-foreground font-mono text-[11px] tracking-widest uppercase transition-colors"
+            >
               {post.category}
-            </span>
+            </Link>
           </div>
 
           {/* ── Post Header ─────────────────────── */}
@@ -242,9 +259,30 @@ export default async function BlogPostPage({ params }: Props) {
                 className="border-border h-10 w-10 rounded-full border object-cover"
               />
               <div className="text-sm leading-tight">
-                <div className="text-foreground font-medium">{post.author}</div>
+                {author ? (
+                  <Link
+                    href={`/authors/${author.slug}`}
+                    rel="author"
+                    className="text-foreground font-medium transition-opacity hover:opacity-70"
+                  >
+                    {post.author}
+                  </Link>
+                ) : (
+                  <div className="text-foreground font-medium">
+                    {post.author}
+                  </div>
+                )}
                 <div className="text-muted-foreground font-mono text-xs">
                   <time dateTime={post.date}>{formatDate(post.date)}</time>
+                  {isUpdated && post.dateModified && (
+                    <>
+                      <span className="mx-1.5">·</span>
+                      Updated{' '}
+                      <time dateTime={post.dateModified}>
+                        {formatDate(post.dateModified)}
+                      </time>
+                    </>
+                  )}
                   <span className="mx-1.5">·</span>
                   {post.readingTime}
                 </div>
@@ -320,28 +358,26 @@ export default async function BlogPostPage({ params }: Props) {
           )}
 
           {/* ── Continue reading ────────────────── */}
-          {morePosts.length > 0 && (
+          {relatedPosts.length > 0 && (
             <section className="mt-20" aria-labelledby="more-heading">
               <div className="text-muted-foreground mb-8 flex items-center gap-3 font-mono text-[11px] tracking-widest uppercase">
                 <span className="bg-foreground/60 h-px w-8" />
                 <span id="more-heading">Continue reading</span>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {morePosts.map((p) => (
+              <div className="grid gap-4 sm:grid-cols-3">
+                {relatedPosts.map((p) => (
                   <Link
                     key={p.slug}
                     href={`/${p.slug}`}
-                    className="group border-border bg-card/40 hover:bg-card/60 flex flex-col rounded-2xl border p-6 transition-colors duration-200"
+                    className="group border-border bg-card/40 hover:bg-card/60 flex flex-col rounded-2xl border p-5 transition-colors duration-200"
                   >
-                    <div className="text-muted-foreground flex items-center gap-3 font-mono text-[11px] tracking-widest uppercase">
-                      <span>{p.category}</span>
-                      <span className="text-muted-foreground/50">·</span>
-                      <time dateTime={p.date}>{formatDate(p.date)}</time>
+                    <div className="text-muted-foreground font-mono text-[11px] tracking-widest uppercase">
+                      {p.category}
                     </div>
-                    <h3 className="text-foreground mt-3 text-lg font-semibold tracking-tight transition-opacity group-hover:opacity-70">
+                    <h3 className="text-foreground mt-3 text-base font-semibold tracking-tight transition-opacity group-hover:opacity-70">
                       {p.title}
                     </h3>
-                    <p className="text-muted-foreground mt-2 line-clamp-2 text-sm leading-relaxed">
+                    <p className="text-muted-foreground mt-2 line-clamp-3 flex-1 text-sm leading-relaxed">
                       {p.description}
                     </p>
                     <span className="text-foreground mt-4 inline-flex items-center gap-1.5 font-mono text-xs">

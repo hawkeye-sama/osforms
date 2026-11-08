@@ -1,0 +1,265 @@
+---
+title: 'Verify Webhook HMAC Signatures in Node.js'
+description: 'Verify webhook signature in Node.js the right way: hash the raw body with HMAC-SHA256, compare with timingSafeEqual, block replays. Express and Next.js code.'
+date: '2026-11-23'
+dateModified: '2026-11-23'
+author: 'Bahroze Ali'
+tags: ['webhooks', 'node.js', 'hmac', 'security']
+readingTime: '9 min read'
+category: 'Integrate'
+seoTitle: 'Verify Webhook Signature in Node.js (HMAC)'
+focusKeyphrase: 'verify webhook signature node.js'
+coverImage: '/content/images/verify-webhook-signature-nodejs-cover.png'
+coverTitle: 'Verify Webhook Signatures'
+coverSubtitle: 'HMAC-SHA256 in Node.js, Express and Next.js'
+faq:
+  - question: 'Why does my webhook signature never match?'
+    answer: 'Almost always because you hashed a different string than the sender did. If express.json() or another body parser runs before your route, you end up hashing JSON.stringify of the parsed object, which can differ from the bytes on the wire. Read the raw body (express.raw or req.text() in a Next.js Route Handler), compute the HMAC over that, and only then parse it.'
+  - question: 'Why does crypto.timingSafeEqual throw a RangeError?'
+    answer: "It requires both buffers to have the same byte length and throws ERR_CRYPTO_TIMING_SAFE_EQUAL_LENGTH when they don't. A missing or truncated signature header will trigger it. Compare the lengths first and return false if they differ, then call timingSafeEqual."
+  - question: 'Does the OSForms webhook signature include a timestamp?'
+    answer: 'No. The X-osforms-Signature header is the lowercase hex HMAC-SHA256 of the JSON body only, with no prefix and no timestamp. A captured request stays valid if replayed, so deduplicate on the submissionId in the body. OSForms does not retry webhooks, so a second request with the same submissionId is never a legitimate redelivery.'
+  - question: 'Is the signature header always sent?'
+    answer: 'Only when the webhook has a signing secret. Without one, OSForms sends the request unsigned and anyone who knows your URL can post fake submissions to it. Set a secret in the webhook settings and reject any request that arrives without the header.'
+  - question: 'How do I test my verification code without a real submission?'
+    answer: "Save the webhook, then click Send Test under Test Webhook in its settings. OSForms sends a signed sample payload with name, email, message, phone, and company fields. Its submissionId looks like test_sub_1763856000000 rather than a real ID, so make sure your handler doesn't reject or store it as a real submission."
+---
+
+A webhook endpoint is a public URL that does something when it gets a POST. Without a signature check, anyone who finds that URL can make it do that something. To verify a webhook signature in Node.js, read the **raw request body** before any JSON parsing, compute `HMAC-SHA256(secret, rawBody)` with `crypto.createHmac`, and compare it to the signature header using `crypto.timingSafeEqual` after checking that both values have the same length. Then handle replays separately, because a valid signature only proves who sent the request, not that it's the first time you've seen it.
+
+That's the whole recipe, and most broken implementations get one of those steps wrong. The worked example below is the `X-osforms-Signature` header that OSForms puts on every signed form-submission webhook, but the code carries over to GitHub and most other hex-encoded HMAC webhooks with a one-line change. I'll show Express, a Next.js Route Handler, replay protection, and how to test it all with a real signed request.
+
+## What the Signature Header Actually Signs
+
+Before you write a verifier, pin down three things about the sender: which header holds the signature, what format it's in, and exactly which bytes were hashed. Get any of them wrong and every request fails.
+
+For OSForms, those answers come straight from the [webhook handler source](https://github.com/hawkeye-sama/osforms/blob/main/apps/web/src/lib/integrations/webhook.ts):
+
+- **Header:** `X-osforms-Signature`. Node lowercases incoming header names, so you read it as `x-osforms-signature`.
+- **Format:** a lowercase hex HMAC-SHA256 digest. No `sha256=` prefix, no timestamp, no version.
+- **Signed bytes:** the exact JSON body of the request. OSForms builds the payload string once, signs that string, and sends that same string as the body.
+- **Present only when a secret is set.** The signing secret is optional in the webhook settings. With no secret, there's no header and the request is unsigned.
+
+The body itself looks like this:
+
+```json
+{
+  "event": "form.submission",
+  "formId": "64f1a2b3c4d5e6f7a8b9c0d2",
+  "formName": "Contact Form",
+  "submissionId": "64f1a2b3c4d5e6f7a8b9c0d1",
+  "submittedAt": "2026-11-23T09:14:02.511Z",
+  "data": { "name": "Ada", "email": "ada@example.com", "message": "Hi" }
+}
+```
+
+Other providers make different choices, which is why copying a verifier between them so often fails:
+
+| Provider | Header                | Value format        | What's signed            | Timestamp in signature |
+| -------- | --------------------- | ------------------- | ------------------------ | ---------------------- |
+| OSForms  | `X-osforms-Signature` | `<hex>`             | Raw body                 | No                     |
+| GitHub   | `X-Hub-Signature-256` | `sha256=<hex>`      | Raw body                 | No                     |
+| Stripe   | `Stripe-Signature`    | `t=<unix>,v1=<hex>` | `<timestamp>.<raw body>` | Yes                    |
+
+GitHub's [delivery validation guide](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) says the value "always starts with `sha256=`". Stripe signs the timestamp together with the body, and per its [webhook docs](https://docs.stripe.com/webhooks#verify-manually) its libraries reject anything older than five minutes by default (both checked November 2026). Strip the prefix, or include the timestamp, and the rest of the code below is the same.
+
+## Verify a Webhook Signature in Node.js With Express
+
+Here is the version I'd ship. The verification lives in one small function so you can reuse it for any provider. It's written in TypeScript; for plain JavaScript, save it as `verify.js` and drop the type annotations:
+
+```ts
+// lib/verify.ts
+import crypto from 'node:crypto';
+
+export function verifyHmacSha256(
+  rawBody: string | Buffer,
+  signature: string | null | undefined,
+  secret: string,
+  prefix = '' // 'sha256=' for GitHub
+): boolean {
+  if (typeof signature !== 'string' || !signature.startsWith(prefix)) {
+    return false;
+  }
+
+  const received = Buffer.from(signature.slice(prefix.length), 'utf8');
+  const expected = Buffer.from(
+    crypto.createHmac('sha256', secret).update(rawBody).digest('hex'),
+    'utf8'
+  );
+
+  // timingSafeEqual throws on unequal lengths, so check first
+  return (
+    received.length === expected.length &&
+    crypto.timingSafeEqual(received, expected)
+  );
+}
+```
+
+And the Express route that uses it:
+
+```js
+// server.js
+import express from 'express';
+import { verifyHmacSha256 } from './verify.js';
+
+const app = express();
+
+// The webhook route gets the raw body, before any JSON parser
+app.post(
+  '/webhooks/osforms',
+  express.raw({ type: 'application/json' }),
+  (req, res) => {
+    if (!Buffer.isBuffer(req.body)) {
+      return res.status(400).json({ error: 'Expected a JSON body' });
+    }
+
+    const ok = verifyHmacSha256(
+      req.body,
+      req.get('x-osforms-signature'),
+      process.env.OSFORMS_WEBHOOK_SECRET
+    );
+    if (!ok) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    const event = JSON.parse(req.body.toString('utf8'));
+    console.log('New submission', event.submissionId, event.data);
+    res.json({ ok: true });
+  }
+);
+
+// JSON parsing for every other route goes after the webhook route
+app.use(express.json());
+
+app.listen(3000);
+```
+
+The part that bites people is middleware order. If `app.use(express.json())` sits above the webhook route, Express has already parsed the body into an object by the time your handler runs, and the original bytes are gone. Hashing `JSON.stringify(req.body)` sometimes matches and sometimes doesn't (key order, whitespace, and number formatting can all change), which is the worst kind of bug. `express.raw()` hands you a `Buffer` of the exact bytes instead. Per the [Express API docs](https://expressjs.com/en/5x/api/express/), `req.body` is `undefined` if the `Content-Type` didn't match, which is what the `Buffer.isBuffer` guard catches.
+
+### Why the length check comes first
+
+A plain `===` on two hex strings returns as soon as it finds a different character, so the response time leaks how many leading characters an attacker guessed right. `crypto.timingSafeEqual` takes the same time regardless. The catch is that it refuses inputs of different sizes. Without the guard, a short signature does this on Node 24:
+
+```bash
+RangeError [ERR_CRYPTO_TIMING_SAFE_EQUAL_LENGTH]: Input buffers must have the same byte length
+```
+
+An uncaught throw turns a forged request into a 500 instead of a 401, and depending on your error handling it can also crash the process. Comparing lengths first is safe because the length of a SHA-256 hex digest (64 characters) isn't a secret.
+
+## Next.js Route Handler: Verify With req.text()
+
+In the App Router there's no body parser to switch off. A Route Handler receives a standard `Request`, and nothing has read the body yet, so `req.text()` gives you the raw string:
+
+```ts
+// app/api/webhooks/osforms/route.ts
+import { verifyHmacSha256 } from '@/lib/verify';
+
+export const runtime = 'nodejs';
+
+export async function POST(req: Request) {
+  const rawBody = await req.text();
+  const signature = req.headers.get('x-osforms-signature');
+
+  if (
+    !verifyHmacSha256(rawBody, signature, process.env.OSFORMS_WEBHOOK_SECRET!)
+  ) {
+    return Response.json({ error: 'Invalid signature' }, { status: 401 });
+  }
+
+  const event = JSON.parse(rawBody) as {
+    event: 'form.submission';
+    formId: string;
+    formName: string;
+    submissionId: string;
+    submittedAt: string;
+    data: Record<string, unknown>;
+  };
+
+  // Do slow work after responding, or hand it to a queue
+  console.log('New submission', event.submissionId);
+  return Response.json({ ok: true });
+}
+```
+
+Two details matter here. `runtime = 'nodejs'` keeps the route off the Edge runtime, where `node:crypto` isn't fully available (on Edge you'd use `crypto.subtle` instead). And `req.text()` decodes the body as UTF-8. That's fine for OSForms and for any sender that posts UTF-8 JSON, which is nearly all of them. If a provider ever signs bytes that aren't valid UTF-8, read `Buffer.from(await req.arrayBuffer())` and pass the buffer instead; `verifyHmacSha256` takes either.
+
+Pages Router API routes are different: they parse the body by default, so you'd need `export const config = { api: { bodyParser: false } }` and read the stream yourself. If you're still on the Pages Router, a Route Handler is the shorter path.
+
+Here's what each common failure looks like and where it comes from:
+
+| Symptom                                        | Likely cause                                                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Every request fails, header present            | Body parsed before hashing, or the wrong secret in this environment                                          |
+| Header missing entirely                        | No signing secret saved on the webhook                                                                       |
+| 500 with `ERR_CRYPTO_TIMING_SAFE_EQUAL_LENGTH` | No length check before `timingSafeEqual`                                                                     |
+| Works locally, fails after deploy              | Secret env var not set or has stray whitespace (the dashboard trims the secret you enter, so trim yours too) |
+| Error importing `node:crypto`                  | Route running on the Edge runtime                                                                            |
+
+> "A valid signature tells you who sent the request. It doesn't tell you it's the first time they sent it."
+
+## Replays: No Timestamp in the Signature, So Deduplicate on submissionId
+
+Signing proves the body came from someone holding the secret and wasn't changed on the way. It doesn't stop someone who captured a valid request (from a log, a proxy, a misconfigured tunnel) from sending it again. Stripe defends against that with the signed timestamp. The OSForms signature has no timestamp, so the defense has to live in your handler.
+
+The fix is idempotency. Every OSForms payload carries a `submissionId`, and it's inside the signed body, so an attacker can't change it without breaking the signature. Record each one you process and skip any you've seen. With Postgres and `pg`:
+
+```js
+// One-time setup:
+// CREATE TABLE processed_webhooks (
+//   submission_id text PRIMARY KEY,
+//   received_at timestamptz NOT NULL DEFAULT now()
+// );
+
+import pg from 'pg';
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+
+export async function firstTimeSeen(submissionId) {
+  const { rowCount } = await pool.query(
+    'INSERT INTO processed_webhooks (submission_id) VALUES ($1) ON CONFLICT DO NOTHING',
+    [submissionId]
+  );
+  return rowCount === 1;
+}
+```
+
+Call it right after the signature check. If it returns `false`, respond `200` and do nothing. Returning a success code for a duplicate is deliberate: the request is authentic, you've already handled it, and there's nothing for the sender to fix.
+
+The primary-key insert matters more than it looks. A "check, then insert" in two queries has a race window where two identical requests both pass the check. `ON CONFLICT DO NOTHING` makes the database the referee.
+
+OSForms doesn't retry failed webhooks. A non-2xx response is logged against that submission and you get an in-app notification and an email alert, but the request isn't sent again. (The request times out at 30 seconds, and on the hosted service the background window can be shorter, so respond within a few seconds and do slow work afterwards.) So on this sender, a repeated `submissionId` is never a legitimate redelivery. If you do miss one, fetch the submission with the [pull submissions API](/docs/api-reference/pull-submissions) instead of waiting for a retry that won't come.
+
+If you want a freshness check on top, `submittedAt` is also inside the signed body. Rejecting payloads where it's more than a few minutes old works today because OSForms sends the webhook right after storing the submission. Keep the window generous, and remember that the dedupe table is the real protection.
+
+## Testing With the OSForms Send Test Button
+
+You don't need to submit your own form to exercise the verifier. Once the webhook is saved with a signing secret, its settings show a **Test Webhook** row with a **Send Test** button. That calls `POST /api/v1/integrations/{id}/test`, which runs the real webhook integration with sample data. The request is signed with your secret the same way a real submission is, and the dashboard shows either a success toast or the status code and first part of the body your endpoint returned.
+
+The test payload uses your real `formId` and form name, with this `data`:
+
+```json
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "message": "This is a test submission from osforms to verify your integration is working correctly.",
+  "phone": "+1234567890",
+  "company": "Test Company"
+}
+```
+
+Its `submissionId` is `test_sub_` plus a millisecond timestamp, like `test_sub_1763856000000`, not a real submission ID. Each test gets a fresh ID, so the dedupe table won't block repeat tests. The thing to watch is everything after it: if your handler checks for a MongoDB ObjectId, the test fails for the wrong reason, and if it creates a CRM lead, you get a "Test User" lead every time you click the button. Checking for the `test_sub_` prefix and returning `200` early handles both.
+
+OSForms sends the test from its own servers, so the endpoint has to be reachable from the internet. For local development, put a tunnel in front of `localhost`, or skip the network entirely and sign a request yourself:
+
+```bash
+BODY='{"event":"form.submission","submissionId":"local_1","data":{"name":"Ada"}}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$OSFORMS_WEBHOOK_SECRET" | sed 's/^.* //')
+
+curl -i http://localhost:3000/api/webhooks/osforms \
+  -H 'Content-Type: application/json' \
+  -H "X-osforms-Signature: $SIG" \
+  -d "$BODY"
+```
+
+Run it once and you should get `200`. Change one character in the `-d` body without recomputing `SIG` and you should get `401`. Both results matter: a verifier that never rejects anything passes the first test too.
+
+On OSForms, signed webhooks are part of the free tier rather than a paid plugin, which is one of the gaps covered in [OSForms vs Formspree](/osforms-vs-formspree). The [webhook docs](/docs/integrations/webhooks) list the payload fields and the timeout. Whatever sends your webhooks, the steps to verify a webhook signature in Node.js stay the same: raw body, HMAC, length check, constant-time compare, dedupe. If you're still deciding where your form data should go in the first place, start with [how to handle form submissions without a backend](/handle-form-submissions).

@@ -47,20 +47,26 @@ export function GET() {
     'CCBot',
   ];
 
+  // A crawler obeys only the most specific group matching its user agent
+  // (RFC 9309 §2.2.1), so a bot with its own group ignores the `*` rules.
+  // Every group therefore repeats the same rules, generated from one list.
+  const disallow = ['/api/', '/dashboard/', '/onboarding', '/verify-email'];
+  const rules = [
+    'Allow: /',
+    ...disallow.map((p) => `Disallow: ${p}`),
+    'Content-Signal: search=yes, ai-input=yes, ai-train=yes',
+  ].join('\n');
+  const group = (ua: string) => `User-agent: ${ua}\n${rules}`;
+
   const body = `# OSForms — https://osforms.com
-User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /dashboard/
-Disallow: /onboarding
-Disallow: /verify-email
-Content-Signal: search=yes, ai-input=yes, ai-train=yes
+${group('*')}
 
 # AI crawlers are welcome — we want to be discoverable in AI answers.
-${aiBots.map((ua) => `User-agent: ${ua}\nAllow: /`).join('\n\n')}
+${aiBots.map(group).join('\n\n')}
 
 Host: ${SITE_URL}
 Sitemap: ${SITE_URL}/sitemap.xml
+Sitemap: ${SITE_URL}/docs/sitemap.xml
 `;
 
   return new Response(body, {

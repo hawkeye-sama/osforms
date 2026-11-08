@@ -1,18 +1,20 @@
 ---
-title: 'How to Set Up a Form Backend in 2 Minutes'
-description: 'This form backend setup takes two minutes: create an endpoint, paste the URL into your form, and start receiving submissions. No server, no config needed.'
+title: 'What Is a Form Backend? (And How to Set One Up)'
+description: 'A form backend is the server that receives your form POST, stores each submission, and routes it to email, Sheets, or webhooks. Set one up in two minutes.'
 date: '2026-07-02'
-dateModified: '2026-07-02'
+dateModified: '2026-11-08'
 author: 'Bahroze Ali'
 tags: ['tutorial', 'form backend', 'quickstart', 'html']
 readingTime: '5 min read'
 category: 'Build'
-seoTitle: 'Form Backend Setup in 2 Minutes'
-focusKeyphrase: 'form backend setup'
+seoTitle: 'What Is a Form Backend? Setup in 2 Minutes'
+focusKeyphrase: 'form backend'
 coverImage: '/content/images/form-backend-setup-cover.png'
 coverTitle: 'Form Backend Setup'
 coverSubtitle: 'From HTML form to stored submission in two minutes'
 faq:
+  - question: 'What is a form backend?'
+    answer: "A form backend is the server-side service your form's action URL points to. It receives the POST, parses the fields, stores the submission, and sends it on to email, a spreadsheet, or a webhook, with spam checks, CORS, and rate limiting along the way. You can write one yourself or use a hosted or open-source one."
   - question: 'Do I need to write any server code?'
     answer: 'No. The whole point of a hosted form backend is that OSForms is the server. You create an endpoint in the dashboard, set its URL as your form action, and submissions are received, stored, and routed for you. There is nothing to deploy.'
   - question: 'What does the endpoint return after a submission?'
@@ -25,17 +27,17 @@ faq:
     answer: 'Yes. The endpoint stores every submission on its own. Integrations are optional and run in the background after the submission is saved, so you can add email, a webhook, or Google Sheets whenever you are ready without touching your form markup.'
 ---
 
-A form backend setup should not take an afternoon. With OSForms it takes about two minutes: create an endpoint in the dashboard, paste its URL into your form's `action`, and your next submission is stored and ready to route. No server to deploy, no request parsing, no database to wire up. This walks through the whole thing, from an empty form to a submission you can see in a dashboard, and then shows where that data can go next.
+A form backend is the server your HTML form's `action` URL points to. It receives the POST request, stores each submission, and forwards it to email, a spreadsheet, or a webhook, while handling spam, CORS, and rate limits. A static site can't do any of that on its own.
 
-The reason it is fast is that the hard part already exists. You are not building a backend. You are pointing your form at one.
+You can write a form backend yourself or point your form at an existing one. With OSForms the setup takes about two minutes: create an endpoint in the dashboard, paste its URL into your form's `action`, and your next submission is stored and ready to route. No server to deploy, no request parsing, no database to wire up. This walks through the whole thing, from an empty form to a submission you can see in a dashboard, and then shows where that data can go next.
 
-## What a Form Backend Setup Actually Involves
+## What a Form Backend Does (and What Building One Involves)
 
 Do it yourself and the checklist is long. Stand up a server. Add a route that accepts POST. Parse the body, and remember that a browser form sends `application/x-www-form-urlencoded` while your `fetch` call sends JSON, so you handle both. Store the submission somewhere, which means a database. Then the real work starts: email yourself on each submission, block spam bots, set CORS so the endpoint only answers your own site, rate-limit abusive IPs, and keep it all running.
 
 That is a day of plumbing for a contact form. Every project repeats it.
 
-A hosted form backend collapses that checklist into a URL. OSForms runs the server, the parser, the storage, and the spam and rate-limit checks. Your form backend setup becomes three steps: create an endpoint, wire it into your form, decide where submissions go. Here is each one.
+A hosted form backend collapses that checklist into a URL. OSForms runs the server, the parser, the storage, and the spam and rate-limit checks. Setting one up becomes three steps: create an endpoint, wire it into your form, decide where submissions go. Here is each one.
 
 ## Create Your First Endpoint
 

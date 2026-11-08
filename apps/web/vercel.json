@@ -1,3 +1,7 @@
 {
-  "ignoreCommand": "! git diff HEAD~1 --name-only | grep -qvE '^apps/docs/'"
+  "ignoreCommand": "node vercel-ignore.mjs",
+  "crons": [
+    { "path": "/api/cron/publish", "schedule": "0 5 * * *" },
+    { "path": "/api/cron/indexnow", "schedule": "0 8 * * *" }
+  ]
 }

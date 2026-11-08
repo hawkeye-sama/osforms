@@ -1,0 +1,145 @@
+---
+title: 'Self-Hosted Form Backend With Docker Compose'
+description: 'Self-hosted form backend in two containers: run OSForms with Docker Compose, set the required env vars, lift the 100/month cap in MongoDB, and back it all up.'
+date: '2026-12-14'
+dateModified: '2026-12-14'
+author: 'Bahroze Ali'
+tags: ['self-hosting', 'docker', 'mongodb', 'open source']
+readingTime: '9 min read'
+category: 'Integrate'
+seoTitle: 'Self-Hosted Form Backend With Docker Compose'
+focusKeyphrase: 'self-hosted form backend'
+coverImage: '/content/images/self-host-form-backend-cover.png'
+coverTitle: 'Self-Host Your Form Backend'
+coverSubtitle: 'Two containers, two secrets, your data'
+faq:
+  - question: 'What do I need to self-host OSForms?'
+    answer: 'Docker with Compose, and enough memory for the first build: the Next.js build runs with a 4GB heap and the Dockerfile asks for a Docker VM of at least 6GB. Clone the repo, copy .env.docker.example to .env, set JWT_SECRET and ENCRYPTION_KEY, and run docker compose up. MongoDB comes bundled, so there is nothing else to install.'
+  - question: 'Why does the verification email never arrive on my self-hosted instance?'
+    answer: 'System emails (the signup OTP, the welcome email, and integration-failure alerts) are sent from hardcoded @osforms.com addresses, which Resend rejects for your account, so nothing is delivered from a self-hosted instance yet. The code is saved in MongoDB, though. Read it with docker compose exec mongodb mongosh osforms and a find on the emailverifications collection, then enter it at /verify-email?email=you@example.com.'
+  - question: 'How do I remove the 100 submissions per month limit when self-hosting?'
+    answer: 'Every account starts with monthlySubmissionLimit set to 100, and no environment variable changes it. Run db.users.updateMany({}, {$set: {monthlySubmissionLimit: 1000000}}) in mongosh against your database. It only updates existing users, so run it again after new signups.'
+  - question: 'Is there a self-hosted Typeform alternative?'
+    answer: 'Typeform is a hosted SaaS. If what you want is one-question-at-a-time forms on infrastructure you control, OSForms ships an MIT-licensed React component, @osforms/react, whose default mode is conversational. Point it at your own instance with the baseUrl prop and submissions land in your MongoDB instead of a vendor account.'
+  - question: 'What do I need to back up on a self-hosted form backend?'
+    answer: 'Two things: a mongodump of the osforms database, and your .env file. The database holds users, forms, and submissions; ENCRYPTION_KEY in .env is the only thing that can decrypt the integration keys stored in it. A database backup without the matching ENCRYPTION_KEY restores your submissions but leaves every saved Resend key and Google connection unreadable.'
+---
+
+Search for a self-hosted form backend and you mostly get bare GitHub repos: a README, a `docker-compose.yml`, and good luck. This is the walkthrough I wanted for OSForms. A self-hosted form backend is a service you run yourself that accepts form POSTs, stores each submission, and forwards it to email, a spreadsheet, or a webhook. With OSForms that is two containers (the Next.js app and MongoDB): clone the repo, copy the env template, set two secrets, and run `docker compose up`. Then lift the default 100 submissions a month with one MongoDB update, and your forms post to a server you own.
+
+The alternative is writing one. I have done that version too, and the endpoint is the easy part. Then comes storage, a dashboard to read submissions, spam handling, CORS, retries when the email provider is down, encrypted storage for the API keys, and an export for the day someone asks for a CSV. A form backend is a small product, which is why most people either rent one or run someone else's. If you are still deciding whether to run your own at all, [why your form tool shouldn't own your data](/own-your-form-data) covers the case for it.
+
+## What a Self-Hosted Form Backend Runs
+
+Here is the whole footprint from the repo's `docker-compose.yml`:
+
+| Service   | Image                              | Port  | What it does                                                                            |
+| --------- | ---------------------------------- | ----- | --------------------------------------------------------------------------------------- |
+| `mongodb` | `mongo:7`                          | 27017 | Users, forms, submissions, integration logs. Data in the `mongo_data` volume            |
+| `web`     | Built from the repo's `Dockerfile` | 3000  | The dashboard, the public endpoint `POST /api/v1/f/{slug}`, and the integration runners |
+
+No Redis, no queue worker, no object storage. The `web` container waits for MongoDB's health check before it starts, and Compose points it at the bundled database through `MONGODB_URI=mongodb://mongodb:27017/osforms` unless you override it.
+
+Integrations run inside the same Node process. After a submission is stored, the endpoint answers immediately and the Resend, Google Sheets, and webhook calls run in the background. On Vercel, where the hosted version runs, that background work has to fit inside the `waitUntil` window (about 10 seconds on Hobby, up to 60 on Pro). On a long-running container there is no window at all: the work finishes on the event loop. A slow webhook receiver is one place self-hosting behaves better than the hosted tier.
+
+## Running It With docker compose up
+
+```bash
+git clone https://github.com/hawkeye-sama/osforms.git
+cd osforms
+cp .env.docker.example .env
+
+# Run twice: once for JWT_SECRET, once for ENCRYPTION_KEY
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+docker compose up
+```
+
+Paste the two generated values into `.env`, then start it. The first run builds the image, which takes a while, and serves OSForms at `http://localhost:3000`. If you skip the `cp` step, Compose stops with an "env file .env not found" error, because the `web` service reads all its config from that file.
+
+**Memory is the first thing that breaks.** The Dockerfile raises Node's heap to 4GB for `next build` and its comment asks for a Docker VM of at least 6GB. Docker Desktop's memory limit "defaults to 50% of your host's memory" under **Settings → Resources → Advanced** ([Docker Desktop settings](https://docs.docker.com/desktop/settings-and-maintenance/settings/), November 2026). On a 16GB machine that is 8GB and fine. On an 8GB laptop it is 4GB, and the build dies partway through. Raise it to 8GB before you start. On the WSL 2 backend the limit lives in the WSL utility VM's config instead of that slider.
+
+These are the variables that matter:
+
+| Variable                                   | Needed              | Notes                                                                                 |
+| ------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------- |
+| `JWT_SECRET`                               | Yes                 | Signs session tokens. Left blank, the app falls back to a hardcoded development value |
+| `ENCRYPTION_KEY`                           | Yes                 | Exactly 64 hex characters. AES-256-GCM key for stored integration configs             |
+| `NEXT_PUBLIC_APP_URL`                      | For any real domain | Baked into the client bundle at build time; also builds the Google OAuth redirect URI |
+| `MONGODB_URI`                              | No                  | Defaults to the bundled `mongodb` service. Set it to use Atlas or another database    |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | For Google Sheets   | Redirect URI must be `<NEXT_PUBLIC_APP_URL>/api/auth/google/callback`                 |
+| `RESEND_API_KEY`                           | No                  | System emails only. Each user's Resend integration uses their own key                 |
+
+Two of those deserve a warning. Compose will start with both secrets blank, and nothing tells you. A blank `JWT_SECRET` means sessions are signed with a default string that anyone can read in the source, so anyone could mint a valid login. A blank `ENCRYPTION_KEY` only fails later, with `ENCRYPTION_KEY must be a 64-character hex string`, the first time someone saves an integration. Set both before the first `up`.
+
+`NEXT_PUBLIC_APP_URL` is the other trap. Because it is inlined at build time, editing `.env` and restarting does nothing. Change it, then run `docker compose up --build`.
+
+## First Login and the 100/Month Default
+
+Open the app, sign up, and wait for a verification email that is not coming. This is the main gap in self-hosting today, and I would rather you hear it here than find it at 11pm.
+
+System emails (the signup OTP, the welcome email, and integration-failure alerts) are sent from hardcoded `@osforms.com` addresses. Resend rejects those for your account, so nothing is delivered from your instance. With `RESEND_API_KEY` blank, the send throws and signup returns a 500, but the account and the code are already saved. Either way, read the code from MongoDB:
+
+```bash
+docker compose exec mongodb mongosh osforms --eval 'db.emailverifications.find().sort({createdAt:-1}).limit(1)'
+```
+
+Then open `http://localhost:3000/verify-email?email=you@example.com` and enter the `code`. Codes expire after 30 minutes; if yours has, click resend on that page and query again. Failure alerts still show up as in-app notifications, so you lose the email copy, not the alert.
+
+Next, the limit. Every account gets `monthlySubmissionLimit: 100`, the same as the hosted free tier, and the submission endpoint enforces it with a `403` once it is hit. No env var changes it. Update it in the database:
+
+```bash
+docker compose exec mongodb mongosh osforms --eval 'db.users.updateMany({}, {$set: {monthlySubmissionLimit: 1000000}})'
+```
+
+That touches existing users only. Accounts created later still start at 100, so rerun it after new signups.
+
+The other limit to know before you migrate anything: file inputs are accepted but files are not stored. A multipart upload is replaced with a placeholder like `[File: cv.pdf, 48120 bytes]` in the submission. Self-hosting does not change that.
+
+## Putting It on a Server: HTTPS, Ports, and Backups
+
+On a laptop the defaults are fine. On a VPS, three things change.
+
+**Bind the ports to localhost.** The compose file publishes `27017:27017` and `3000:3000`, which listen on every interface, and the bundled MongoDB has no authentication configured. Docker's published ports also skip your host firewall: Docker's docs say traffic "gets diverted before it goes through the ufw firewall settings" ([Docker packet filtering docs](https://docs.docker.com/engine/network/packet-filtering-firewalls/), November 2026). In your copy of `docker-compose.yml`, change them to `'127.0.0.1:27017:27017'` and `'127.0.0.1:3000:3000'`, or drop the MongoDB mapping entirely. The `web` container reaches the database over the Compose network either way.
+
+**Put a proxy in front for HTTPS.** Caddy is the short version:
+
+```text
+forms.yourdomain.com {
+	reverse_proxy localhost:3000
+}
+```
+
+This matters for more than TLS. OSForms reads the client IP from the leftmost `X-Forwarded-For` entry for its rate limits (10 submissions per minute per IP per form on the public endpoint, 5 signups per IP per hour). Caddy's `reverse_proxy` ignores incoming forwarded headers from untrusted clients by default "to prevent spoofing" ([Caddy reverse_proxy docs](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy), November 2026), so the IP OSForms sees is the real one. Set `NEXT_PUBLIC_APP_URL=https://forms.yourdomain.com` and rebuild.
+
+**Back up the database and the key.** The `mongo:7` image ships `mongodump`, so a backup is one line from the host:
+
+```bash
+docker compose exec -T mongodb mongodump --db osforms --archive --gzip > osforms-$(date +%F).archive.gz
+
+# Restore
+docker compose exec -T mongodb mongorestore --archive --gzip --drop < osforms-2026-12-14.archive.gz
+```
+
+The `-T` flag stops Compose from allocating a TTY, which would corrupt the binary stream. Then back up `.env` somewhere separate. Integration configs (Resend keys, Google refresh tokens, webhook secrets) are stored encrypted with `ENCRYPTION_KEY`, so a dump restored next to a different key gives you your submissions back and every integration broken. Keep the key stable once you have live data, too: rotating it has the same effect.
+
+If the instance is public, also turn on signup protection. Out of the box you get the per-IP signup limit. For scripted signups, add Google reCAPTCHA v3 by setting both `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` in `.env` (both or neither; a secret without a site key in the build rejects every signup), optionally tune `RECAPTCHA_MIN_SCORE` from its 0.5 default, and rebuild, since the site key is baked into the bundle. The full steps are in [SELF_HOSTING.md](https://github.com/hawkeye-sama/osforms/blob/main/SELF_HOSTING.md).
+
+## Hosted vs Self-Hosted Form Backend
+
+Same codebase, MIT-licensed, so the choice is about who runs it:
+
+|                                     | Hosted (osforms.com)      | Self-hosted                                    |
+| ----------------------------------- | ------------------------- | ---------------------------------------------- |
+| Setup                               | Sign up, copy an endpoint | Docker, two secrets, a proxy for HTTPS         |
+| Submission cap                      | 100/month per account     | Whatever you set in MongoDB                    |
+| System emails (OTP, failure alerts) | Delivered                 | Not delivered yet; read the OTP from MongoDB   |
+| Background integrations             | Vercel `waitUntil` window | No time cap on a long-running container        |
+| Where submissions live              | OSForms' database         | Your MongoDB, your disk                        |
+| Backups and upgrades                | Handled for you           | `mongodump` and a `git pull` + rebuild, on you |
+
+Either way, integrations run on your own keys, which is the point of the [bring-your-own-key model](/bring-your-own-key). Forms built with `@osforms/react` work against either: pass `baseUrl="https://forms.yourdomain.com"` and the component fetches the schema and submits to your instance instead of osforms.com.
+
+> Self-hosting turns your form data from a vendor relationship into a file on a disk you can `mongodump`.
+
+My advice: start hosted if you need a form working this afternoon, and keep your field names clean. Moving later means a CSV export and changing one `action` URL. Run a self-hosted form backend when the data has to stay on your infrastructure, when 100 a month is too tight, or when you would rather own the upgrade schedule than trust mine. For the wider set of options, including the ones that need no server at all, [how to handle form submissions without a backend](/handle-form-submissions) compares them side by side.

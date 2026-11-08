@@ -1,0 +1,185 @@
+---
+title: 'Open Source Form Backends Compared (2026)'
+description: 'Open source form backend options compared: OSForms, Formgrid, FormBee, Formlander, OpnForm and Formbricks on license, stack, database, integrations and upkeep.'
+date: '2026-12-28'
+dateModified: '2026-12-28'
+author: 'Bahroze Ali'
+tags: ['open source', 'form backend', 'self-hosting', 'comparison']
+readingTime: '12 min read'
+category: 'Compare'
+seoTitle: 'Open Source Form Backends Compared (2026)'
+focusKeyphrase: 'open source form backend'
+coverImage: '/content/images/open-source-form-backends-cover.png'
+coverTitle: 'Open Source Form Backends'
+coverSubtitle: 'Six projects, checked against their own repos'
+faq:
+  - question: 'What is the best open source form backend?'
+    answer: 'It depends on what you want to run. Formlander is the lightest to self-host (one Go binary and one SQLite file). OSForms is the pick if you want email, Google Sheets, and signed webhooks on your own API keys, hosted or self-hosted. Formgrid is the one that stores file uploads. If you need a drag-and-drop builder rather than a backend for your own HTML, look at OpnForm or Formbricks instead.'
+  - question: 'Are OpnForm and Formbricks form backends?'
+    answer: 'Not in the narrow sense. Both are open source form builders: you design the form in their editor and they host it, embed it, and store the responses. A form backend receives a POST from markup you wrote yourself. OpnForm and Formbricks are good tools, but they replace your form rather than sit behind it.'
+  - question: 'Which open source form backends use the MIT license?'
+    answer: 'OSForms, Formgrid, FormBee, and Formlander all ship an MIT LICENSE file (checked November 2026). OpnForm and Formbricks are AGPLv3 at the core, with a separately licensed enterprise directory in each repository.'
+  - question: 'Can I self-host a form backend on a small VPS?'
+    answer: 'Yes. Formlander runs as a single container with SQLite, and OSForms runs as two containers (the Next.js app and MongoDB) via docker compose. Formgrid, OpnForm, and Formbricks each bring several services in their compose files, such as Redis, a queue worker, or object storage, so they want more memory.'
+  - question: 'Do any open source form backends store file uploads?'
+    answer: 'Formgrid does, with local, MinIO, S3, or Google Cloud Storage as the storage target. OSForms accepts multipart posts but does not store files: each file is replaced with a placeholder like [File: cv.pdf, 48120 bytes]. If attachments matter, check that column of the comparison first.'
+---
+
+An open source form backend is a service you can read, fork, and run yourself that receives a POST from your own HTML form, stores the submission, and forwards it somewhere useful. As of November 2026, the actively maintained options I'd look at are **OSForms**, **Formgrid**, **FormBee**, and **Formlander**, with **OpnForm** and **Formbricks** as open source form _builders_ that often show up in the same searches.
+
+There is no neutral roundup of these, which is part of why this one exists. The other part is a conflict of interest you should know about up front: I built OSForms. So every fact below about the other five comes from that project's own repository (the LICENSE file, the README, the compose file, the release page) or its own website, checked in November 2026 and linked so you can recheck it. Where a competitor is the better pick, I say so.
+
+## How I Picked These Open Source Form Backends
+
+"Open source form" pulls in hundreds of projects, most of them abandoned weekend repos. I kept a project only if it passed all four of these:
+
+1. **An OSI-approved license in the repo.** A LICENSE file, not a marketing page saying "open source." MIT and AGPLv3 both count; they just mean different things for you (more on that below).
+2. **A commit or release in the last three months.** A form endpoint is public infrastructure. Unmaintained means unpatched.
+3. **It stores submissions.** A pure relay that forwards to email and keeps nothing is a different category.
+4. **A self-host path someone documented.** If the only option is "read the source and figure it out," it didn't make the list.
+
+Then I scored each one on the axes that decide whether you'll still be happy with it in a year: license, stack, database, built-in integrations, how many services you run to self-host it, and whether it can take a plain HTML form at all.
+
+That last one splits the list in two, so it's worth being precise about it. A **form backend** takes your markup as-is:
+
+```html
+<!-- Your form, your styles. Only the action URL changes. -->
+<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+  <input type="email" name="email" required />
+  <textarea name="message" required></textarea>
+  <button type="submit">Send</button>
+</form>
+```
+
+A **form builder** gives you an editor, then hosts or embeds the form it generates. OpnForm and Formbricks are builders. They're on this list because people searching for an open source form backend land on them, and because for some teams a builder is the right answer.
+
+## Open Source Form Backends at a Glance
+
+Checked against each repository in November 2026:
+
+| Project        | License                          | Stack                                 | Database              | Built-in integrations                                                       | Last release / activity                  |
+| -------------- | -------------------------------- | ------------------------------------- | --------------------- | --------------------------------------------------------------------------- | ---------------------------------------- |
+| **OSForms**    | MIT                              | Next.js (TypeScript)                  | MongoDB               | Email via your Resend key, Google Sheets, webhooks with HMAC signing        | No tagged releases; commits in Nov 2026  |
+| **Formgrid**   | MIT                              | Express + Prisma API, React dashboard | MySQL                 | Email notifications, webhooks, file storage (local, MinIO, S3, GCS)         | No tagged releases; last commit Oct 2026 |
+| **FormBee**    | MIT                              | Express + TypeORM API, Angular client | PostgreSQL            | Email, auto-reply, Telegram, Discord, Make, n8n, webhooks                   | No tagged releases; last commit Sep 2026 |
+| **Formlander** | MIT                              | Go, single binary                     | SQLite                | Webhooks, email via Mailgun                                                 | v3.9.1, 31 Oct 2026                      |
+| **OpnForm**    | AGPLv3 core + enterprise license | Laravel (PHP) API, Nuxt client        | PostgreSQL (+ Redis)  | Email, Slack, Discord, Telegram, webhooks, Google Sheets, Zapier, Make, n8n | v2.8.4, 5 Nov 2026                       |
+| **Formbricks** | AGPLv3 core + enterprise license | Next.js + Prisma (TypeScript)         | PostgreSQL (+ Valkey) | Google Sheets, Airtable, Notion, Slack, webhooks, Zapier, Make, n8n         | 6.1.4, 5 Nov 2026                        |
+
+Two columns need a footnote. "Built-in" means the integration ships in the repo, configured from the dashboard, without you writing glue code. And a project with no tagged releases is not necessarily dead: OSForms, Formgrid, and FormBee simply don't tag them. Look at the commit date instead.
+
+On the license column: **MIT** lets you run, modify, and embed the code anywhere, including inside a closed product. **AGPLv3** lets you do the same, but if you modify it and offer it to users over a network, you must publish your changes under AGPLv3 too. Both OpnForm and Formbricks also keep an enterprise directory under a separate commercial license, switched on by an enterprise license key. For most self-hosters that changes nothing. For an agency reselling a modified build, it changes a lot.
+
+## The Six Projects, One by One
+
+### OSForms
+
+[OSForms](https://github.com/hawkeye-sama/osforms) is the one I wrote. It's a Next.js app on MongoDB, MIT-licensed, and you can use the hosted version at osforms.com or run the same codebase yourself.
+
+The design choice that sets it apart is **bring your own key**. Email goes out through your Resend API key, Google Sheets writes through your Google account (with the narrow `drive.file` scope), and webhooks are signed with HMAC-SHA256 in an `X-osforms-Signature` header once you set a secret. Keys are encrypted at rest with AES-256-GCM and never shipped to the browser. Because the integrations run on your credentials, none of them sit behind a paid tier: the hosted free plan is 100 submissions a month with all three included.
+
+What you also get: CSV export of every submission, a read-only pull API with scoped `osf_live_` keys, a honeypot field you name yourself, reCAPTCHA or hCaptcha with your own keys, a per-form rate limit (10 a minute per IP by default), and per-form allowed origins.
+
+What you don't get, stated plainly: **file uploads are not stored** (the endpoint accepts multipart, but files become a `[File: name, size bytes]` placeholder), there are only three integration types, and self-hosting has a rough edge. System emails like the signup code are sent from fixed `@osforms.com` addresses, so a self-hosted instance can't deliver them yet and you read the code from MongoDB instead. The 100-a-month cap applies on a self-hosted instance too until you raise it, which takes one `updateMany` in MongoDB (the [self-hosting guide](https://github.com/hawkeye-sama/osforms/blob/main/SELF_HOSTING.md#raise-the-submission-limit) has the command). It's also the youngest project here, with single-digit GitHub stars in November 2026.
+
+### Formgrid
+
+[Formgrid](https://github.com/allenarduino/formgrid) is the closest match to OSForms in shape: an MIT-licensed form endpoint with a dashboard, available hosted or self-hosted. The API is Express with Prisma on MySQL, and the dashboard is React.
+
+Its standout feature is **file uploads**, which it stores to local disk, MinIO, S3, or Google Cloud Storage with per-field type and size limits. If your form collects CVs or screenshots, Formgrid handles something OSForms doesn't. It also ships honeypot and reCAPTCHA spam protection, webhooks, and a CLI for running the Docker stack.
+
+The hosted product at [formgrid.dev](https://formgrid.dev) has a free plan of 50 submissions a month, with paid plans at $12 and $29 a month (November 2026), and lists webhooks and Zapier under the Business tier. Self-hosting sidesteps those tiers, but the compose file runs seven services (MySQL, Redis, MinIO, API, dashboard, a queue worker, and a file-cleanup job), so plan for a real server.
+
+### FormBee
+
+[FormBee](https://github.com/FormBee/FormBee) has the most stars of the plain backends (about 770 in November 2026) and the widest plugin list: email with automatic return emails, Telegram, Discord, Make, n8n, and webhooks. It uses a proof-of-work captcha rather than a third-party one, and you can whitelist domains.
+
+The thing to know before you adopt it: the README now says the hosted formbee.dev service **went offline in July 2026**, and the repository remains for self-hosting. The last commit was in September 2026. Self-hosting is modular, with separate Docker images for email-only, email-with-captcha, and webhooks, so you deploy only the part you need (the full server stores data in PostgreSQL). It's MIT-licensed and the code is there. Whether it keeps moving is the open question.
+
+### Formlander
+
+[Formlander](https://github.com/karloscodes/formlander) is the minimalist's pick, and it's good at it. One Go binary, one SQLite file, one container. It stores submissions, shows them in an admin dashboard with delivery status, and delivers each one to a webhook or by email through Mailgun from a queue that retries.
+
+It also has the most disciplined release cadence on this list: tagged versions, Docker images on Docker Hub, and v3.9.1 shipped on 31 October 2026. Spam protection is a fixed honeypot field (`__fl_hp`) plus rate limiting, and an optional script adds retries with backoff. Forms post to a per-form URL carrying a token.
+
+The trade-off is scope. There's no hosted version (that's the point), no Google Sheets, and email is Mailgun only. If you want "my submissions, on my box, nothing else," Formlander is the cleanest answer here.
+
+### OpnForm
+
+[OpnForm](https://github.com/OpnForm/OpnForm) is a form builder, and a very complete one: about 4,000 stars, a release on 5 November 2026, conditional logic, file fields, PDF templates, and the longest integration list in this roundup (Slack, Discord, Telegram, Google Sheets, Zapier, Make, n8n, webhooks, email, and more).
+
+It is **not** a backend for your own HTML. You build forms in OpnForm's editor and share or embed them. Self-hosting means running a Laravel API, a queue worker, a scheduler, the Nuxt client, Redis, PostgreSQL, and an nginx ingress, which is seven containers in its compose file. The core is AGPLv3, with enterprise features in a separately licensed directory.
+
+Pick it when the people building forms aren't developers, or when you want Typeform-style forms without the Typeform bill. Don't pick it to sit behind a contact form you already designed.
+
+### Formbricks
+
+[Formbricks](https://github.com/formbricks/formbricks) describes itself as an open source Qualtrics alternative, and that framing is accurate. It's a survey and experience-management platform (about 13,000 stars, release 6.1.4 on 5 November 2026) built on Next.js and Prisma, with in-app, website, link, and email surveys, user targeting, and integrations with Google Sheets, Airtable, Notion, Slack, webhooks, Zapier, Make, and n8n.
+
+Like OpnForm, it's a builder, not a backend. The self-host compose file brings PostgreSQL, Valkey, SpiceDB, and several migration and helper jobs alongside the app, so it is the heaviest install here by a distance. The license is AGPLv3 at the core, MIT for some SDK packages, and a commercial license for the `ee` directory.
+
+If you're collecting product feedback inside an app, Formbricks does things no form backend will. For a contact form, it is far more than you need.
+
+## Self-Hosting Footprint: What You Actually Run
+
+The license tells you what you're allowed to do. The compose file tells you what you're signing up to maintain. Here are the two smallest installs side by side, taken from each project's own docs (the [self-hosted form backend guide](/self-host-form-backend) walks through the OSForms one end to end):
+
+```bash
+# OSForms: Next.js app + MongoDB (2 services)
+git clone https://github.com/hawkeye-sama/osforms.git
+cd osforms
+cp .env.docker.example .env   # set JWT_SECRET and ENCRYPTION_KEY
+docker compose up
+
+# Formlander: one Go binary + SQLite (1 container)
+docker run -d -p 127.0.0.1:8080:8080 \
+  -e FORMLANDER_SESSION_SECRET="$(openssl rand -hex 32)" \
+  -v "$PWD/storage:/app/storage" \
+  karloscodes/formlander:latest
+```
+
+And the rest, by the services in their compose files (November 2026):
+
+| Project    | What `docker compose up` starts                                     | Rough fit                    |
+| ---------- | ------------------------------------------------------------------- | ---------------------------- |
+| Formlander | 1 container (Go binary, SQLite on a volume)                         | Smallest VPS you can buy     |
+| OSForms    | 2 (Next.js app, MongoDB)                                            | Small VPS, or Vercel + Atlas |
+| FormBee    | 1 image per feature variant, plus PostgreSQL                        | Small VPS                    |
+| Formgrid   | 7 (MySQL, Redis, MinIO, API, dashboard, queue worker, file cleanup) | Mid-size server              |
+| OpnForm    | 7 (API, worker, scheduler, Nuxt UI, Redis, PostgreSQL, nginx)       | Mid-size server              |
+| Formbricks | App plus PostgreSQL, Valkey, SpiceDB, and migration/bootstrap jobs  | The biggest box on this list |
+
+Every extra service is something to back up, patch, and restart at 2 a.m. That's not a knock on the bigger projects; Formgrid needs object storage because it stores files, and OpnForm needs a queue because it does a lot. It's a reason to match the tool to the job instead of picking the one with the most stars.
+
+## Which Open Source Form Backend Fits Your Use Case
+
+| You want                                                            | Pick           | Why                                                             |
+| ------------------------------------------------------------------- | -------------- | --------------------------------------------------------------- |
+| Email, Google Sheets, and webhooks with no paid tier, hosted or not | **OSForms**    | All three run on your own keys, so none is gated                |
+| Submissions on your own server, nothing else, minimal upkeep        | **Formlander** | One binary, one SQLite file, tagged releases                    |
+| File uploads stored alongside submissions                           | **Formgrid**   | Local, MinIO, S3, or GCS storage built in                       |
+| Chat delivery (Telegram, Discord) from a plain HTML form            | **FormBee**    | Widest plugin list among the plain backends; self-host only now |
+| Non-developers building forms in an editor                          | **OpnForm**    | Full no-code builder with logic and a long integration list     |
+| In-app surveys and product feedback with targeting                  | **Formbricks** | A survey platform, not a form endpoint                          |
+| A modified build you'll resell without publishing changes           | An MIT project | AGPLv3 requires publishing network-served modifications         |
+
+If you're on a static site and just need a contact form working today, the decision is mostly between hosted-with-an-exit (OSForms) and self-host-only (Formlander, FormBee). The [guide to handling form submissions without a backend](/handle-form-submissions) walks through that trade-off with code for each approach.
+
+## Where Hosted Tools Still Win
+
+Being open source doesn't make a project the right choice by default. Closed, hosted form backends like Formspree still beat everything above in a few places:
+
+- **Nothing to run.** No server, no database backups, no security patches. For a single marketing site, that's worth real money.
+- **Wider integration catalogs.** Mature hosted tools ship one-click integrations that open source backends cover only through webhooks you wire up yourself.
+- **Spam filtering you don't configure.** Every open source option here relies on a honeypot, a captcha, or a rate limit you set up. Some hosted services filter automatically.
+- **Support with a contract behind it.** If a form outage costs you leads, a vendor with an SLA is a reasonable thing to pay for.
+
+The [Formspree alternatives comparison](/formspree-alternative) puts numbers on those trade-offs, with prices from each vendor's own page.
+
+## Choosing an Open Source Form Backend You Can Leave
+
+The useful question isn't which project has the most stars. It's which one you could walk away from without losing data or rewriting your forms. Every MIT backend above passes that test, because the code, the database, and the export are yours.
+
+> A form builder hosts the form. A form backend hosts the POST. Pick the one that matches the HTML you already have.
+
+My bias is obvious, so here's the short version without it. If you want the least software, run Formlander. If you need file uploads, run Formgrid. If you want non-developers building forms, run OpnForm. And if you want an open source form backend where email, Sheets, and webhooks are free because they run on your own keys, with a hosted option today and a `git clone` exit whenever you want it, that's what I built OSForms to be. The case for owning that exit is laid out in [why your form tool shouldn't own your data](/own-your-form-data).

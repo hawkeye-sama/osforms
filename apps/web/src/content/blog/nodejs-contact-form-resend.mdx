@@ -1,0 +1,256 @@
+---
+title: 'Node.js Contact Form With Express and Resend'
+description: 'Node.js contact form with Express and Resend: a working route, validation, a honeypot and rate limit, what the DIY version lacks, and a no-server option.'
+date: '2026-12-21'
+dateModified: '2026-12-21'
+author: 'Bahroze Ali'
+tags: ['tutorial', 'nodejs', 'express', 'resend']
+readingTime: '9 min read'
+category: 'Build'
+seoTitle: 'Node.js Contact Form With Express and Resend'
+focusKeyphrase: 'node.js contact form'
+coverImage: '/content/images/nodejs-contact-form-resend-cover.png'
+coverTitle: 'Node.js Contact Form'
+coverSubtitle: 'Express and Resend, then no server at all'
+faq:
+  - question: 'Why does Resend return a 403 when my contact form sends to a real inbox?'
+    answer: 'You are probably sending from onboarding@resend.dev. That testing address can only deliver to the email address on your Resend account. Add and verify a domain you control in the Resend dashboard (a subdomain like mail.yourdomain.com is fine), then change the from address to use it.'
+  - question: 'Should I use Nodemailer or Resend for a Node.js contact form?'
+    answer: 'Nodemailer talks SMTP, so you bring an SMTP server and its credentials. Resend is an HTTP API with an official Node SDK: one npm install, one API key, and a JSON response that tells you whether the send failed. For a contact form on a domain you control, Resend is less to configure. If you already have SMTP credentials from your mail host, Nodemailer works fine.'
+  - question: 'Can I call Resend directly from the browser?'
+    answer: 'No. The call needs your Resend API key, and anything in client-side JavaScript is readable by every visitor. Someone could copy the key and send mail from your domain. The key has to live on a server: your own Express route, a serverless function, or a form backend that stores it encrypted and calls Resend for you.'
+  - question: 'Does a Node.js contact form need a database?'
+    answer: 'It works without one, but then the email is the only copy of each message. If the Resend call fails, the message is gone unless the visitor tries again. A database (or a form backend that stores each submission before it sends anything) means a failed email costs you a notification, not the message.'
+  - question: 'Will OSForms send the email through my own Resend account?'
+    answer: "Yes. You paste your Resend API key into the form's Email integration, and every submission is sent from your verified domain through your account. The key is encrypted at rest with AES-256-GCM and never reaches the browser. The free tier covers 100 submissions a month, and sends count against your Resend quota, not a markup from us."
+---
+
+Most Node.js contact form tutorials still reach for Nodemailer and an SMTP password. The shorter path now is an HTTP email API. To build a Node.js contact form with Express and Resend, add a `POST /contact` route that parses the form body, validates it, and calls `resend.emails.send()` with your API key from an environment variable, then redirect to a thank-you page. Under 100 lines gets you there, honeypot and rate limit included.
+
+Then the follow-up questions start. Where do messages go when Resend is down? Who sees the failed sends? Which server does this run on? I will build the Express version properly first, with validation and spam handling, then list what it still lacks, then show the version with no server at all.
+
+## The Express Route That Sends With Resend
+
+Set up a project with the two dependencies:
+
+```bash
+mkdir contact-form && cd contact-form
+npm init -y
+npm pkg set type=module
+npm install express resend
+```
+
+Put your key in `.env` (Node 20.6+ reads it with `--env-file`, no `dotenv` needed):
+
+```bash
+RESEND_API_KEY=re_xxxxxxxxx
+```
+
+Then `server.js`:
+
+```js
+import express from 'express';
+import { Resend } from 'resend';
+
+const app = express();
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+app.use(express.urlencoded({ extended: false, limit: '20kb' }));
+app.use(express.static('public'));
+
+app.post('/contact', async (req, res) => {
+  const { name, email, message } = req.body ?? {};
+
+  const { error } = await resend.emails.send({
+    from: 'Contact form <contact@mail.yourdomain.com>',
+    to: ['you@yourdomain.com'],
+    replyTo: email,
+    subject: `New message from ${name}`,
+    text: `${name} <${email}>\n\n${message}`,
+  });
+
+  if (error) {
+    console.error('Resend error:', error);
+    return res
+      .status(502)
+      .send('Could not send your message. Please try again.');
+  }
+
+  res.redirect(303, '/thanks.html');
+});
+
+app.listen(3000, () => console.log('http://localhost:3000'));
+```
+
+And the form in `public/index.html`:
+
+```html
+<form action="/contact" method="POST">
+  <input name="name" placeholder="Name" required />
+  <input name="email" type="email" placeholder="Email" required />
+  <textarea name="message" rows="5" required></textarea>
+  <button type="submit">Send</button>
+</form>
+```
+
+Run it with `node --env-file=.env server.js`.
+
+A few details that matter. The Resend SDK does not throw on a failed send; it resolves to `{ data, error }`, and you check `error` yourself ([Resend Node.js docs](https://resend.com/docs/send-with-nodejs), November 2026). `replyTo` (camelCase) means hitting reply in your inbox goes to the visitor instead of your own sending address. The `303` tells the browser to follow up with a GET, so a refresh on the thank-you page does not resubmit the form. And `req.body ?? {}` is there because Express 5 leaves `req.body` undefined when no parser matched the request.
+
+The `from` address is the classic first failure. Resend's testing sender, `onboarding@resend.dev`, only delivers to the address on your own Resend account; anything else comes back as a `403` ([Resend knowledge base](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain), November 2026). Verify a domain under **Domains** in the Resend dashboard (they recommend a subdomain like `mail.yourdomain.com`) and send from that.
+
+## Validation, Honeypot, and Rate Limit
+
+### Validate on the server
+
+The `required` attributes in the HTML are a convenience for real visitors. Anyone with `curl` skips them. Validate on the server:
+
+```js
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validate(body = {}) {
+  const clean = (v) => (typeof v === 'string' ? v.trim() : '');
+  const values = {
+    name: clean(body.name).replace(/[\r\n]+/g, ' '),
+    email: clean(body.email),
+    message: clean(body.message),
+  };
+
+  const errors = {};
+  if (!values.name || values.name.length > 100)
+    errors.name = 'Name is required (100 characters max).';
+  if (values.email.length > 254 || !EMAIL_RE.test(values.email))
+    errors.email = 'Enter a valid email address.';
+  if (values.message.length < 10 || values.message.length > 5000)
+    errors.message = 'Message must be 10 to 5,000 characters.';
+
+  return { values, errors };
+}
+```
+
+Then at the top of the route:
+
+```js
+const { values, errors } = validate(req.body);
+if (Object.keys(errors).length > 0) {
+  return res.status(400).json({ errors });
+}
+```
+
+Use `values` in the `send()` call from here on. The `typeof` check is not paranoia: with `extended: false`, a body like `name=a&name=b` parses to an array, and an array in a template string is not what you want in a subject line. Stripping line breaks from `name` keeps the subject on one line. You are not exposed to classic SMTP header injection here, because Resend takes JSON over HTTPS rather than raw headers, but the subject still goes into every mail client you own. If you switch from `text` to `html`, escape every field before it goes in the template.
+
+For more than three fields, a schema library like Zod pays for itself. For three, a function you can read top to bottom is fine.
+
+### Block bots without a CAPTCHA
+
+A public contact form gets found by bots within days. Two cheap defenses cover most of them.
+
+The **honeypot** is a field humans never see. Add it to the form:
+
+```html
+<input
+  type="text"
+  name="website"
+  tabindex="-1"
+  autocomplete="off"
+  aria-hidden="true"
+  style="display:none"
+/>
+```
+
+And check it first in the route, answering exactly as a success would so the bot learns nothing:
+
+```js
+if (req.body?.website) {
+  return res.redirect(303, '/thanks.html');
+}
+```
+
+The **rate limit** stops one IP from hammering the endpoint and burning through your Resend quota. A fixed-window limiter in memory:
+
+```js
+const hits = new Map();
+
+function rateLimit({ limit, windowMs }) {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of hits) if (entry.resetAt < now) hits.delete(key);
+  }, windowMs).unref();
+
+  return (req, res, next) => {
+    const now = Date.now();
+    const entry = hits.get(req.ip);
+    if (!entry || entry.resetAt < now) {
+      hits.set(req.ip, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+    if (++entry.count > limit) {
+      res.set('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)));
+      return res.status(429).send('Too many messages. Try again in a minute.');
+    }
+    next();
+  };
+}
+
+app.post(
+  '/contact',
+  rateLimit({ limit: 5, windowMs: 60_000 }),
+  async (req, res) => {
+    // honeypot, validate, send
+  }
+);
+```
+
+Two caveats on that limiter. Behind a reverse proxy, `req.ip` is the proxy's address for every visitor until you call `app.set('trust proxy', 1)`, at which point Express reads the client IP from `X-Forwarded-For`. And the `Map` lives in one process, so two instances or a restart means two separate counts. The `express-rate-limit` package handles both, with pluggable stores. Resend also rate limits on its side: 10 requests per second per team by default, answered with a `429` ([Resend rate limit docs](https://resend.com/docs/api-reference/rate-limit), November 2026). A contact form will not hit that, but a spam burst through an unprotected route can.
+
+## What the DIY Node.js Contact Form Still Lacks
+
+The server is now about 80 lines, and it sends email. Here is what it does not do:
+
+| Gap                | What happens today                                          | What fixing it takes                        |
+| ------------------ | ----------------------------------------------------------- | ------------------------------------------- |
+| Storage            | The email is the only copy. A failed send loses the message | A database and a write before the send      |
+| Failure visibility | A `console.error` in a log you may never read               | Logging, alerting, or a dashboard           |
+| Retries            | The visitor sees a 502 and maybe tries again                | A queue or a retry with backoff             |
+| Export             | Search your inbox                                           | A table you can query and a CSV endpoint    |
+| Cross-origin posts | Only works when the form is served by this same app         | A `cors` setup if your site lives elsewhere |
+| Hosting            | You run, patch, and monitor a Node process                  | A server or platform, forever               |
+
+None of these are hard. All of them are yours to own, for a form that might get ten messages a month.
+
+> A contact form is ten lines of HTML and a backend you maintain for as long as the site exists.
+
+This is the point where the question changes from "how do I send the email" to "do I want to run a server for this."
+
+## The No-Server Node.js Contact Form Option
+
+If the Express app exists only to receive this form, you can delete it. Point the form at an OSForms endpoint instead:
+
+```html
+<form action="https://osforms.com/api/v1/f/abc123xyz" method="POST">
+  <input name="name" placeholder="Name" required />
+  <input name="email" type="email" placeholder="Email" required />
+  <textarea name="message" rows="5" required></textarea>
+  <input
+    type="text"
+    name="_gotcha"
+    tabindex="-1"
+    autocomplete="off"
+    aria-hidden="true"
+    style="display:none"
+  />
+  <button type="submit">Send</button>
+</form>
+```
+
+Then, in the dashboard, open the form's **Integrations** tab, pick **Email**, and paste the same Resend API key along with a `from` address on your verified domain and the recipients. Set `_gotcha` (or any name you pick) under **Settings → Honeypot Field Name**, since the honeypot is off until you name it. Set a **Redirect URL** too, so the native form post lands on your thank-you page instead of a JSON body; the [HTML contact form guide](/html-contact-form) covers that response behavior in full.
+
+Mapped against the table above: each submission is stored before any email is sent, so a failed Resend call leaves the message in your dashboard and shows up in the integration log and an in-app notification. Rate limiting is on by default at 10 submissions per minute per IP per form. CORS is handled, and **Allowed Origins** locks browser posts to your domain. Submissions export to CSV, or you can read them over a read-only pull API. Your Resend key is encrypted at rest with AES-256-GCM and decrypted only when a submission needs sending. Turn on the auto-reply and the visitor gets a confirmation from your domain as well; the [Resend notifications guide](/form-email-notifications) walks through the templates.
+
+Some tradeoffs, in plain terms. The notification email does not set `Reply-To` to the visitor's address today, so replying means copying their address from the email body, which the DIY route handles with one `replyTo` line. The free tier is 100 submissions a month. File inputs are accepted but files are not stored. And if you need custom logic per submission (a CRM lookup, a Slack message with buttons), keep a small handler and point a webhook at it instead of the whole form. If you would rather not depend on our servers at all, the same codebase runs on yours; [self-hosting the form backend](/self-host-form-backend) takes two containers.
+
+## Picking Your Node.js Contact Form Setup
+
+Keep the Express route if you already run a Node server for other reasons, need per-submission logic, or want `replyTo` exactly as you wrote it. Add the database and the retry before you trust it with leads.
+
+Skip the server if the form is the only reason it exists. The Node.js contact form above is a good exercise in how the pieces fit, and a poor use of your weekend to maintain. Either way the email goes out through your own Resend account, on your domain, with your key. For the full list of options, from serverless functions to hosted tools, [how to handle form submissions without a backend](/handle-form-submissions) compares them side by side.

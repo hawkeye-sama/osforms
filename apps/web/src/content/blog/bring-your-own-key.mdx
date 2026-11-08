@@ -1,14 +1,14 @@
 ---
-title: 'What Bring Your Own Key (BYOK) Actually Means'
-description: "Bring your own key (BYOK) is showing up everywhere. Here's what it actually means, why it changes who controls your data, and where it matters most."
+title: 'BYOK for Form Backends: What Bring Your Own Key Means'
+description: 'A BYOK form backend runs email, Google Sheets and webhooks on your own API keys, so integrations bill to your own accounts with no markup and no paywall.'
 date: '2026-04-10'
-dateModified: '2026-06-28'
+dateModified: '2026-11-08'
 author: 'Bahroze Ali'
-tags: ['byok', 'data-ownership', 'open-source', 'api-keys']
+tags: ['byok', 'form backend', 'data-ownership', 'api-keys']
 readingTime: '6 min read'
 category: 'BYOK Files'
-seoTitle: 'What Bring Your Own Key (BYOK) Actually Means'
-focusKeyphrase: 'bring your own key'
+seoTitle: 'BYOK Form Backend: What Bring Your Own Key Means'
+focusKeyphrase: 'byok form backend'
 coverImage: '/content/images/bring-your-own-key-cover.png'
 coverTitle: 'Bring Your Own Key'
 coverSubtitle: 'What BYOK actually means for your data'
@@ -20,16 +20,16 @@ faq:
   - question: 'Can I self-host OSForms?'
     answer: 'Yes. Clone the repo, point it at your own MongoDB, set your environment variables, and deploy anywhere. Nothing in the codebase requires the hosted version.'
   - question: 'How is the credential encryption key managed?'
-    answer: 'It lives in the ENCRYPTION_KEY environment variable: 64 hex characters (32 bytes). You generate it; the OSForms team never sees it. In self-hosted deployments it is entirely yours.'
-  - question: 'What happens if I delete my OSForms account?'
-    answer: 'All submissions and encrypted credentials are deleted. Data is stored as standard JSON so you can export at any time before deletion.'
+    answer: 'It lives in the ENCRYPTION_KEY environment variable (64 hex characters, 32 bytes), separate from the database, so a database dump only contains ciphertext. On the hosted version it is a server secret managed by OSForms. When you self-host, you generate it and it is entirely yours.'
+  - question: 'What happens to my keys if I delete a form?'
+    answer: 'Deleting a form removes its submissions and its integration configs, including the encrypted credentials, in the same request. Export your submissions to CSV first if you want to keep them.'
   - question: 'How is BYOK different from building my own serverless function?'
     answer: 'A serverless function handles one integration with no storage or dashboard. OSForms handles storage, integration logs, spam protection, and a submissions dashboard. You just change your form action attribute.'
 ---
 
-Bring your own key, or BYOK, used to be an enterprise checkbox. Now it's everywhere: AI tools that run on your own OpenAI or Anthropic key, email APIs, analytics, form backends. The phrase keeps showing up on pricing pages, and it quietly changes who controls your data.
+A BYOK form backend receives your form submissions and then sends them onward using API keys you supply: your Resend key for email, your Google account for Sheets, your signing secret for webhooks. The integrations bill to your accounts at the provider's price, so the form tool has nothing to mark up and no reason to put them behind a paid tier.
 
-Here's what bring your own key actually means, why it changes your relationship with a tool, and where it matters beyond forms.
+Bring your own key, or BYOK, also shows up in cloud key management and AI tools, where it means something related but different. This post is about the SaaS-integration meaning: what it changes for a form backend, how the keys are handled, and what the pricing difference looks like in practice.
 
 ## What Bring Your Own Key Means
 
@@ -45,11 +45,11 @@ The opposite model, call it bring-your-wallet, is where the tool holds the keys,
 
 When the keys are yours, the relationship with the tool changes in three concrete ways:
 
-**Cost accrues to you, not a middleman.** If you're paying Resend $0.10 per 1,000 emails, that's the cost. There's no integration tier marking up an API you already pay for.
+**Cost accrues to you, not a middleman.** Resend's free plan covers 3,000 emails a month (100 a day) per its [pricing page](https://resend.com/pricing), so most contact forms cost nothing to notify on. There's no integration tier marking up an API you already pay for.
 
 **You can leave.** Revoke the key and the tool's access ends instantly. Your data isn't hostage to a credential the vendor controls, and there's no migration tax to switch providers.
 
-**Security responsibility is explicit.** Holding someone's third-party credentials is real responsibility. The honest version of BYOK is verifiable, not just promised:
+**Security responsibility is explicit.** Holding someone's third-party credentials is real responsibility. Good BYOK is verifiable, not just promised:
 
 - **Encrypted at rest.** Keys are encrypted (OSForms uses AES-256-GCM) before they touch the database, with the encryption key in the environment, not the DB. Dump the database and you get ciphertext.
 - **Never logged.** Decrypted in memory for the call, then discarded. Not in logs, errors, or storage.
@@ -57,7 +57,7 @@ When the keys are yours, the relationship with the tool changes in three concret
 
 > "You don't have to trust a description of how your keys are handled. When the code is open source, you can read the implementation."
 
-## BYOK in Practice With a Form Backend
+## How a BYOK Form Backend Works
 
 A form backend is a clean example, because every integration it offers runs on a key you already own. In OSForms, adding one looks like this:
 
@@ -72,28 +72,28 @@ Submission → OSForms → decrypts your key → calls Resend API → logs resul
                                      Resend bills your account
 ```
 
-The practical payoff shows up on the pricing page. Here's what the same integrations cost when the tool owns the keys versus when you do:
+The practical payoff shows up on the pricing page. Here's the cheapest generally available plan that unlocks each integration, from each vendor's pricing page in November 2026 ([Formspree](https://formspree.io/plans), [Basin](https://usebasin.com/pricing), [Web3Forms](https://web3forms.com/pricing)):
 
-| Feature          | OSForms (BYOK) | Formspree | FormBold |
-| ---------------- | -------------- | --------- | -------- |
-| Email forwarding | Free           | $15/mo    | $9/mo    |
-| Google Sheets    | Free           | $15/mo    | $9/mo    |
-| Webhooks         | Free           | $9/mo     | $9/mo    |
-| Open source      | Yes            | No        | No       |
-| Self-hostable    | Yes            | No        | No       |
+| Feature          | OSForms (BYOK) | Formspree             | Basin                     | Web3Forms     |
+| ---------------- | -------------- | --------------------- | ------------------------- | ------------- |
+| Auto-reply email | Free           | $30/mo (Professional) | $24.17/mo yearly (Growth) | $149/yr (Pro) |
+| Google Sheets    | Free           | $15/mo (Personal)     | $24.17/mo yearly (Growth) | $149/yr (Pro) |
+| Webhooks         | Free           | $30/mo (Professional) | $24.17/mo yearly (Growth) | $149/yr (Pro) |
+| Open source      | Yes (MIT)      | No                    | No                        | No            |
+| Self-hostable    | Yes            | No                    | No                        | No            |
 
-Every paid integration above is executed with credentials you supply. The charge is for an API call to a service you already pay for. For a hands-on example, see [how to send form email notifications with Resend](/form-email-notifications) on your own key, and the [docs](/docs) cover self-hosting if you want to own the whole stack.
+The Google Sheets row runs on your Google account in every column; the paid tiers charge for permission to connect it. For a wider comparison of hosted options, including where each one is the better pick, see [Formspree alternatives compared](/formspree-alternative). For a hands-on example, see [how to send form email notifications with Resend](/form-email-notifications) on your own key, and the [docs](/docs) cover self-hosting if you want to own the whole stack.
 
-## Where Else BYOK Matters
+## BYOK Beyond Form Backends
 
-The form backend is just one instance of a pattern worth demanding wherever your data and credentials are involved:
+The form backend is one instance of a pattern worth asking for wherever your data and credentials are involved:
 
 - **AI features.** Tools that run on your own OpenAI or Anthropic key, so inference cost and prompt data stay on your account, not the vendor's.
 - **Email and messaging.** Resend, Postmark, Twilio: bring the key, pay the provider, skip the per-message markup.
 - **Analytics and storage.** Pipe events and files into infrastructure you control rather than a silo you rent.
 
-The test is simple. If a tool charges you for something that runs on a credential you provide, ask why. BYOK isn't a novel idea; infrastructure tooling has worked this way for years. It's just honest, and it's worth choosing the tools that do it.
+The test is simple. If a tool charges you for something that runs on a credential you provide, ask why. BYOK isn't a novel idea; infrastructure tooling has worked this way for years.
 
-OSForms is built entirely on this model. The integrations are free because they cost us nothing to run (you bring the key, you bear the provider cost), and the code is [open source](https://github.com/hawkeye-sama/osforms) so you can verify every word of that.
+OSForms is built entirely on this model. The integrations are free because they cost us nothing to run (you bring the key, you bear the provider cost), and the code is [open source](https://github.com/hawkeye-sama/osforms) so you can verify every word of that. The data side of the same argument, export, deletion, and retention, is in [why your form tool shouldn't own your data](/own-your-form-data), and the [Google Sheets walkthrough](/form-to-google-sheets) shows BYOK on the integration people ask for most.
 
 Try it free, no card required: [osforms.com/signup](https://osforms.com/signup).

@@ -1,0 +1,181 @@
+---
+title: 'Web3Forms Alternatives: Open Source Options'
+description: 'Web3Forms alternative guide: what the free plan covers, where Sheets and webhooks get paywalled, and how OSForms, Formgrid, Formspree and Basin compare.'
+date: '2027-01-18'
+dateModified: '2027-01-18'
+author: 'Bahroze Ali'
+tags: ['web3forms alternative', 'form backend', 'open source', 'comparison']
+readingTime: '9 min read'
+category: 'Compare'
+seoTitle: 'Web3Forms Alternative: Open Source Options'
+focusKeyphrase: 'web3forms alternative'
+coverImage: '/content/images/web3forms-alternative-cover.png'
+coverTitle: 'Web3Forms Alternatives'
+coverSubtitle: 'Where the free plan stops, and the open-source options'
+faq:
+  - question: 'Is Web3Forms free?'
+    answer: 'Yes. The Personal plan on web3forms.com/pricing (November 2026) is free with 250 submissions a month, unlimited forms and domains, hCaptcha, a honeypot, custom redirects, and CSV export. Webhooks, Google Sheets, Slack, the Submissions API, autoresponders, and file uploads are not on the free plan. The dashboard lists 30 days of submission history on free.'
+  - question: 'Which Web3Forms plan includes webhooks and Google Sheets?'
+    answer: 'According to web3forms.com/pricing (November 2026), webhooks and Google Sheets start on the Starter plan, a $49/year plan you apply for (aimed at students, early startups, and non-profits) that allows one active integration per form. Pro, at $149/year billed yearly, allows up to five active integrations and adds the Submissions API, autoresponders, and file uploads.'
+  - question: 'Is there an open-source Web3Forms alternative?'
+    answer: 'Two of the tools compared here are open source under the MIT license: OSForms (github.com/hawkeye-sama/osforms) and Formgrid (github.com/allenarduino/formgrid). Both can be self-hosted with Docker. Web3Forms, Formspree, and Basin are hosted-only services.'
+  - question: 'How do I migrate a form from Web3Forms to OSForms?'
+    answer: 'Change the form action from https://api.web3forms.com/submit to your OSForms endpoint (https://osforms.com/api/v1/f/your-slug) and delete the access_key hidden input, because the slug in the URL identifies the form. Move the redirect URL into the form settings, set the honeypot field name to botcheck if you used it, and remove the other Web3Forms hidden fields so they are not stored as submission data.'
+  - question: 'Does OSForms support file uploads like Web3Forms Pro?'
+    answer: 'No. OSForms accepts multipart posts, but it does not store files: an uploaded file is replaced with a placeholder like "[File: cv.pdf, 48213 bytes]" in the submission. If your form must collect attachments, Web3Forms Pro, Formspree Personal, Basin, or Formgrid Premium are better fits.'
+---
+
+A Web3Forms alternative makes sense when you need more than an email per submission on the free plan. [Web3Forms' pricing page](https://web3forms.com/pricing) (November 2026) gives you 250 free submissions a month with email delivery, CSV export, and hCaptcha, but webhooks, Google Sheets, autoresponders, file uploads, and the Submissions API all sit on paid plans. If you want those integrations without a subscription, OSForms (open source, MIT) includes them on its 100-submission free tier because they run on your own API keys; Formgrid is the other open-source option, with smaller free limits.
+
+I built OSForms, so weigh this post with that in mind. Every competitor figure below comes from that vendor's own pricing page, checked in November 2026, and every OSForms claim is checked against the code in [the public repo](https://github.com/hawkeye-sama/osforms). There is also a section on when Web3Forms is the better pick, because for a lot of contact forms it is.
+
+## What Web3Forms Gives You for Free
+
+Web3Forms is a hosted form-to-email service. You add a hidden `access_key` input to an HTML form, point the `action` at `https://api.web3forms.com/submit`, and each submission lands in your inbox. The free plan, which Web3Forms calls Personal, is generous on volume:
+
+- **250 submissions a month**, unlimited forms, unlimited domains
+- **hCaptcha** using a site key Web3Forms provides, plus honeypot and spam filtering
+- **Custom redirect page** after submit (by default the endpoint returns JSON)
+- **CSV export**, one email recipient per form, three email templates
+- **Dashboard history of 30 days.** The pricing page separates this from storage: data is retained up to 3 years on free, set per form, while the dashboard only lists the last 30 days
+
+For a portfolio contact form that only needs to reach one inbox, that is a lot of free capacity. It is 2.5 times the OSForms free tier and five times Formspree's.
+
+## Where the Web3Forms Free Plan Stops
+
+The limits show up when a submission needs to go somewhere other than your inbox. From the same [pricing page comparison table](https://web3forms.com/pricing) (November 2026):
+
+| Feature                         | Free    | Starter ($49/yr, by application) | Pro ($149/yr) |
+| ------------------------------- | ------- | -------------------------------- | ------------- |
+| Webhooks                        | No      | Yes                              | Yes           |
+| Google Sheets, Slack, Discord   | No      | Yes                              | Yes           |
+| Active integrations per form    | 0       | 1                                | Up to 5       |
+| Submissions API                 | No      | No                               | Yes           |
+| Autoresponder to the submitter  | No      | No                               | Yes           |
+| File uploads                    | No      | No                               | Yes (5 GB)    |
+| reCAPTCHA v3, Turnstile         | No      | Yes                              | Yes           |
+| Restrict submissions to domains | No      | Yes                              | Yes           |
+| Dashboard submission history    | 30 days | 3 months                         | 1 year        |
+
+Starter is a yearly-only plan for students, early startups, and non-profits that you apply for, and it skips file uploads and autoresponders. For everyone else, the first plan with a webhook and a Sheets sync is Pro at $149 a year.
+
+The DIY workaround is familiar to anyone who has tried it. Stay on the free plan, then write a serverless function that receives the form instead, appends a row with the Google Sheets API, and posts to Slack. That means a Google Cloud project, a service account or an OAuth flow, a place to keep the credentials, retry handling, and a function you now maintain. At that point the form backend is doing very little for you.
+
+The odd part is that the Sheets row is written with Google's API either way. Web3Forms charges for the plumbing; the [bring-your-own-key model](/bring-your-own-key) hands you the plumbing and asks for your credentials instead.
+
+## Web3Forms Alternatives Compared
+
+Five hosted form backends, each scored from its own pricing page (November 2026):
+
+| Tool          | Free submissions | Sheets on free           | Webhooks on free      | Autoresponder         | File uploads            | Open source |
+| ------------- | ---------------- | ------------------------ | --------------------- | --------------------- | ----------------------- | ----------- |
+| **Web3Forms** | 250/mo           | No (Starter/Pro)         | No (Starter/Pro)      | Pro, $149/yr          | Pro                     | No          |
+| **OSForms**   | 100/mo           | Yes, your Google account | Yes, optional HMAC    | Free, your Resend key | Not stored              | Yes (MIT)   |
+| **Formspree** | 50/mo            | No (Personal, $15/mo)    | No (Professional)     | Professional, $30/mo  | Personal and up         | No          |
+| **Formgrid**  | 50/mo, 3 forms   | 10 rows, one time        | No (Business, $29/mo) | Premium, $12/mo       | Premium and up          | Yes (MIT)   |
+| **Basin**     | 50/mo, 1 form    | No (Growth)              | No (Growth)           | Growth                | All plans (100 MB free) | No          |
+
+Sources: [Web3Forms](https://web3forms.com/pricing), [Formspree](https://formspree.io/plans), [Formgrid](https://formgrid.dev/pricing), [Basin](https://usebasin.com/pricing). Basin's Growth plan is listed at $24.17/month billed yearly. Prices drift, so check the linked page before you commit.
+
+### OSForms
+
+OSForms stores every submission (no expiry on the hosted tier) and routes it to the integrations you connect: email through your own Resend key, rows in a Google Sheet through your own Google account, and webhooks with an optional `X-osforms-Signature` HMAC-SHA256 header. Auto-replies to the submitter come from the same Resend integration. There is one plan, so none of that is gated. You also get CSV export and a read-only pull API (`GET /api/v1/submissions` with a scoped `osf_live_` key) on the free tier.
+
+Your keys are encrypted at rest with AES-256-GCM and only used server-side when an integration runs, so nothing sensitive ships in your page's HTML. The whole thing is MIT-licensed and runs with `docker compose up` if you would rather host it yourself.
+
+The tradeoffs: 100 free submissions instead of 250, no file storage, and CAPTCHA means your own reCAPTCHA or hCaptcha keys, with the secret set through the forms API (Turnstile is not supported yet). Pick it when you want Sheets, webhooks, or auto-replies without paying, or a backend you can run yourself.
+
+### Formgrid
+
+Formgrid is the other open-source entry (MIT, [repo here](https://github.com/allenarduino/formgrid)), and it leans toward lead management: a pipeline with New, Contacted, and Converted stages, a form builder, and Notion and Supabase sync. The hosted free plan is tighter than Web3Forms (50 submissions, 3 forms, a one-time 10-row Sheets sync), and webhooks need the $29/month Business plan. Self-hosting with Docker removes Formgrid's submission caps. Pick it if you want a lead pipeline and are happy to self-host or pay $12/month. If self-hosting is the main draw, the [open source form backends comparison](/open-source-form-backends) covers Formgrid, OSForms, and four other projects on stack and upkeep.
+
+### Formspree
+
+Formspree is the mature option with the widest plugin catalog and real file uploads, but its free plan is 50 submissions with a 30-day archive, Google Sheets starts at $15/month, and webhooks at $30/month. Moving from Web3Forms to Formspree trades free volume for polish. The [Formspree alternatives roundup](/formspree-alternative) and the [OSForms vs Formspree comparison](/osforms-vs-formspree) go deeper.
+
+### Basin
+
+Basin stores file uploads on every plan, including 100 MB on free, which neither Web3Forms nor OSForms does at no cost. The free plan is one form and 50 submissions with 30-day retention, and Sheets, webhooks, and auto-responses start on Growth. Pick it if file uploads matter more than integrations.
+
+## When Web3Forms Is Still the Better Pick
+
+Stay on Web3Forms if your form only needs to reach an inbox and you expect more than 100 submissions a month. Its free plan is the largest of the five, and email delivery works without creating a Resend account and API key, which OSForms does require.
+
+It also wins on bot protection out of the box: hCaptcha works on the free plan with a site key Web3Forms provides, so there are no CAPTCHA keys to create. And if you need Slack, Discord, or Telegram notifications, or file attachments, Web3Forms Pro covers them in one plan, while OSForms has no native Slack integration (you would need a small relay between an OSForms webhook and Slack's incoming-webhook format).
+
+> "If your form only feeds an inbox, Web3Forms' free plan is hard to beat. The moment it needs to feed anything else, you are paying for plumbing that runs on someone's API either way."
+
+## Migrating From Web3Forms to OSForms
+
+Migration is mostly deleting lines. Here is a typical Web3Forms contact form:
+
+```html
+<form action="https://api.web3forms.com/submit" method="POST">
+  <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE" />
+  <input type="hidden" name="subject" value="New contact form message" />
+  <input type="hidden" name="redirect" value="https://example.com/thanks" />
+  <input type="checkbox" name="botcheck" style="display: none" />
+
+  <input type="text" name="name" required />
+  <input type="email" name="email" required />
+  <textarea name="message" required></textarea>
+  <button type="submit">Send</button>
+</form>
+```
+
+And the same form pointed at OSForms:
+
+```html
+<form action="https://osforms.com/api/v1/f/YOUR_FORM_SLUG" method="POST">
+  <input
+    type="checkbox"
+    name="botcheck"
+    style="display: none"
+    tabindex="-1"
+    autocomplete="off"
+  />
+
+  <input type="text" name="name" required />
+  <input type="email" name="email" required />
+  <textarea name="message" required></textarea>
+  <button type="submit">Send</button>
+</form>
+```
+
+The `access_key` input is gone because the form slug in the URL identifies the form. The other Web3Forms hidden fields move into the dashboard, and you should delete them from the HTML: OSForms stores every field it receives (except CAPTCHA tokens and the honeypot), so a leftover `subject` or `redirect` input would show up as a column in your submissions and your Google Sheet.
+
+| Web3Forms field      | OSForms equivalent                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| `access_key`         | Not needed; the slug in the endpoint URL identifies the form                               |
+| `redirect`           | **Redirect URL** in form settings; HTML posts get a 303 to it, JSON calls get JSON         |
+| `subject`            | **Subject** on the email integration (the form name is appended)                           |
+| `botcheck`           | Set **Honeypot field** to `botcheck` in form settings; filled = silently dropped           |
+| `webhook`            | A **Webhook** integration, with an optional signing secret                                 |
+| `h-captcha-response` | Verified with your own hCaptcha secret, set through the forms API (no dashboard field yet) |
+
+If you submit with JavaScript, the call is the same `fetch` minus the key:
+
+```js
+const form = document.querySelector('form');
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const res = await fetch('https://osforms.com/api/v1/f/YOUR_FORM_SLUG', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.fromEntries(new FormData(form))),
+  });
+  const result = await res.json();
+  // 200: { success: true, message: 'Submission received' }
+  // 4xx: { error: '...' } (403 = origin not allowed or monthly limit, 429 = rate limited)
+  console.log(res.ok ? 'Sent' : result.error);
+});
+```
+
+Two more steps before you switch the URL. Export your Web3Forms submissions as CSV first, since the free dashboard only lists the last 30 days. Then connect your integrations in OSForms ([webhooks](/docs/integrations/webhooks), [Google Sheets](/form-to-google-sheets), Resend email) and send one test submission so you see it arrive in each place. If you lock the form down with allowed origins, note that the check applies to browser requests that send an `Origin` header, which is what a form on your site does.
+
+## Picking a Web3Forms Alternative
+
+The choice comes down to where your submissions need to go. Inbox only, high volume: Web3Forms free is the strongest plan here. Files: Basin, or Web3Forms Pro. A lead pipeline you can self-host: Formgrid. Sheets, webhooks, and auto-replies without a subscription, on a backend whose code you can read and run yourself: that is the Web3Forms alternative I built OSForms to be.
+
+Whichever you pick, keep your field names plain and your export habit regular, so the next switch is as small as this one. For the bigger picture of how form backends fit a static site, start with [how to handle form submissions without a backend](/handle-form-submissions).

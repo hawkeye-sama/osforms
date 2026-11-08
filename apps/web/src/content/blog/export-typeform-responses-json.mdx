@@ -1,0 +1,289 @@
+---
+title: 'Export Typeform Responses to JSON (API + CSV)'
+description: 'Export Typeform to JSON: the Results panel only gives you CSV or XLSX, so page through the Responses API or convert the CSV. Two Node scripts that run as-is.'
+date: '2026-11-30'
+dateModified: '2026-11-30'
+author: 'Bahroze Ali'
+tags: ['typeform', 'json', 'export', 'data portability']
+readingTime: '9 min read'
+category: 'BYOK Files'
+seoTitle: 'Export Typeform to JSON: Responses API and CSV'
+focusKeyphrase: 'export typeform to json'
+coverImage: '/content/images/export-typeform-responses-json-cover.png'
+coverTitle: 'Export Typeform to JSON'
+coverSubtitle: 'Every response, through the API or from the CSV'
+faq:
+  - question: 'Can Typeform export responses as JSON directly?'
+    answer: "Not from the Results panel. Typeform's export window offers CSV or XLSX for responses (help.typeform.com, November 2026). The Admin settings ZIP export does include JSON, but only for form definitions, not responses. For JSON responses you use the Responses API or convert the CSV yourself."
+  - question: 'How many responses can the Typeform API return per request?'
+    answer: "Up to 1000. Typeform's Responses API walkthrough gives page_size a maximum value of 1000. For more than that, pass the token of the last response you received as the before parameter and request again until a page comes back with fewer than 1000 items."
+  - question: 'Why are my newest Typeform responses missing from the API export?'
+    answer: "Typeform's API reference says very recent responses, within roughly the last 30 minutes, may not be returned. If you are exporting before switching tools, stop collecting on the old form first, wait at least 30 minutes, then run the export."
+  - question: 'Does the Typeform API export file uploads?'
+    answer: 'The JSON includes a file_url for each file upload answer, not the file itself. To download the files in bulk, use the File uploads only (.zip) option in the Results panel export.'
+  - question: 'Can OSForms import my old Typeform responses?'
+    answer: 'No. OSForms has no importer for past responses. Keep the JSON file from this guide as your archive, or load it into your own database. New submissions going forward are stored in OSForms and readable as JSON through its pull API.'
+---
+
+Typeform doesn't have a "Download JSON" button for responses. The Results panel export gives you CSV or XLSX, and that's it. To export Typeform to JSON, you have two routes: call the **Responses API** (`GET /forms/{form_id}/responses`) and page through every response 1000 at a time using the `before` cursor, or download the CSV and convert it. The API route is the better one. It returns nested JSON with stable field IDs, real booleans, and multi-select answers as arrays, while the CSV flattens all of that away.
+
+Below are both, as Node scripts you can run as-is, plus three gotchas that are easy to miss in the Typeform API docs: the 30-minute delay on new responses, the two-requests-per-second limit, and EU accounts needing a different API domain. Typeform facts come from Typeform's own help center and developer docs, checked in November 2026.
+
+## What Typeform Exports Natively
+
+Here is everything Typeform lets you download without writing code, per its [export responses article](https://help.typeform.com/hc/en-us/articles/360029253572-export-your-responses) and [data portability page](https://help.typeform.com/hc/en-us/articles/360029616371-Data-portability):
+
+| What                                    | Where                                   | Format               |
+| --------------------------------------- | --------------------------------------- | -------------------- |
+| Responses                               | Results → Responses → Export            | CSV or XLSX          |
+| Uploaded files                          | Same export window, "File uploads only" | `.zip`               |
+| Form definitions (questions, structure) | Admin settings → Request ZIP            | `.json` inside a ZIP |
+| Org members, workspaces                 | Admin settings → Request ZIP            | CSV inside a ZIP     |
+
+So JSON exists in Typeform's export story, but only for form _definitions_, and only the account owner can request that ZIP. Responses are spreadsheet-only.
+
+That would be fine if the CSV were a lossless copy. It isn't. Typeform's own help article notes two transformations:
+
+- **Yes/No answers become `1` and `0`.** In a CSV that's indistinguishable from a number question.
+- **Multiple-selection questions lose their column.** The question itself doesn't appear; each answer choice gets its own column instead. A "Which features do you use?" question with eight options turns into eight unrelated columns.
+
+Hidden fields, response IDs, and per-field IDs are what you need to join this data with anything else, and the CSV keys everything by question title. Rename a question and your old and new exports stop lining up.
+
+## The Typeform Responses API
+
+The API returns the data in the shape Typeform stores it. One request:
+
+```bash
+curl "https://api.typeform.com/forms/YOUR_FORM_ID/responses?page_size=1000" \
+  -H "Authorization: Bearer $TYPEFORM_TOKEN"
+```
+
+You need a personal access token. In Typeform, open the menu next to your username, then **Account → Personal tokens → Generate a new token**, per the [personal access token guide](https://www.typeform.com/developers/get-started/personal-access-token/). Give it the `responses:read` scope, plus `forms:read` if you want question titles (the script below fetches them). The form ID is the part after `/to/` in your form's public URL.
+
+The parameters that matter for a full export, from the [retrieve responses reference](https://www.typeform.com/developers/responses/reference/retrieve-responses/) and the [Responses API walkthroughs](https://www.typeform.com/developers/responses/walkthroughs/):
+
+| Parameter         | What it does                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `page_size`       | Responses per request. Max value is 1000.                                                             |
+| `before`          | Return responses submitted before this cursor (exclusive). Pass the `token` of the last item you got. |
+| `after`           | The same, in the other direction.                                                                     |
+| `since` / `until` | Inclusive time bounds, as a Unix timestamp or ISO 8601 string.                                        |
+| `response_type`   | Defaults to `completed`. Partial and started responses are opt-in.                                    |
+
+Each item looks like this, trimmed:
+
+```json
+{
+  "token": "a1b2c3d4e5",
+  "submitted_at": "2026-10-14T08:22:51Z",
+  "hidden": { "utm_source": "newsletter" },
+  "answers": [
+    {
+      "field": { "id": "hVONkQcnSNRj", "type": "short_text", "ref": "name" },
+      "type": "text",
+      "text": "Ada Lovelace"
+    },
+    {
+      "field": { "id": "RUqkXSeXBXSd", "type": "yes_no", "ref": "wants_demo" },
+      "type": "boolean",
+      "boolean": true
+    },
+    {
+      "field": {
+        "id": "PNe8ZKBK8C2Q",
+        "type": "multiple_choice",
+        "ref": "features"
+      },
+      "type": "choices",
+      "choices": { "labels": ["Webhooks", "CSV export"] }
+    }
+  ]
+}
+```
+
+Three constraints shape the script. Typeform's [getting started page](https://www.typeform.com/developers/get-started/) allows **two requests per second per account** on the Responses API. The reference warns that **very recent responses (within roughly 30 minutes) may not be returned**. And accounts on Typeform's EU data center must call `api.eu.typeform.com` or `api.typeform.eu` instead; per the [EU data center guide](https://www.typeform.com/developers/get-started/responses-data-center/), querying the US domain for an EU account returns empty results, not an error. That last one is the nastiest, because an empty export looks like success.
+
+## Export Typeform to JSON With a Node Script
+
+This script pages through every completed response, fetches the form definition for question titles, and writes two files: the raw API items, and a flat version with one object per response. It needs Node 18 or later (for the built-in `fetch`) and no dependencies.
+
+```js
+// export-typeform.mjs
+// Usage: TYPEFORM_TOKEN=tfp_... node export-typeform.mjs <form_id>
+import { writeFile } from 'node:fs/promises';
+
+const TOKEN = process.env.TYPEFORM_TOKEN;
+const BASE = process.env.TYPEFORM_API_BASE ?? 'https://api.typeform.com';
+const formId = process.argv[2];
+
+if (!TOKEN || !formId) {
+  console.error(
+    'Usage: TYPEFORM_TOKEN=tfp_... node export-typeform.mjs <form_id>'
+  );
+  process.exit(1);
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function api(path, params = {}) {
+  const url = new URL(path, BASE);
+  for (const [key, value] of Object.entries(params)) {
+    if (value != null) url.searchParams.set(key, String(value));
+  }
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    });
+    if (res.status === 429) {
+      await sleep(1000 * 2 ** attempt); // back off and retry
+      continue;
+    }
+    if (!res.ok) throw new Error(`Typeform ${res.status}: ${await res.text()}`);
+    return res.json();
+  }
+  throw new Error('Still rate limited after 5 attempts');
+}
+
+// 1. Every completed response, newest first, 1000 per page
+const PAGE_SIZE = 1000;
+const responses = [];
+let before;
+
+for (;;) {
+  const page = await api(`/forms/${formId}/responses`, {
+    page_size: PAGE_SIZE,
+    before,
+  });
+  responses.push(...page.items);
+  console.log(`Fetched ${responses.length} responses`);
+
+  if (page.items.length < PAGE_SIZE) break;
+  before = page.items[page.items.length - 1].token;
+  await sleep(500); // stay under 2 requests per second
+}
+
+// 2. Question titles, so the flat file is readable
+const form = await api(`/forms/${formId}`);
+const titles = {};
+(function collect(fields = []) {
+  for (const field of fields) {
+    titles[field.id] = field.title;
+    collect(field.properties?.fields); // question groups nest their fields
+  }
+})(form.fields);
+
+function answerValue(answer) {
+  if (answer.type === 'choice')
+    return answer.choice.label ?? answer.choice.other;
+  if (answer.type === 'choices') {
+    const { labels = [], other } = answer.choices;
+    return other ? [...labels, other] : labels;
+  }
+  // text, email, number, boolean, date, url, file_url, phone_number, ...
+  return answer[answer.type];
+}
+
+const flat = responses.map((r) => ({
+  id: r.response_id ?? r.token,
+  submitted_at: r.submitted_at,
+  ...r.hidden,
+  ...Object.fromEntries(
+    (r.answers ?? []).map((a) => [
+      titles[a.field.id] ?? a.field.ref,
+      answerValue(a),
+    ])
+  ),
+}));
+
+await writeFile(`${formId}.raw.json`, JSON.stringify(responses, null, 2));
+await writeFile(`${formId}.json`, JSON.stringify(flat, null, 2));
+console.log(`Wrote ${formId}.raw.json and ${formId}.json`);
+```
+
+A few decisions worth explaining. The loop stops when a page comes back short, which also covers a form with exactly 1000 responses (the second request returns zero items and the loop ends). Pagination uses `before` with the default newest-first order, the pattern Typeform's walkthrough shows: take the `token` of the last item and ask for everything before it. The 500 ms pause plus request time keeps you under two requests a second, and the 429 handler backs off if you share the account with another integration that's also calling the API.
+
+Keep the `.raw.json` file even if you only plan to use the flat one. It holds the field IDs, `ref` values, `metadata`, and anything `answerValue` doesn't know how to flatten. If a question type isn't covered (payment answers, for instance), the raw file still has it.
+
+For EU accounts, run it with `TYPEFORM_API_BASE=https://api.eu.typeform.com` (or `https://api.typeform.eu`). If you're unsure which, Typeform's guide suggests calling `GET /forms/{form_id}` and reading `_links.responses`, which already contains the right regional domain. For partial responses too, add `response_type: 'completed,partial'` to the params object.
+
+> "An export that silently returns zero rows looks exactly like a form nobody filled in. Check the count against the Results panel before you delete anything."
+
+## Converting a Typeform CSV Export to JSON
+
+If you already have the CSV, or you'd rather not create an API token, converting it is a few lines. Don't split on commas yourself: free-text answers contain commas, quotes, and newlines. Use a real parser:
+
+```js
+// csv-to-json.mjs
+// Usage: npm install csv-parse && node csv-to-json.mjs responses.csv
+import { readFile, writeFile } from 'node:fs/promises';
+import { parse } from 'csv-parse/sync';
+
+const [input, output = input.replace(/\.csv$/i, '.json')] =
+  process.argv.slice(2);
+
+const rows = parse(await readFile(input), {
+  columns: true, // use the header row as keys
+  bom: true, // strip a byte-order mark if the file has one
+  skip_empty_lines: true,
+});
+
+await writeFile(output, JSON.stringify(rows, null, 2));
+console.log(`${rows.length} rows -> ${output}`);
+```
+
+You'll get one object per response, keyed by column header, with every value as a string. That's where the CSV's lossy spots come back. Yes/No answers arrive as `"1"` and `"0"`, so map the columns you know are Yes/No:
+
+```js
+const YES_NO = ['Would you like a demo?'];
+for (const row of rows) {
+  for (const question of YES_NO) row[question] = row[question] === '1';
+}
+```
+
+Multi-select questions are harder: there's no column for the question, only one per choice, so you have to know which columns belong together and regroup them by hand. For a one-off archive of a simple form, the CSV route is fine. For anything you'll query later, use the API script.
+
+|                          | CSV → JSON            | Responses API → JSON        |
+| ------------------------ | --------------------- | --------------------------- |
+| Setup                    | Download a file       | Personal access token       |
+| Booleans                 | `"1"` / `"0"` strings | `true` / `false`            |
+| Multi-select             | One column per choice | `labels` array              |
+| Keys                     | Question titles       | Field IDs, refs, and titles |
+| Uploaded files           | Separate `.zip`       | `file_url` per answer       |
+| Raw shape kept for later | No                    | Yes, in `.raw.json`         |
+
+## Moving Future Responses to a Backend You Own
+
+Exporting is the one-time part. If the reason you're exporting is that you're leaving Typeform, the bigger question is where new responses go, and whether you'll be writing a scraper like the one above again in two years.
+
+That's the problem OSForms is built around. Submissions land in your OSForms account as plain JSON (`fields` is exactly what the form posted), and three ways to read them are included on the free tier of 100 submissions a month:
+
+- **Pull API.** Create a read-only `osf_live_` key scoped to the forms you choose, then page through submissions as JSON. Pages hold up to 100, cursors come back as `nextCursor`, `since` lets you sync incrementally, and pulls don't count toward your monthly quota. IP addresses and user agents are never returned.
+- **CSV export** from the dashboard, on every tier. JSON file export isn't in the dashboard yet, so the pull API is the JSON route.
+- **Webhooks** that push each submission as signed JSON to your own endpoint the moment it arrives. [Verifying the webhook signature in Node.js](/verify-webhook-signature-nodejs) covers the receiving side.
+
+The pull API version of the export script above is much shorter, because the cursor is handed to you:
+
+```bash
+curl "https://osforms.com/api/v1/submissions?formId=YOUR_FORM_SLUG&limit=100" \
+  -H "Authorization: Bearer $OSFORMS_API_KEY"
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "6720b3f1c4d5e6f7a8b9c0d1",
+      "formId": "671fa2b3c4d5e6f7a8b9c0aa",
+      "submittedAt": "2026-11-30T09:14:03.120Z",
+      "fields": { "name": "Ada Lovelace", "wants_demo": true }
+    }
+  ],
+  "nextCursor": null,
+  "hasMore": false
+}
+```
+
+For the one-question-at-a-time Typeform feel, `@osforms/react` renders a conversational form in one component; [building a conversational form in React](/conversational-form-react) walks through it. The [open source Typeform alternative](/typeform-alternative) post covers where Typeform is still the better tool, and some of those reasons are real. OSForms doesn't store uploaded files (a file field becomes a placeholder string like `[File: cv.pdf, 48213 bytes]`), it can't import your old Typeform responses, and it has three integrations (Resend email, Google Sheets, webhooks) rather than Typeform's catalog. Keep the JSON from this guide as your archive.
+
+Whichever tool you land on, the lesson from having to export Typeform to JSON through a paging script is the same: pick a form backend where reading your own data back out is a documented, free API call. The [case for owning your form data](/own-your-form-data) goes further into why, and if you're choosing a setup from scratch, [how to handle form submissions without a backend](/handle-form-submissions) lays out every option.

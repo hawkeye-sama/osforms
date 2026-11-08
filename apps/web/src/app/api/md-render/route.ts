@@ -2,6 +2,7 @@ import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 
 import { getPostBySlug, postToMarkdown } from '@/lib/blog';
+import { DISCOVERY_LINKS } from '@/lib/discovery-links';
 import { SITE_URL } from '@/lib/site';
 
 // Markdown for Agents: returns a Markdown representation of any page.
@@ -12,8 +13,20 @@ export const dynamic = 'force-dynamic';
 // ~4 chars per token is a good-enough estimate for the token-count hints.
 const estTokens = (s: string) => Math.ceil(s.length / 4);
 
-function mdResponse(md: string, originalTokens?: number) {
+/**
+ * Canonical page URL for a requested path, so the `/<path>.md` duplicate
+ * points search engines back at the HTML page instead of competing with it.
+ * (next.config.ts skips its own Link header on .md URLs so this one survives;
+ * on `Accept: text/markdown` requests the URL is already canonical.)
+ */
+function canonicalUrl(path: string): string {
+  const clean = `/${path.replace(/^\/+/, '').replace(/\/+$/, '')}`;
+  return clean === '/' ? `${SITE_URL}/` : `${SITE_URL}${clean}`;
+}
+
+function mdResponse(md: string, path: string, originalTokens?: number) {
   const headers: Record<string, string> = {
+    Link: `<${canonicalUrl(path)}>; rel="canonical", ${DISCOVERY_LINKS}`,
     'Content-Type': 'text/markdown; charset=utf-8',
     Vary: 'Accept',
     'Content-Signal': 'search=yes, ai-input=yes, ai-train=yes',
@@ -35,7 +48,7 @@ export async function GET(req: Request) {
   if (seg && !seg.includes('/')) {
     const post = getPostBySlug(seg);
     if (post) {
-      return mdResponse(postToMarkdown(post, SITE_URL));
+      return mdResponse(postToMarkdown(post, SITE_URL), path);
     }
   }
 
@@ -74,5 +87,9 @@ export async function GET(req: Request) {
   ]);
 
   const md = td.turndown(body).trim();
-  return mdResponse(md || `# ${path}\n\n${SITE_URL}${path}`, estTokens(html));
+  return mdResponse(
+    md || `# ${path}\n\n${SITE_URL}${path}`,
+    path,
+    estTokens(html)
+  );
 }
