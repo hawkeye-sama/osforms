@@ -45,6 +45,13 @@ const nextConfig: NextConfig = {
         destination: '/:slug',
         permanent: true,
       },
+      // Next.js also serves the homepage at /index; GSC flagged it as a
+      // duplicate. Collapse it onto the canonical root.
+      {
+        source: '/index',
+        destination: '/',
+        permanent: true,
+      },
     ];
   },
   async rewrites() {
